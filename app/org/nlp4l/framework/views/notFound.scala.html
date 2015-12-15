@@ -1,0 +1,23 @@
+@(message: String)
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/dashboard.css")">
+    <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("../../../../../public/stylesheets/main.css")">
+    <link rel='stylesheet' href='@routes.WebJarAssets.at(WebJarAssets.locate("css/bootstrap.min.css"))'>
+    <title>Not Found</title>
+</head>
+<body>
+    <div class="container">
+        <div class="alert alert-info" role="alert">
+            Sorry, that's not found. @message
+        </div>
+        <div>
+            <a href="/dashboard">&lt;&lt; Back to dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

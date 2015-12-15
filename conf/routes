@@ -1,0 +1,43 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET           /                                         @org.nlp4l.framework.controllers.Dashboard.index
+
+# Map static resources from the /public folder to the /assets URL path
+GET           /assets/*file                             controllers.Assets.versioned(path="/public", file: Asset)
+GET           /webjars/*file                            controllers.WebJarAssets.at(file)
+
+
+# framework
+GET           /dashboard                                        @org.nlp4l.framework.controllers.Dashboard.index
+GET           /dashboard/job/list                               @org.nlp4l.framework.controllers.Dashboard.joblist
+GET           /dashboard/job/new                                @org.nlp4l.framework.controllers.Dashboard.newJob
+GET           /dashboard/job/status                             @org.nlp4l.framework.controllers.Dashboard.jobstatus
+GET           /dashboard/job/:jobId                             @org.nlp4l.framework.controllers.Dashboard.editJob(jobId: Int, runId: Int = 0)
+GET           /dashboard/job/result/:jobId/:runId               @org.nlp4l.framework.controllers.Dashboard.jobresult(jobId: Int, runId: Int)
+POST          /dashboard/job/result/:jobId/:runId               @org.nlp4l.framework.controllers.Dashboard.jobresult(jobId: Int, runId: Int)
+
+GET           /job/list                                         @org.nlp4l.framework.controllers.JobController.list
+GET           /job/status                                       @org.nlp4l.framework.controllers.JobController.jobStatus
+POST          /job/exec/:jobId                                  @org.nlp4l.framework.controllers.JobController.exec(jobId: Int)
+GET           /job/delete/:jobId                                @org.nlp4l.framework.controllers.JobController.deleteJob(jobId: Int)
+DELETE        /job/:jobId                                       @org.nlp4l.framework.controllers.JobController.deleteJob(jobId: Int)
+POST          /job/info                                         @org.nlp4l.framework.controllers.JobController.saveJobInfo(jobId: Int = 0)
+PUT           /job/info/:jobId                                  @org.nlp4l.framework.controllers.JobController.saveJobInfo(jobId: Int)
+POST          /job/config/:jobId                                @org.nlp4l.framework.controllers.JobController.saveJobConfig(jobId: Int)
+POST          /job/config                                       @org.nlp4l.framework.controllers.JobController.saveNewJobConfig
+GET           /job/result/:jobId/:runId                         @org.nlp4l.framework.controllers.JobController.jobResult(jobId: Int, runId: Int)
+GET           /job/result/delete/:jobId/:runId                  @org.nlp4l.framework.controllers.JobController.deleteRunResult(jobId: Int, runId: Int)
+DELETE        /job/result/:jobId/:runId                         @org.nlp4l.framework.controllers.JobController.deleteRunResult(jobId: Int, runId: Int)
+GET           /job/result/record/:jobId/:runId/:recordId        @org.nlp4l.framework.controllers.JobController.fetchRecord(jobId: Int, runId: Int, recordId: Int)
+GET           /job/result/record/delete/:jobId/:runId/:recordId @org.nlp4l.framework.controllers.JobController.deleteRecord(jobId: Int, runId: Int, recordId: Int)
+DELETE        /job/result/record/:jobId/:runId/:recordId        @org.nlp4l.framework.controllers.JobController.deleteRecord(jobId: Int, runId: Int, recordId: Int)
+POST          /job/result/record/add/:jobId/:runId              @org.nlp4l.framework.controllers.JobController.addRecord(jobId: Int, runId: Int)
+POST          /job/result/record/update/:jobId/:runId/:recordId @org.nlp4l.framework.controllers.JobController.updateRecord(jobId: Int, runId: Int, recordId: Int)
+GET           /job/result/validate/:jobId/:runId                @org.nlp4l.framework.controllers.JobController.validateResult(jobId: Int, runId: Int)
+GET           /job/result/deploy/:jobId/:runId                  @org.nlp4l.framework.controllers.JobController.deployResult(jobId: Int, runId: Int)
+GET           /job/result/export/:jobId/:runId                  @org.nlp4l.framework.controllers.JobController.exportResult(jobId: Int, runId: Int)
+
+

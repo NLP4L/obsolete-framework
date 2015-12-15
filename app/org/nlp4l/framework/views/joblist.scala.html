@@ -1,0 +1,40 @@
+@headerAddon = {
+<script src='@routes.Assets.versioned("javascripts/framework/joblist.js")' type="text/javascript"></script>
+<script>
+  function JobIdFormatter(value, row){
+	//row contains the returned object which applied to current row.
+	return '<a href="/dashboard/job/'+row.jobId+'">' + row.jobId + '</a>';
+  }
+</script>
+}
+
+@main(headerAddon) {
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-9 col-md-10 main">
+        <h1 class="page-header">Job List</h1>
+
+        <table id="table"
+           data-toggle="table"
+           data-pagination="true"
+           data-pagination-first-text="First"
+           data-pagination-pre-text="Prev"
+           data-pagination-next-text="Next"
+           data-pagination-last-text="Last"
+           data-id-field="jobId"
+           data-side-pagination="server"
+           data-url="/job/list">
+          <thead>
+            <tr>
+              <th class="col-xs-1" data-field="jobId" data-sortable="true" data-formatter="JobIdFormatter">Job No</th>
+              <th class="col-xs-5" data-field="name" data-sortable="true">Name</th>
+              <th class="col-xs-3" data-field="lastRunAt" data-sortable="true">Extracted</th>
+              <th class="col-xs-3" data-field="lastDeployAt" data-sortable="true">Deployed</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+    </div>
+  </div>
+}
