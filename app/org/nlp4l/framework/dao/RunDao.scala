@@ -308,8 +308,12 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   def totalCount(jobId: Int, runId: Int): Future[Int] = {
     db.run(sql"select count(id) as n from run_#${jobId}_#${runId}".as[Int].head)
   }
+
+  def totalCountFilter(jobId: Int, runId: Int, filter: String): Future[Int] = {
+    db.run(sql"select count(id) as n from run_#${jobId}_#${runId}#${filter}".as[Int].head)
+  }
   
-  def fetch(tableName: String, job: Job, dic: DictionaryAttribute, sort: String, order: String, offset: Int = 0, size: Int = 10): Dictionary = {
+  def fetch(tableName: String, job: Job, dic: DictionaryAttribute, sort: String, order: String, offset: Int = 0, size: Int = 10, filter: String): Dictionary = {
     var ss: Seq[Record] = Seq()
     var colTypeMap: Map[String, String] = Map()
     var colOrder: Seq[String] = Seq()
@@ -322,7 +326,7 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
         colTypeMap += (col.name.toLowerCase() -> col.sqlTypeName.getOrElse(""))
         colOrder = colOrder :+ col.name.toLowerCase()
       }
-      selectSql += s" id from ${tableName}"
+      selectSql += s" id from ${tableName}${filter}"
       selectSql += s" order by ${sort} ${order} limit ${size} offset ${offset}"
     }
     val r = Await.result(db.run(sql"#$selectSql".as[Map[String, Any]]), scala.concurrent.duration.Duration.Inf)
@@ -456,6 +460,20 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
 
     logger.debug(selectSql)
     Await.result(db.run(sql"#$selectSql".as[Map[String, Any]].head), scala.concurrent.duration.Duration.Inf)
+  }
+  
+  def fetchCellValueList(jobId: Int, runId: Int, cellname: String): List[Any] = {
+    val tableName = s"run_${jobId}_${runId}"
+    var selectSql = s"select distinct ${cellname} from ${tableName} order by ${cellname} asc"
+    
+    logger.debug(selectSql)
+    var filterlist: List[Any] = List()
+    val r = Await.result(db.run(sql"#$selectSql".as[Map[String,Any]]), scala.concurrent.duration.Duration.Inf)
+    var res: List[Any] = List()
+    r.foreach { rr: Map[String, Any] =>
+      res = res :+ rr.values.head
+    }
+    res
   }
   
   def fetchRecordHashcode(jobId: Int, runId: Int, recordId: Int): Int = {
