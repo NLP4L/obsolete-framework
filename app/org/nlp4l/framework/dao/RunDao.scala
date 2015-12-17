@@ -19,7 +19,6 @@ package org.nlp4l.framework.dao
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-
 import javax.inject.Inject
 import play.api.Logger
 import play.api.db.slick.DatabaseConfigProvider
@@ -28,17 +27,16 @@ import slick.driver.JdbcProfile
 import slick.jdbc.meta.MColumn
 import slick.jdbc.meta.MTable
 import slick.lifted.ProvenShape.proveShapeOf
-
 import org.joda.time.DateTime
 import org.nlp4l.framework.models.Cell
 import org.nlp4l.framework.models.CellAttribute
 import org.nlp4l.framework.models.CellType
-import org.nlp4l.framework.models.DbModels.resultAsStringMap
+import org.nlp4l.framework.buildin.DbModels.resultAsStringMap
 import org.nlp4l.framework.models.Dictionary
 import org.nlp4l.framework.models.DictionaryAttribute
-import org.nlp4l.framework.models.Job
-import org.nlp4l.framework.models.JobStatus
 import org.nlp4l.framework.models.Record
+import org.nlp4l.framework.buildin.Job
+import org.nlp4l.framework.buildin.JobStatus
 
 class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) extends HasDatabaseConfigProvider[JdbcProfile] { 
   import driver.api._

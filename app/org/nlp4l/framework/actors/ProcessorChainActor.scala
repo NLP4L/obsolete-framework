@@ -18,12 +18,11 @@ package org.nlp4l.framework.actors
 
 import org.nlp4l.framework.dao.JobDAO
 import org.nlp4l.framework.dao.RunDAO
-import org.nlp4l.framework.models.JobMessage
 import org.nlp4l.framework.processors.ProcessorChain2
-
 import akka.actor.Actor
 import akka.actor.Props
 import javax.inject.Inject
+import org.nlp4l.framework.buildin.JobMessage
 
 
 class ProcessorChain2Actor @Inject()(jobDAO: JobDAO, runDAO: RunDAO) extends Actor {

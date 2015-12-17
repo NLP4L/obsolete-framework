@@ -22,7 +22,6 @@ package org.nlp4l.framework.dao
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-
 import javax.inject.Inject
 import play.api.Logger
 import play.api.db.slick.DatabaseConfigProvider
@@ -31,14 +30,14 @@ import slick.driver.JdbcProfile
 import slick.jdbc.meta.MColumn
 import slick.jdbc.meta.MTable
 import slick.lifted.ProvenShape.proveShapeOf
-
 import com.github.tototoshi.slick.H2JodaSupport.datetimeTypeMapper
 import org.joda.time.DateTime
 import org.nlp4l.framework.models.Cell
-import org.nlp4l.framework.models.DbModels.resultAsStringMap
-import org.nlp4l.framework.models.Job
+import org.nlp4l.framework.buildin.DbModels.resultAsStringMap
 import org.nlp4l.framework.models.Record
-import org.nlp4l.framework.models.Replay
+import org.nlp4l.framework.buildin.Replay
+import org.nlp4l.framework.buildin.Job
+
 
 class JobDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) extends HasDatabaseConfigProvider[JdbcProfile] {
   import driver.api._

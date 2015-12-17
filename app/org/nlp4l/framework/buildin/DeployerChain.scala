@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package org.nlp4l.framework.processors
+package org.nlp4l.framework.buildin
 
-import scala.collection.JavaConversions.asScalaBuffer
-import scala.collection.JavaConversions.asScalaSet
 import scala.collection.mutable
 import scala.concurrent.Await
+import scala.collection.convert.WrapAsScala._
 
 import org.joda.time.DateTime
 import org.nlp4l.framework.dao.JobDAO
 import org.nlp4l.framework.models.Dictionary
-import org.nlp4l.framework.models.Job
+import org.nlp4l.framework.processors.Deployer
+import org.nlp4l.framework.processors.DeployerFactory
 
 import com.typesafe.config.ConfigFactory
 

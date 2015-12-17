@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-package org.nlp4l.framework.processors
+package org.nlp4l.framework.buildin
 
-import scala.collection.JavaConversions.asScalaBuffer
-import scala.collection.JavaConversions.asScalaSet
 import scala.collection.mutable
 import scala.concurrent.Await
+import scala.collection.convert.WrapAsScala._
+
+import org.nlp4l.framework.dao.JobDAO
+import org.nlp4l.framework.models.Dictionary
+import org.nlp4l.framework.processors.Validator
+import org.nlp4l.framework.processors.ValidatorFactory
 
 import com.typesafe.config.ConfigFactory
 
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-
-import org.nlp4l.framework.dao.JobDAO
-import org.nlp4l.framework.models.Dictionary
 
 class ValidatorChain (val chain: List[Validator]) {
   private val logger = Logger(this.getClass)

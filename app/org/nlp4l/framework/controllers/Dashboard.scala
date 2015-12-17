@@ -21,20 +21,18 @@ import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.util.Failure
 import scala.util.Success
-
 import com.google.inject.name.Named
 import akka.actor.ActorRef
 import javax.inject.Inject
 import javax.inject.Singleton
 import play.api.mvc.Action
 import play.api.mvc.Controller
-
 import org.nlp4l.framework.dao.JobDAO
 import org.nlp4l.framework.dao.RunDAO
 import org.nlp4l.framework.models.CellAttribute
 import org.nlp4l.framework.models.DictionaryAttribute
-import org.nlp4l.framework.models.Job
 import org.nlp4l.framework.processors.ProcessorChain2Builder
+import org.nlp4l.framework.buildin.Job
 
 @Singleton
 class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-actor2") processActor: ActorRef) extends Controller {
