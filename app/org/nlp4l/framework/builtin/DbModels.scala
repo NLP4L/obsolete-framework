@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.nlp4l.framework.buildin
+package org.nlp4l.framework.builtin
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -196,11 +196,11 @@ case class JobMessage(jobId: Int)
 case class ActionResult(status:Boolean, message:Seq[String])
 
 object Constants {
-  val WRAPPROCESSOR_CLASS = "org.nlp4l.framework.buildin.WrapProcessor"
-  val REPLAYPROCESSORFACTORY_CLASS = "org.nlp4l.framework.buildin.ReplayProcessorFactory"
-  val SORTPROCESSOR_CLASS = "org.nlp4l.framework.buildin.SortProcessor"
-  val MERGEPROCESSOR_CLASS = "org.nlp4l.framework.buildin.MergeProcessor"
-  val REPLAYPROCESSOR_CLASS = "org.nlp4l.framework.buildin.ReplayProcessor"
+  val WRAPPROCESSOR_CLASS = "org.nlp4l.framework.builtin.WrapProcessor"
+  val REPLAYPROCESSORFACTORY_CLASS = "org.nlp4l.framework.builtin.ReplayProcessorFactory"
+  val SORTPROCESSOR_CLASS = "org.nlp4l.framework.builtin.SortProcessor"
+  val MERGEPROCESSOR_CLASS = "org.nlp4l.framework.builtin.MergeProcessor"
+  val REPLAYPROCESSOR_CLASS = "org.nlp4l.framework.builtin.ReplayProcessor"
 }
 
 

@@ -44,22 +44,22 @@ import org.nlp4l.framework.dao.RunDAO
 import org.nlp4l.framework.models.Cell
 import org.nlp4l.framework.models.CellAttribute
 import org.nlp4l.framework.models.CellType
-import org.nlp4l.framework.buildin.DbModels.fWActionResultWrites
-import org.nlp4l.framework.buildin.DbModels.fWJobStatusWrites
-import org.nlp4l.framework.buildin.DbModels.fWJobWrites
-import org.nlp4l.framework.buildin.DbModels.fWRecordWithAttrubuteWrites
+import org.nlp4l.framework.builtin.DbModels.fWActionResultWrites
+import org.nlp4l.framework.builtin.DbModels.fWJobStatusWrites
+import org.nlp4l.framework.builtin.DbModels.fWJobWrites
+import org.nlp4l.framework.builtin.DbModels.fWRecordWithAttrubuteWrites
 import org.nlp4l.framework.models.Dictionary
 import org.nlp4l.framework.models.DictionaryAttribute
 import org.nlp4l.framework.models.Record
 import org.nlp4l.framework.models.RecordWithAttrbute
-import org.nlp4l.framework.buildin.DeployerChain
+import org.nlp4l.framework.builtin.DeployerChain
 import org.nlp4l.framework.processors.ProcessorChain2
 import org.nlp4l.framework.processors.ProcessorChain2Builder
-import org.nlp4l.framework.buildin.ValidatorChain
-import org.nlp4l.framework.buildin.Replay
-import org.nlp4l.framework.buildin.JobMessage
-import org.nlp4l.framework.buildin.ActionResult
-import org.nlp4l.framework.buildin.Job
+import org.nlp4l.framework.builtin.ValidatorChain
+import org.nlp4l.framework.builtin.Replay
+import org.nlp4l.framework.builtin.JobMessage
+import org.nlp4l.framework.builtin.ActionResult
+import org.nlp4l.framework.builtin.Job
 
 
 

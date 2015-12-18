@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.nlp4l.framework.buildin
+package org.nlp4l.framework.builtin
 
 import scala.concurrent.Await
 import org.nlp4l.framework.dao.JobDAO

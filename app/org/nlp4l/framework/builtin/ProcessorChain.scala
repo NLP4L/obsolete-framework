@@ -33,13 +33,13 @@ import org.nlp4l.framework.dao.RunDAO
 import org.nlp4l.framework.models.Dictionary
 import org.nlp4l.framework.models.DictionaryAttribute
 import org.nlp4l.framework.models.Record
-import org.nlp4l.framework.buildin.ReplayProcessor
-import org.nlp4l.framework.buildin.WrapProcessor
-import org.nlp4l.framework.buildin.SortProcessor
-import org.nlp4l.framework.buildin.MergeProcessor
-import org.nlp4l.framework.buildin.Constants
-import org.nlp4l.framework.buildin.JobStatus
-import org.nlp4l.framework.buildin.Job
+import org.nlp4l.framework.builtin.ReplayProcessor
+import org.nlp4l.framework.builtin.WrapProcessor
+import org.nlp4l.framework.builtin.SortProcessor
+import org.nlp4l.framework.builtin.MergeProcessor
+import org.nlp4l.framework.builtin.Constants
+import org.nlp4l.framework.builtin.JobStatus
+import org.nlp4l.framework.builtin.Job
 
 
 class ProcessorChain2 (val chain: List[Processor]) {

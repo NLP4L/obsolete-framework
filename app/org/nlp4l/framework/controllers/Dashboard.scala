@@ -32,7 +32,7 @@ import org.nlp4l.framework.dao.RunDAO
 import org.nlp4l.framework.models.CellAttribute
 import org.nlp4l.framework.models.DictionaryAttribute
 import org.nlp4l.framework.processors.ProcessorChain2Builder
-import org.nlp4l.framework.buildin.Job
+import org.nlp4l.framework.builtin.Job
 
 @Singleton
 class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-actor2") processActor: ActorRef) extends Controller {

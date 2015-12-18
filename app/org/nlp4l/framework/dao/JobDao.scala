@@ -33,10 +33,10 @@ import slick.lifted.ProvenShape.proveShapeOf
 import com.github.tototoshi.slick.H2JodaSupport.datetimeTypeMapper
 import org.joda.time.DateTime
 import org.nlp4l.framework.models.Cell
-import org.nlp4l.framework.buildin.DbModels.resultAsStringMap
+import org.nlp4l.framework.builtin.DbModels.resultAsStringMap
 import org.nlp4l.framework.models.Record
-import org.nlp4l.framework.buildin.Replay
-import org.nlp4l.framework.buildin.Job
+import org.nlp4l.framework.builtin.Replay
+import org.nlp4l.framework.builtin.Job
 
 
 class JobDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) extends HasDatabaseConfigProvider[JdbcProfile] {
