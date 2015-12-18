@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package org.nlp4l.framework.models
+package org.nlp4l.framework.builtin
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
-
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-
 import play.api.libs.json.JsError
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
@@ -36,6 +34,10 @@ import play.api.mvc.EssentialAction
 import play.api.mvc.Result
 import play.api.mvc.Results
 import slick.jdbc.GetResult
+import org.nlp4l.framework.models.RecordWithAttrbute
+import org.nlp4l.framework.models.Dictionary
+import org.nlp4l.framework.models.Record
+import org.nlp4l.framework.models.Cell
 
 /**
  * Job Table
@@ -181,3 +183,25 @@ object Actions extends Results with BodyParsers {
   }
   
 }
+
+
+/**
+ * Message class between actors related job execution
+ */
+case class JobMessage(jobId: Int)
+
+/**
+ * Response of action
+ */
+case class ActionResult(status:Boolean, message:Seq[String])
+
+object Constants {
+  val WRAPPROCESSOR_CLASS = "org.nlp4l.framework.builtin.WrapProcessor"
+  val REPLAYPROCESSORFACTORY_CLASS = "org.nlp4l.framework.builtin.ReplayProcessorFactory"
+  val SORTPROCESSOR_CLASS = "org.nlp4l.framework.builtin.SortProcessor"
+  val MERGEPROCESSOR_CLASS = "org.nlp4l.framework.builtin.MergeProcessor"
+  val REPLAYPROCESSOR_CLASS = "org.nlp4l.framework.builtin.ReplayProcessor"
+}
+
+
+

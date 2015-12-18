@@ -23,7 +23,6 @@ import java.io.PrintWriter
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.UUID
-
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -31,9 +30,7 @@ import scala.concurrent.Future
 import scala.concurrent.TimeoutException
 import scala.util.Failure
 import scala.util.Success
-
 import com.google.inject.name.Named
-
 import akka.actor.ActorRef
 import javax.inject.Inject
 import play.api.libs.json.JsValue.jsValueToJsLookup
@@ -41,29 +38,28 @@ import play.api.libs.json.Json
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.mvc.Action
 import play.api.mvc.Controller
-
 import org.joda.time.DateTime
 import org.nlp4l.framework.dao.JobDAO
 import org.nlp4l.framework.dao.RunDAO
-import org.nlp4l.framework.models.ActionResult
 import org.nlp4l.framework.models.Cell
 import org.nlp4l.framework.models.CellAttribute
 import org.nlp4l.framework.models.CellType
-import org.nlp4l.framework.models.DbModels.fWActionResultWrites
-import org.nlp4l.framework.models.DbModels.fWJobStatusWrites
-import org.nlp4l.framework.models.DbModels.fWJobWrites
-import org.nlp4l.framework.models.DbModels.fWRecordWithAttrubuteWrites
+import org.nlp4l.framework.builtin.DbModels.fWActionResultWrites
+import org.nlp4l.framework.builtin.DbModels.fWJobStatusWrites
+import org.nlp4l.framework.builtin.DbModels.fWJobWrites
+import org.nlp4l.framework.builtin.DbModels.fWRecordWithAttrubuteWrites
 import org.nlp4l.framework.models.Dictionary
 import org.nlp4l.framework.models.DictionaryAttribute
-import org.nlp4l.framework.models.Job
-import org.nlp4l.framework.models.JobMessage
 import org.nlp4l.framework.models.Record
 import org.nlp4l.framework.models.RecordWithAttrbute
-import org.nlp4l.framework.models.Replay
-import org.nlp4l.framework.processors.DeployerChain
+import org.nlp4l.framework.builtin.DeployerChain
 import org.nlp4l.framework.processors.ProcessorChain2
 import org.nlp4l.framework.processors.ProcessorChain2Builder
-import org.nlp4l.framework.processors.ValidatorChain
+import org.nlp4l.framework.builtin.ValidatorChain
+import org.nlp4l.framework.builtin.Replay
+import org.nlp4l.framework.builtin.JobMessage
+import org.nlp4l.framework.builtin.ActionResult
+import org.nlp4l.framework.builtin.Job
 
 
 
@@ -462,8 +458,25 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       case Some(c) => c
       case _ => "asc"
     }
+    val filter = request.getQueryString("filter") match {
+      case Some(c) => c.replace("{", "").replace("}", "").replace("\"", "")
+      case _ => ""
+    }
+    var filterStr = "";
+    if (filter != "") {
+      val filterList = filter.split(",").toList
+      for( e <- filterList) {
+        val tmpList = e.split(":").toList
+        if (filterStr == "") {
+          filterStr = " where " + tmpList(0) + "='" + tmpList(1) + "'"
+        } else {
+          filterStr += " and " + tmpList(0) + "='" + tmpList(1) + "'"
+        }
+      }
+    }
     var total = 0
-    runDAO.totalCount(jobId, runId).map {
+    //runDAO.totalCount(jobId, runId).map {
+    runDAO.totalCountFilter(jobId, runId, filterStr).map {
       res =>
         total = res
     }
@@ -472,7 +485,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
     val dic: DictionaryAttribute = new ProcessorChain2Builder().dicBuild(job.config)
     
-    val res:Dictionary = runDAO.fetch(tableName, job, dic, sort, order, offset, size)
+    val res:Dictionary = runDAO.fetch(tableName, job, dic, sort, order, offset, size, filterStr)
     val res2 = res.recordList.map { x:Record => RecordWithAttrbute(x, dic) }
       
     val jsonResponse = Json.obj(
@@ -504,5 +517,9 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     }
   }
   
-  
+  def filterList(jobId: Int, runId: Int, cellname: String) = Action {request =>
+    val r = runDAO.fetchCellValueList(jobId, runId, cellname)
+    val res = r.filter(_ != null).grouped(1).map(xs => (xs(0).toString -> xs(0).toString)).toMap
+    Ok(Json.toJson(res))
+  }
 }

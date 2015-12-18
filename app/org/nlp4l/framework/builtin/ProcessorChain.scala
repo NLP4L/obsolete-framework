@@ -20,24 +20,26 @@ import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.JavaConversions.asScalaSet
 import scala.collection.mutable
 import scala.concurrent.Await
-
+import scala.collection.convert.WrapAsScala._
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigSyntax
-
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-
 import org.joda.time.DateTime
 import org.nlp4l.framework.dao.JobDAO
 import org.nlp4l.framework.dao.RunDAO
-import org.nlp4l.framework.models.Constants
 import org.nlp4l.framework.models.Dictionary
 import org.nlp4l.framework.models.DictionaryAttribute
-import org.nlp4l.framework.models.Job
-import org.nlp4l.framework.models.JobStatus
 import org.nlp4l.framework.models.Record
+import org.nlp4l.framework.builtin.ReplayProcessor
+import org.nlp4l.framework.builtin.WrapProcessor
+import org.nlp4l.framework.builtin.SortProcessor
+import org.nlp4l.framework.builtin.MergeProcessor
+import org.nlp4l.framework.builtin.Constants
+import org.nlp4l.framework.builtin.JobStatus
+import org.nlp4l.framework.builtin.Job
 
 
 class ProcessorChain2 (val chain: List[Processor]) {

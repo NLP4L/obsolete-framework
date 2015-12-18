@@ -168,23 +168,5 @@ class DictionaryAttribute(val name: String, val cellAttributeList: Seq[CellAttri
 }
 
 
-/**
- * Message class between actors related job execution
- */
-case class JobMessage(jobId: Int)
-
-/**
- * Response of action
- */
-case class ActionResult(status:Boolean, message:Seq[String])
-
-object Constants {
-  val WRAPPROCESSOR_CLASS = "org.nlp4l.framework.processors.WrapProcessor"
-  val REPLAYPROCESSORFACTORY_CLASS = "org.nlp4l.framework.processors.ReplayProcessorFactory"
-  val SORTPROCESSOR_CLASS = "org.nlp4l.framework.processors.SortProcessor"
-  val MERGEPROCESSOR_CLASS = "org.nlp4l.framework.processors.MergeProcessor"
-  val REPLAYPROCESSOR_CLASS = "org.nlp4l.framework.processors.ReplayProcessor"
-}
-
 
 

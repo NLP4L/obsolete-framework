@@ -21,20 +21,18 @@ import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.util.Failure
 import scala.util.Success
-
 import com.google.inject.name.Named
 import akka.actor.ActorRef
 import javax.inject.Inject
 import javax.inject.Singleton
 import play.api.mvc.Action
 import play.api.mvc.Controller
-
 import org.nlp4l.framework.dao.JobDAO
 import org.nlp4l.framework.dao.RunDAO
 import org.nlp4l.framework.models.CellAttribute
 import org.nlp4l.framework.models.DictionaryAttribute
-import org.nlp4l.framework.models.Job
 import org.nlp4l.framework.processors.ProcessorChain2Builder
+import org.nlp4l.framework.builtin.Job
 
 @Singleton
 class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-actor2") processActor: ActorRef) extends Controller {
@@ -89,7 +87,7 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     var ths: String = "<th data-field=\"id\" data-formatter=\"RecordIdFormatter\">ID</th>"
     var addtable: String = ""
     dic.cellAttributeList foreach { c: CellAttribute =>
-      ths += "<th data-field=\"" + c.name.toLowerCase() + "\" data-filter-control=\"select\""
+      ths += "<th data-field=\"" + c.name.toLowerCase() + "\" data-filter-control=\"select\" data-filter-data=\"url:/job/result/filterlist/"+jobId+"/"+runId+"/"+c.name.toLowerCase()+"\""
       addtable += "<th align=\"right\">" + c.name.toLowerCase() + "</th><td><input type=\"text\" class=\"form-control\" id=\"form_" + c.name.toLowerCase() + "\" name=\"" + c.name.toLowerCase() + "\"></td>"
       c.isSortable match {
         case true => ths += " data-sortable=\"true\""
@@ -97,7 +95,7 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
       }
       ths += ">" + c.name.toLowerCase()  + "</th>\n"
     }
-    ths += "<th data-field=\"replay\" data-filter-control=\"select\">Replay</th>"
+    ths += "<th data-field=\"replay\" data-filter-control=\"select\" data-filter-data=\"url:/job/result/filterlist/"+jobId+"/"+runId+"/replay\">Replay</th>"
 
     val listTable = s"""<table id="table"
            data-toolbar="#toolbar"
