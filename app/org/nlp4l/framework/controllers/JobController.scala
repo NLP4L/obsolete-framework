@@ -53,8 +53,8 @@ import org.nlp4l.framework.models.DictionaryAttribute
 import org.nlp4l.framework.models.Record
 import org.nlp4l.framework.models.RecordWithAttrbute
 import org.nlp4l.framework.builtin.DeployerChain
-import org.nlp4l.framework.processors.ProcessorChain2
-import org.nlp4l.framework.processors.ProcessorChain2Builder
+import org.nlp4l.framework.processors.ProcessorChain
+import org.nlp4l.framework.processors.ProcessorChainBuilder
 import org.nlp4l.framework.builtin.ValidatorChain
 import org.nlp4l.framework.builtin.Replay
 import org.nlp4l.framework.builtin.JobMessage
@@ -108,9 +108,9 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
           file.ref.moveTo(temp, replace = true)
           val tempPath = Paths.get(temp.getAbsolutePath)
           val configdata: String = Files.readAllLines(tempPath).toList.mkString("\n")
-          if (ProcessorChain2.validateConf(configdata)) {
+          if (ProcessorChain.validateConf(configdata)) {
             // reload processor chain
-            ProcessorChain2.loadChain(jobDAO, jobId)
+            ProcessorChain.loadChain(jobDAO, jobId)
             // Update DB
             val newjob = Job(Some(jobId), job.name, configdata, job.lastRunId, job.lastRunAt, job.lastDeployAt)
             jobDAO.update(newjob)
@@ -137,7 +137,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       file.ref.moveTo(temp, replace = true)
       val tempPath = Paths.get(temp.getAbsolutePath)
       val configdata: String = Files.readAllLines(tempPath).toList.mkString("\n")
-      if (ProcessorChain2.validateConf(configdata)) {        
+      if (ProcessorChain.validateConf(configdata)) {
         Ok(org.nlp4l.framework.views.html.newjob(configdata, "Successfully uploaded.", ""))
       } else {
         Files.delete(Paths.get(temp.getAbsolutePath))
@@ -232,7 +232,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
   def addRecord(jobId: Int, runId: Int) = Action.async {implicit request =>
     val f: Future[Job] = jobDAO.get(jobId)
     val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
-    val dicAttr: DictionaryAttribute = new ProcessorChain2Builder().dicBuild(job.config)
+    val dicAttr: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
     var cellList: Seq[Cell] = Seq()
     
     val formData: Map[String, Seq[String]]  = request.body.asFormUrlEncoded.getOrElse(Map())
@@ -290,7 +290,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
   def updateRecord(jobId: Int, runId: Int, recordId: Int) = Action {implicit request =>
     val f: Future[Job] = jobDAO.get(jobId)
     val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
-    val dicAttr: DictionaryAttribute = new ProcessorChain2Builder().dicBuild(job.config)
+    val dicAttr: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
     var cellList: Seq[Cell] = Seq()
     var oldCellList: Seq[Cell] = Seq()
     
@@ -483,7 +483,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     
     val f: Future[Job] = jobDAO.get(jobId)
     val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
-    val dic: DictionaryAttribute = new ProcessorChain2Builder().dicBuild(job.config)
+    val dic: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
     
     val res:Dictionary = runDAO.fetch(tableName, job, dic, sort, order, offset, size, filterStr)
     val res2 = res.recordList.map { x:Record => RecordWithAttrbute(x, dic) }
@@ -500,7 +500,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     try {
       val f: Future[Job] = jobDAO.get(jobId)
       val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
-      val dic: DictionaryAttribute = new ProcessorChain2Builder().dicBuild(job.config)
+      val dic: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
       
       val res:Dictionary = runDAO.fetchAllColumn(jobId, runId)
       val res2 = res.recordList.map { x:Record => RecordWithAttrbute(x, dic) }

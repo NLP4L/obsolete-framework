@@ -31,7 +31,7 @@ import org.nlp4l.framework.dao.JobDAO
 import org.nlp4l.framework.dao.RunDAO
 import org.nlp4l.framework.models.CellAttribute
 import org.nlp4l.framework.models.DictionaryAttribute
-import org.nlp4l.framework.processors.ProcessorChain2Builder
+import org.nlp4l.framework.processors.ProcessorChainBuilder
 import org.nlp4l.framework.builtin.Job
 
 @Singleton
@@ -83,7 +83,7 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
   def createJobResultTable(job: Job, runId: Int): (String, String, String) = {
     val jobId = job.jobId.getOrElse(0)
     
-    val dic: DictionaryAttribute = new ProcessorChain2Builder().dicBuild(job.config)
+    val dic: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
     var ths: String = "<th data-field=\"id\" data-formatter=\"RecordIdFormatter\">ID</th>"
     var addtable: String = ""
     dic.cellAttributeList foreach { c: CellAttribute =>

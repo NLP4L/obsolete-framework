@@ -42,7 +42,7 @@ import org.nlp4l.framework.builtin.JobStatus
 import org.nlp4l.framework.builtin.Job
 
 
-class ProcessorChain2 (val chain: List[Processor]) {
+class ProcessorChain (val chain: List[Processor]) {
   private val logger = Logger(this.getClass)
 
   def process(jobDAO: JobDAO, runDAO: RunDAO, jobId: Int, dicAttr: DictionaryAttribute) = {
@@ -62,7 +62,7 @@ class ProcessorChain2 (val chain: List[Processor]) {
           out = head.asInstanceOf[MergeProcessor].merge(dicAttr, out)
         }
         runDAO.updateJobStatus(JobStatus(js.id, js.jobId, js.runId, js.total, js.total-li.size+1))
-        ProcessorChain2.outputResult(jobDAO, runDAO, jobId, runId, dicAttr, out)
+        ProcessorChain.outputResult(jobDAO, runDAO, jobId, runId, dicAttr, out)
       case head :: tail =>
         var out:Option[Dictionary]  = head.execute(data)
         val cname = head.asInstanceOf[AnyRef].getClass.getName
@@ -84,10 +84,10 @@ class ProcessorChain2 (val chain: List[Processor]) {
   }
 }
 
-object ProcessorChain2 {
+object ProcessorChain {
   // Processor
-  private var mapP: Map[Int, ProcessorChain2] = Map()
-  def chainMap: Map[Int, ProcessorChain2] = mapP
+  private var mapP: Map[Int, ProcessorChain] = Map()
+  def chainMap: Map[Int, ProcessorChain] = mapP
   
   // DictionaryAttribute
   private var mapD: Map[Int, DictionaryAttribute] = Map()
@@ -96,7 +96,7 @@ object ProcessorChain2 {
   def loadChain(jobDAO: JobDAO, jobId: Int): Unit = {
     jobDAO.get(jobId).map(
         job => {
-          val pcb = new ProcessorChain2Builder()
+          val pcb = new ProcessorChainBuilder()
            mapP += (jobId -> pcb.procBuild(jobId, job.config).result())
            var dicAttr = pcb.dicBuild(job.config)
 
@@ -130,14 +130,14 @@ object ProcessorChain2 {
   }
   
   
-  def getChain(jobDAO: JobDAO, jobId: Int): ProcessorChain2 = {
+  def getChain(jobDAO: JobDAO, jobId: Int): ProcessorChain = {
     val job = Await.result(jobDAO.get(jobId), scala.concurrent.duration.Duration.Inf)
-    new ProcessorChain2Builder().procBuild(jobId, job.config).result()
+    new ProcessorChainBuilder().procBuild(jobId, job.config).result()
   }
   
   def getDictionaryAttribute(jobDAO: JobDAO, jobId: Int): DictionaryAttribute = {
     val job = Await.result(jobDAO.get(jobId), scala.concurrent.duration.Duration.Inf)
-    val pcb = new ProcessorChain2Builder()
+    val pcb = new ProcessorChainBuilder()
     var dicAttr = pcb.dicBuild(job.config)
 
      // Replay data
@@ -219,11 +219,11 @@ object ProcessorChain2 {
   }
 }
 
-class ProcessorChain2Builder() {
+class ProcessorChainBuilder() {
   val logger = Logger(this.getClass)
   val buf = mutable.ArrayBuffer[Processor]()
 
-  def procBuild(jobId: Int, confStr: String): ProcessorChain2Builder = {
+  def procBuild(jobId: Int, confStr: String): ProcessorChainBuilder = {
     val config = ConfigFactory.parseString(confStr)
 
     config.getConfigList("processors").foreach {
@@ -276,5 +276,5 @@ class ProcessorChain2Builder() {
     constructor.newInstance(buf).asInstanceOf[WrapProcessor]
   }
 
-  def result() = new ProcessorChain2(buf.toList)
+  def result() = new ProcessorChain(buf.toList)
 }
