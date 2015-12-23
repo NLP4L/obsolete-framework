@@ -7,8 +7,8 @@ lazy val commonSettings: Seq[Setting[_]] = Seq(
 lazy val root = (project in file(".")).
   settings(commonSettings: _*).
   settings(
-    name := "framework-library",
-    version := "1.0-SNAPSHOT",
+    name := "NLP4L-framework-library",
+    version := "0.1.0",
     scalacOptions := Seq("-encoding", "UTF-8", "-deprecation", "-unchecked"),
     parallelExecution := true,
     libraryDependencies ++= Seq(
