@@ -39,6 +39,7 @@ import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import play.api.mvc.Action
 import play.api.mvc.Controller
 import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 import org.nlp4l.framework.dao.JobDAO
 import org.nlp4l.framework.dao.RunDAO
 import org.nlp4l.framework.models.Cell
@@ -60,6 +61,7 @@ import org.nlp4l.framework.builtin.Replay
 import org.nlp4l.framework.builtin.JobMessage
 import org.nlp4l.framework.builtin.ActionResult
 import org.nlp4l.framework.builtin.Job
+
 
 
 
@@ -245,7 +247,10 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
               case CellType.IntType => c.toInt(x)
               case CellType.FloatType => c.toFloat(x)
               case CellType.DoubleType => c.toDouble(x)
-              case CellType.DateType => c.toDate(x)
+              case CellType.DateType => {
+                val dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
+                c.toDate(x)
+              }
             }
         } else {
           null
@@ -307,13 +312,23 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     dicAttr.cellAttributeList foreach { c: CellAttribute =>
       val v = formData.get(c.name.toLowerCase()) map { list: Seq[String] =>
         val x:String = list.head
-        c.cellType match {
-            case CellType.StringType => x.toString
-            case CellType.IntType => x.toInt
-            case CellType.FloatType => x.toFloat
-            case CellType.DoubleType => x.toDouble
-            case CellType.DateType => DateTime.parse(x)
-          }
+        if(x != null && x.length() != 0) {
+          c.cellType match {
+              case CellType.StringType => x.toString
+              case CellType.IntType => x.toInt
+              case CellType.FloatType => x.toFloat
+              case CellType.DoubleType => x.toDouble
+              case CellType.DateType => {
+                try {
+                  DateTime.parse(x, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss"))
+                } catch {
+                  case e: IllegalArgumentException => DateTime.parse(x, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS"))
+                }
+              }
+            }
+        } else {
+          null
+        }
       }
       cellList = cellList :+ Cell(c.name.toLowerCase(), v.getOrElse(null))
       
@@ -324,8 +339,16 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
               case CellType.IntType => x.toInt
               case CellType.FloatType => x.toFloat
               case CellType.DoubleType => x.toDouble
-              case CellType.DateType => DateTime.parse(x)
+              case CellType.DateType => {
+                try {
+                  DateTime.parse(x, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss"))
+                } catch {
+                  case e: IllegalArgumentException => DateTime.parse(x, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS"))
+                }
+              }
             }
+        } else {
+          null
         }
       }
       oldCellList = oldCellList :+ Cell(c.name.toLowerCase(), vv.getOrElse(null))

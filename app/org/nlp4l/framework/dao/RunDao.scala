@@ -270,9 +270,23 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
       b.append(s" ${columnName} = ")
       Option(c.value) match {
         case Some(cc) => {
-          b.append("'")
-          b.append(cc.value.toString().replace("'", "\'"))
-          b.append("',")
+          cc.value match {
+            case cv: String  => {
+              b.append("'")
+              b.append(cc.value.toString().replace("'", "\'"))
+              b.append("',")
+            }
+            case cv: DateTime  => {
+              b.append("'")
+              b.append(cc.value.toString())
+              b.append("',")
+            }
+            case _ => {
+              b.append(cc.value.toString())
+              b.append(",")
+            }
+          }
+          
         }
         case None => {
           b.append("null,")
