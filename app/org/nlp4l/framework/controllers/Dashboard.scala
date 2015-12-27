@@ -86,9 +86,11 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     val dic: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
     var ths: String = "<th data-field=\"id\" data-formatter=\"RecordIdFormatter\">ID</th>"
     var addtable: String = ""
+    var addtableHead: String = ""
     dic.cellAttributeList foreach { c: CellAttribute =>
       ths += "<th data-field=\"" + c.name.toLowerCase() + "\" data-filter-control=\"select\" data-filter-data=\"url:/job/result/filterlist/"+jobId+"/"+runId+"/"+c.name.toLowerCase()+"\""
-      addtable += "<th align=\"right\">" + c.name.toLowerCase() + "</th><td><input type=\"text\" class=\"form-control\" id=\"form_" + c.name.toLowerCase() + "\" name=\"" + c.name.toLowerCase() + "\"></td>"
+      addtableHead += "<th>" + c.name.toLowerCase() + "</th>"      
+      addtable += "<td><input type=\"text\" class=\"form-control\" id=\"form_" + c.name.toLowerCase() + "\" name=\"" + c.name.toLowerCase() + "\"></td>"
       c.isSortable match {
         case true => ths += " data-sortable=\"true\""
         case _ => ths += " data-sortable=\"false\""
@@ -124,7 +126,10 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
       <table id="addform" class="table">
         <tbody>
           <tr>
-            <td><button type="submit" id="addrecord-button" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i>Add</button></td>
+            <td rowspan="2"><button type="submit" id="addrecord-button" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i>Add</button></td>
+            ${addtableHead}
+          </tr>
+          <tr>
             ${addtable}
           </tr>
         </tbody>
@@ -137,6 +142,9 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     <form id="editrecord-form" method="post">
       <table id="editform" class="table">
         <tbody>
+          <tr>
+            ${addtableHead}
+          </tr>
           <tr>
             ${addtable}
           </tr>
