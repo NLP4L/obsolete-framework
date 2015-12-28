@@ -25,23 +25,35 @@ abstract class DictionaryAttributeFactory(val settings: Map[String, String]) {
   def getInstance(): DictionaryAttribute
 }
 
-abstract class ConfiguredFactory(val settings: Map[String, String]){
+abstract class ConfiguredFactory(val settings: Map[String, Any]){
   def getStrParamRequired(name: String): String = {
-    settings.apply(name)
+    settings.apply(name).toString
   }
   def getIntParam(name: String, default: Int): Int = {
-    val value = settings.getOrElse(name, default.toString)
-    value.toInt
+    // this is implemented by using cast???
+    //val value = settings.getOrElse(name, default.toString)
+    val value = settings.get(name)
+    value match {
+      case None => default
+      case Some(v: Int) => v
+      case _ => value.get.toString.toInt
+    }
   }
   def getIntParamRequired(name: String): Int = {
-    settings.apply(name).toInt
+    settings.apply(name).toString.toInt
   }
   def getFloatParam(name: String, default: Float): Float = {
-    val value = settings.getOrElse(name, default.toString)
-    value.toFloat
+    // this is implemented by using cast???
+    //val value = settings.getOrElse(name, default.toString)
+    val value = settings.get(name)
+    value match {
+      case None => default
+      case Some(v: String) => v.toFloat
+      case _ => value.get.toString.toFloat
+    }
   }
   def getFloatParamRequired(name: String): Float = {
-    settings.apply(name).toFloat
+    settings.apply(name).toString.toFloat
   }
 }
 
