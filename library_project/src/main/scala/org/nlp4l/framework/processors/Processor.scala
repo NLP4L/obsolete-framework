@@ -25,7 +25,27 @@ abstract class DictionaryAttributeFactory(val settings: Map[String, String]) {
   def getInstance(): DictionaryAttribute
 }
 
-abstract class ProcessorFactory(val settings: Map[String, String]) {
+abstract class ConfiguredFactory(val settings: Map[String, String]){
+  def getStrParamRequired(name: String): String = {
+    settings.apply(name)
+  }
+  def getIntParam(name: String, default: Int): Int = {
+    val value = settings.getOrElse(name, default.toString)
+    value.toInt
+  }
+  def getIntParamRequired(name: String): Int = {
+    settings.apply(name).toInt
+  }
+  def getFloatParam(name: String, default: Float): Float = {
+    val value = settings.getOrElse(name, default.toString)
+    value.toFloat
+  }
+  def getFloatParamRequired(name: String): Float = {
+    settings.apply(name).toFloat
+  }
+}
+
+abstract class ProcessorFactory(settings: Map[String, String]) extends ConfiguredFactory(settings){
   def getInstance(): Processor
 }
 
@@ -49,7 +69,7 @@ trait RecordProcessor {
 /**
  * Validate processor
  */
-abstract class ValidatorFactory(val settings: Map[String, String]) {
+abstract class ValidatorFactory(settings: Map[String, String]) extends ConfiguredFactory(settings){
   def getInstance(): Validator
 }
 trait Validator {
@@ -60,7 +80,7 @@ trait Validator {
 /**
  * Deploy processor
  */
-abstract class DeployerFactory(val settings: Map[String, String]) {
+abstract class DeployerFactory(settings: Map[String, String]) extends ConfiguredFactory(settings){
   def getInstance(): Deployer
 }
 trait Deployer {
