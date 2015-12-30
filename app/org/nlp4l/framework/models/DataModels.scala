@@ -128,7 +128,7 @@ trait CellView {
 case class CellAttribute(
     val name: String,
     val cellType: CellType, // String, Int, Float, Double, DateTime
-    val isEditable: Boolean = false,
+    val isFilterable: Boolean = false,
     val isSortable: Boolean = false
     ) extends CellView {
   
