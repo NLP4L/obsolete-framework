@@ -139,7 +139,7 @@ class JobDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
       create table ${tableName} (
         runId int,
         hashcode int,
-        replay varchar,
+        replay varchar(10),
         modToHashcode int,
         CONSTRAINT u_key_${tableName} UNIQUE (runId, hashcode)
       )

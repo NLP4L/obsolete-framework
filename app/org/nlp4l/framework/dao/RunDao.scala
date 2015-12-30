@@ -144,11 +144,11 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
         case CellType.DateType => b.append(s"  ${columnName} datetime,")
         case CellType.DoubleType => b.append(s"  ${columnName} double,")
         case CellType.FloatType => b.append(s"  ${columnName} float,")
-        case CellType.StringType => b.append(s"  ${columnName} varchar,")
+        case CellType.StringType => b.append(s"  ${columnName} text,")
       }
     }
     b.append(s"  id int not null primary key,")
-    b.append(s"  replay varchar,")
+    b.append(s"  replay varchar(10),")
     b.append(s"  hashcode int")
     b.append(s")")
     val sql: String = b.toString()

@@ -17,6 +17,7 @@
 package org.nlp4l.framework.builtin
 
 import scala.concurrent.Await
+import scala.util.{ Try, Success, Failure }
 import org.nlp4l.framework.dao.JobDAO
 import org.nlp4l.framework.dao.RunDAO
 import org.nlp4l.framework.models.Dictionary
@@ -69,8 +70,12 @@ final class SortProcessor(val key: Option[String], val order: Option[String]) ex
     val tmpRunId: Int = runId + 1000000
     
       dic map { d => {
-        Await.result(runDAO.createTable(jobId, tmpRunId, dicAttr), scala.concurrent.duration.Duration.Inf)
-        runDAO.insertData(jobId, tmpRunId, dicAttr, d)
+        val f1 = runDAO.createTable(jobId, tmpRunId, dicAttr)
+        Await.ready(f1, scala.concurrent.duration.Duration.Inf)
+        f1.value.get match {
+          case Success(n) => runDAO.insertData(jobId, tmpRunId, dicAttr, d)
+          case Failure(ex) => logger.error(ex.getMessage)
+        }
         var newout:Dictionary = runDAO.fetchAll(jobId, tmpRunId, key.getOrElse("id"), order.getOrElse("asc"))
         out = Some(newout)
         runDAO.dropTable(jobId, tmpRunId)
