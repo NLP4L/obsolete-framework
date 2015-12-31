@@ -142,7 +142,7 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
       c.cellType match {
         case CellType.IntType => b.append(s"  ${columnName} int,")
         case CellType.DateType => b.append(s"  ${columnName} datetime,")
-        case CellType.DoubleType => b.append(s"  ${columnName} double,")
+        case CellType.DoubleType => b.append(s"  ${columnName} double precision,")
         case CellType.FloatType => b.append(s"  ${columnName} float,")
         case CellType.StringType => b.append(s"  ${columnName} text,")
       }
@@ -222,8 +222,8 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   def addRecord(jobId: Int, runId: Int, dicAttr: DictionaryAttribute, r: Record): Future[Int]  = {
     val tableName = s"run_${jobId}_${runId}"
 
-    val f: Future[Int] = totalCount(jobId, runId)
-    val n: Int = Await.result(f, scala.concurrent.duration.Duration.Inf) + 1
+    val f: Future[Int] = nextId(jobId, runId)
+    val n: Int = Await.result(f, scala.concurrent.duration.Duration.Inf)
     val hashcode = r.hashCode
     val b = new StringBuffer
     b.append(s"insert into ${tableName} (")
@@ -311,9 +311,14 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     var res: Seq[Int] = Seq()
     (1 to lastRunId) foreach { runId =>
       val tableName = s"run_${jobId}_${runId}"
-      Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf) map { x =>
+      var t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+      if(t == None) {
+        t = Await.result(db.run(MTable.getTables(tableName.toLowerCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+      }
+      t map { x =>
         res = runId +: res
       }
+      
     }
     res
   }
@@ -321,6 +326,10 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
 
   def totalCount(jobId: Int, runId: Int): Future[Int] = {
     db.run(sql"select count(id) as n from run_#${jobId}_#${runId}".as[Int].head)
+  }
+  
+  def nextId(jobId: Int, runId: Int): Future[Int] = {
+    db.run(sql"select max(id)+1 as n from run_#${jobId}_#${runId}".as[Int].head)
   }
 
   def totalCountFilter(jobId: Int, runId: Int, filter: String): Future[Int] = {
@@ -332,7 +341,10 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     var colTypeMap: Map[String, String] = Map()
     var colOrder: Seq[String] = Seq()
     var selectSql = "select"
-    val t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    var t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    if(t == None) {
+      t = Await.result(db.run(MTable.getTables(tableName.toLowerCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    }
     t map { tt =>
       val cols = Await.result(db.run( tt.getColumns ), scala.concurrent.duration.Duration.Inf)
       for (col: MColumn <- cols) {
@@ -373,7 +385,10 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     var colTypeMap: Map[String, String] = Map()
     var colOrder: Seq[String] = Seq()
     var selectSql = "select"
-    val t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    var t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    if(t == None) {
+      t = Await.result(db.run(MTable.getTables(tableName.toLowerCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    }
     t map { tt =>
       val cols = Await.result(db.run( tt.getColumns ), scala.concurrent.duration.Duration.Inf)
       for (col: MColumn <- cols) {
@@ -418,7 +433,10 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     var colTypeMap: Map[String, String] = Map()
     var colOrder: Seq[String] = Seq()
     var selectSql = "select"
-    val t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    var t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    if(t == None) {
+      t = Await.result(db.run(MTable.getTables(tableName.toLowerCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    }
     t map { tt =>
       val cols = Await.result(db.run( tt.getColumns ), scala.concurrent.duration.Duration.Inf)
       for (col: MColumn <- cols) {
@@ -463,7 +481,10 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   def fetchRecordData(jobId: Int, runId: Int, recordId: Int): Map[String, Any] = {
     val tableName = s"run_${jobId}_${runId}"
     var selectSql = "select"
-    val t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    var t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    if(t == None) {
+      t = Await.result(db.run(MTable.getTables(tableName.toLowerCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    }
     t map { tt =>
       val cols = Await.result(db.run( tt.getColumns ), scala.concurrent.duration.Duration.Inf)
       for (col: MColumn <- cols) {
@@ -493,7 +514,10 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   def fetchRecordHashcode(jobId: Int, runId: Int, recordId: Int): Int = {
     val tableName = s"run_${jobId}_${runId}"
     var selectSql = "select"
-    val t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    var t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    if(t == None) {
+      t = Await.result(db.run(MTable.getTables(tableName.toLowerCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    }
     t map { tt =>
       val cols = Await.result(db.run( tt.getColumns ), scala.concurrent.duration.Duration.Inf)
       for (col: MColumn <- cols) {
@@ -515,7 +539,10 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     var colTypeMap: Map[String, String] = Map()
     var colOrder: Seq[String] = Seq()
     var selectSql = "select"
-    val t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    var t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    if(t == None) {
+      t = Await.result(db.run(MTable.getTables(tableName.toLowerCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    }
     t map { tt =>
       val cols = Await.result(db.run( tt.getColumns ), scala.concurrent.duration.Duration.Inf)
       for (col: MColumn <- cols) {
