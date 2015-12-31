@@ -21,6 +21,8 @@
   function StatusFormatter(value, row){
 	if(value == "Running") {
 		return "<h4><span class=\"label label-warning\">"+value+"</span></h4>"
+	} else if(value == "Error") {
+		return "<h4><span class=\"label label-danger\">"+value+"</span></h4>"
 	} else {
 		return "<h4><span class=\"label label-success\">"+value+"</span></h4>"
 	}
@@ -55,6 +57,7 @@
               <th data-field="runId">RunID</th>
               <th data-field="total">Total</th>
               <th data-field="done">Done</th>
+              <th data-field="message">Message</th>
             </tr>
           </thead>
         </table>

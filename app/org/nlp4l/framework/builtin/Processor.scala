@@ -74,7 +74,7 @@ final class SortProcessor(val key: Option[String], val order: Option[String]) ex
         Await.ready(f1, scala.concurrent.duration.Duration.Inf)
         f1.value.get match {
           case Success(n) => runDAO.insertData(jobId, tmpRunId, dicAttr, d)
-          case Failure(ex) => logger.error(ex.getMessage)
+          case Failure(ex) => throw(ex)
         }
         var newout:Dictionary = runDAO.fetchAll(jobId, tmpRunId, key.getOrElse("id"), order.getOrElse("asc"))
         out = Some(newout)

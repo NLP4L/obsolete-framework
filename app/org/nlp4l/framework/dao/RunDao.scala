@@ -50,7 +50,8 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     def runId = column[Int]("RUNID")
     def total = column[Int]("TOTAL")
     def done = column[Int]("DONE")
-    def * = (id.?, jobId, runId, total, done) <> (JobStatus.tupled, JobStatus.unapply)
+    def message = column[String]("MESSAGE")
+    def * = (id.?, jobId, runId, total, done, message) <> (JobStatus.tupled, JobStatus.unapply)
   }
 
   val jobStatus = TableQuery[JobStatusTable]
