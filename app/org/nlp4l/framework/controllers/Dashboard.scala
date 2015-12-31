@@ -89,7 +89,7 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     var addtableHead: String = ""
     dic.cellAttributeList foreach { c: CellAttribute =>
       c.isFilterable match {
-        case true => ths += "<th data-field=\"" + c.name.toLowerCase() + "\" data-filter-control=\"select\" data-filter-data=\"url:/job/result/filterlist/"+jobId+"/"+runId+"/"+c.name.toLowerCase()+"\""
+        case true => ths += "<th data-field=\"" + c.name.toLowerCase() + "\" data-filter-control=\"input\""
         case _ =>    ths += "<th data-field=\"" + c.name.toLowerCase() + "\""
       }
       addtableHead += "<th>" + c.name.toLowerCase() + "</th>"      
