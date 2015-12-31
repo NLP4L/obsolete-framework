@@ -216,7 +216,10 @@ class JobDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     var colTypeMap: Map[String, String] = Map()
     var colOrder: Seq[String] = Seq()
     var selectSql = "select"
-    val t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    var t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    if(t == None) {
+      t = Await.result(db.run(MTable.getTables(tableName.toLowerCase()).headOption ), scala.concurrent.duration.Duration.Inf)
+    }
     t map { tt =>
       val cols = Await.result(db.run( tt.getColumns ), scala.concurrent.duration.Duration.Inf)
       
