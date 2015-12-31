@@ -20,6 +20,7 @@ import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.JavaConversions.asScalaSet
 import scala.collection.mutable
 import scala.concurrent.Await
+import scala.util.{ Try, Success, Failure }
 import scala.collection.convert.WrapAsScala._
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
@@ -85,6 +86,8 @@ class ProcessorChain (val chain: List[Processor]) {
 }
 
 object ProcessorChain {
+  private val logger = Logger(this.getClass)
+  
   // Processor
   private var mapP: Map[Int, ProcessorChain] = Map()
   def chainMap: Map[Int, ProcessorChain] = mapP
@@ -147,11 +150,6 @@ object ProcessorChain {
        val runId: Int = hd._1
        val hashcode: Int = hd._2
        jobDAO.fetchRecordByHashcode(jobId, runId, hashcode) map { rec: Record =>
-         
-         println("addedRecordList")
-         println("result  hashcode="+rec.hashCode)
-         println(rec)
-         
          addedRecordList += (hashcode -> rec)
        }
      }
@@ -176,9 +174,17 @@ object ProcessorChain {
   def outputResult(jobDAO: JobDAO, runDAO: RunDAO, jobId: Int, runId: Int, dicAttr: DictionaryAttribute, dic: Option[Dictionary]): Unit = {
     jobDAO.get(jobId) map {job: Job =>
       dic map { d =>
-        runDAO.dropTable(jobId, runId)
-        runDAO.createTable(jobId, runId, dicAttr) map {n =>
-          runDAO.insertData(jobId, runId, dicAttr, d)
+        val f1 = runDAO.dropTable(jobId, runId)
+        Await.ready(f1, scala.concurrent.duration.Duration.Inf)
+        f1.value.get match {
+          case Success(n) => n
+          case Failure(ex) => logger.debug(ex.getMessage)
+        }
+        val f2 = runDAO.createTable(jobId, runId, dicAttr)
+        Await.ready(f2, scala.concurrent.duration.Duration.Inf)
+        f2.value.get match {
+          case Success(n) => runDAO.insertData(jobId, runId, dicAttr, d)
+          case Failure(ex) => logger.error(ex.getMessage)
         }
       }
     }
