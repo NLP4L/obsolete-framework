@@ -15,6 +15,7 @@ libraryDependencies ++= Seq(
   specs2 % Test,
   "com.typesafe.play" %% "play-slick" % "1.1.0",
   "mysql" % "mysql-connector-java" % "5.1.38",
+  "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
   "org.apache.lucene" % "lucene-suggest" % "5.2.1",
   "org.apache.solr" % "solr-solrj" % "5.2.1",
   "org.apache.opennlp" % "opennlp-tools" % "1.6.0",
