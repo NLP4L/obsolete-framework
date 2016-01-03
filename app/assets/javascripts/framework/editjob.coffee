@@ -71,5 +71,6 @@ $ ->
       url: url,
       type: 'POST',
       success: (data) ->
-        location.reload()
+        jump = '/dashboard/job/status'
+        location.replace(jump)
 
