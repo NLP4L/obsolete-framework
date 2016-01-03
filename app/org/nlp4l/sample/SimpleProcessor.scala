@@ -1,9 +1,25 @@
-package org.nlp4l.sample
+/*
+ * Copyright 2015 org.NLP4L
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import scala.collection.mutable
+package org.nlp4l.sample
 
 import org.nlp4l.framework.processors._
 import org.nlp4l.framework.models._
+
+import scala.collection.mutable.ListBuffer
 
 /**
  * NLP4L framework Processor sample
@@ -52,18 +68,18 @@ class SimpleProcessor(val param1: Option[String], val param2: Option[String]) ex
     val rcrd02 = Record(Seq(Cell("cell01", param1.getOrElse("0002")), Cell("cell02", null), Cell("cell03", null), Cell("cell02_check", null), Cell("cell04", null)))
     data match {
       case Some(dic) => {
-        var ss: Seq[Record] = dic.recordList
+        val ss = dic.recordList.toBuffer
         (ss.size+1 to ss.size+20).toList.foreach { n=>
           val rcrd = Record(Seq(Cell("cell01", n.toString()), Cell("cell02", n), Cell("cell03", n.toDouble), Cell("cell02_check", null), Cell("cell04", n.toFloat)))
-          ss = ss :+ rcrd
+          ss += rcrd
         }
         Some(Dictionary(ss))
       }
       case None => {
-        var ss: Seq[Record] = Seq(rcrd01, rcrd02)
+        val ss = ListBuffer(rcrd01, rcrd02)
         (1 to 20).toList.foreach { n=>
           val rcrd = Record(Seq(Cell("cell01", n.toString()), Cell("cell02", n), Cell("cell03", n.toDouble), Cell("cell02_check", null), Cell("cell04", n.toFloat)))
-          ss = ss :+ rcrd
+          ss += rcrd
         }
         val dic = Dictionary(ss)
         Some(dic)
