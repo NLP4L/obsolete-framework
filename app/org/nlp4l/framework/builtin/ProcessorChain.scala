@@ -50,33 +50,43 @@ class ProcessorChain (val chain: List[Processor]) {
     val job = Await.result(jobDAO.get(jobId), scala.concurrent.duration.Duration.Inf)
     val runId = job.lastRunId + 1
     jobDAO.update(Job(job.jobId, job.name, job.config, runId, Some(new DateTime()), job.lastDeployAt))
-    def loop(li: List[Processor], js: JobStatus, data:Option[Dictionary] = None): Unit = li match {
-      case Nil => ()
-      case head :: Nil =>
-        var out: Option[Dictionary] = head.execute(data)
-        val cname = head.asInstanceOf[AnyRef].getClass.getName
-        if(cname == Constants.SORTPROCESSOR_CLASS) {
-          out = head.asInstanceOf[SortProcessor].sort(jobDAO, runDAO, jobId, runId, dicAttr, out)
-        } else if(cname == Constants.REPLAYPROCESSOR_CLASS) {
-          out = head.asInstanceOf[ReplayProcessor].replay(jobDAO, runDAO, jobId, dicAttr, out)
-        } else if(cname == Constants.MERGEPROCESSOR_CLASS) {
-          out = head.asInstanceOf[MergeProcessor].merge(dicAttr, out)
+    def loop(li: List[Processor], js: JobStatus, data:Option[Dictionary] = None): Unit = {
+      try {
+        li match {
+          case Nil => ()
+          case head :: Nil =>
+            var out: Option[Dictionary] = head.execute(data)
+            val cname = head.asInstanceOf[AnyRef].getClass.getName
+            if(cname == Constants.SORTPROCESSOR_CLASS) {
+              out = head.asInstanceOf[SortProcessor].sort(jobDAO, runDAO, jobId, runId, dicAttr, out)
+            } else if(cname == Constants.REPLAYPROCESSOR_CLASS) {
+              out = head.asInstanceOf[ReplayProcessor].replay(jobDAO, runDAO, jobId, dicAttr, out)
+            } else if(cname == Constants.MERGEPROCESSOR_CLASS) {
+              out = head.asInstanceOf[MergeProcessor].merge(dicAttr, out)
+            }
+            runDAO.updateJobStatus(JobStatus(js.id, js.jobId, js.runId, js.total, js.total-li.size+1))
+            ProcessorChain.outputResult(jobDAO, runDAO, jobId, runId, dicAttr, out)
+          case head :: tail =>
+            var out:Option[Dictionary]  = head.execute(data)
+            val cname = head.asInstanceOf[AnyRef].getClass.getName
+            if(cname == Constants.SORTPROCESSOR_CLASS) {
+              out = head.asInstanceOf[SortProcessor].sort(jobDAO, runDAO, jobId, runId, dicAttr, out)
+            } else if(cname == Constants.REPLAYPROCESSOR_CLASS) {
+              out = head.asInstanceOf[ReplayProcessor].replay(jobDAO, runDAO, jobId, dicAttr, out)
+            } else if(cname == Constants.MERGEPROCESSOR_CLASS) {
+              out = head.asInstanceOf[MergeProcessor].merge(dicAttr, out)
+            }
+            val newjs = JobStatus(js.id, js.jobId, js.runId, js.total, js.total-li.size+1)
+            runDAO.updateJobStatus(newjs)
+            loop(tail, newjs, out)
         }
-        runDAO.updateJobStatus(JobStatus(js.id, js.jobId, js.runId, js.total, js.total-li.size+1))
-        ProcessorChain.outputResult(jobDAO, runDAO, jobId, runId, dicAttr, out)
-      case head :: tail =>
-        var out:Option[Dictionary]  = head.execute(data)
-        val cname = head.asInstanceOf[AnyRef].getClass.getName
-        if(cname == Constants.SORTPROCESSOR_CLASS) {
-          out = head.asInstanceOf[SortProcessor].sort(jobDAO, runDAO, jobId, runId, dicAttr, out)
-        } else if(cname == Constants.REPLAYPROCESSOR_CLASS) {
-          out = head.asInstanceOf[ReplayProcessor].replay(jobDAO, runDAO, jobId, dicAttr, out)
-        } else if(cname == Constants.MERGEPROCESSOR_CLASS) {
-          out = head.asInstanceOf[MergeProcessor].merge(dicAttr, out)
+      } catch {
+        case e: Exception => {
+          val errjs = JobStatus(js.id, js.jobId, js.runId, js.total, -js.done, e.getMessage)
+          runDAO.updateJobStatus(errjs)
+          logger.error(e.getMessage)
         }
-        val newjs = JobStatus(js.id, js.jobId, js.runId, js.total, js.total-li.size+1)
-        runDAO.updateJobStatus(newjs)
-        loop(tail, newjs, out)
+      }
     }
     val js = JobStatus(None, jobId, runId, chain.size, 0)
     runDAO.insertJobStatus(js) map {newjs =>
@@ -184,7 +194,7 @@ object ProcessorChain {
         Await.ready(f2, scala.concurrent.duration.Duration.Inf)
         f2.value.get match {
           case Success(n) => runDAO.insertData(jobId, runId, dicAttr, d)
-          case Failure(ex) => logger.error(ex.getMessage)
+          case Failure(ex) => throw(ex)
         }
       }
     }

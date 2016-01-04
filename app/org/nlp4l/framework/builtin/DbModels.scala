@@ -47,7 +47,7 @@ case class Job(jobId: Option[Int], name: String, config: String, lastRunId: Int,
 /**
  * Job Status Table
  */
-case class JobStatus(id: Option[Int], jobId: Int, runId: Int, total: Int, done: Int)
+case class JobStatus(id: Option[Int], jobId: Int, runId: Int, total: Int, done: Int, message: String = "")
 
 
 /**
@@ -116,13 +116,15 @@ object DbModels {
   
   implicit val fWJobStatusWrites = new Writes[JobStatus] {
     override def writes(js: JobStatus): JsValue = {
-      val status: String = if(js.total == js.done) { "Done" } else {"Running" }
+      var status: String = if(js.total == js.done) { "Done" } else {"Running" }
+      if(js.done < 0) status = "Error"
       Json.obj(
         "status" -> status,
         "jobId" -> js.jobId,
         "runId" -> js.runId,
         "total" -> js.total,
-        "done" -> js.done)
+        "done" -> js.done,
+        "message" -> js.message)
     }
   }
 
