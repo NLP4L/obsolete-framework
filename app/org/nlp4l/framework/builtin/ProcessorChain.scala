@@ -143,9 +143,20 @@ object ProcessorChain {
   }
   
   
-  def getChain(jobDAO: JobDAO, jobId: Int): ProcessorChain = {
+  def getChain(jobDAO: JobDAO, runDAO: RunDAO, jobId: Int): ProcessorChain = {
     val job = Await.result(jobDAO.get(jobId), scala.concurrent.duration.Duration.Inf)
-    new ProcessorChainBuilder().procBuild(jobId, job.config).result()
+    try {
+      val pc = new ProcessorChainBuilder().procBuild(jobId, job.config).result()
+      pc
+    } catch {
+      case e: Exception => {
+        val runId = job.lastRunId + 1
+        val errjs = JobStatus(None, jobId, runId, 0, -1, e.getMessage)
+        runDAO.insertJobStatus(errjs)
+        logger.error(e.getMessage)
+        null
+      }
+    }
   }
   
   def getDictionaryAttribute(jobDAO: JobDAO, jobId: Int): DictionaryAttribute = {
@@ -228,7 +239,7 @@ object ProcessorChain {
       }
     } catch {
       case e: Exception => {
-        println(e.getMessage)
+        logger.error(e.getMessage)
         false
       }
     }
@@ -244,7 +255,6 @@ class ProcessorChainBuilder() {
 
     config.getConfigList("processors").foreach {
       pConf =>
-        try {
           val className = pConf.getString("class")
           if(className == Constants.WRAPPROCESSOR_CLASS) {
             buf += wrapBuild(pConf)
@@ -258,9 +268,6 @@ class ProcessorChainBuilder() {
             val p = facP.getInstance()
             buf += p
           }
-        } catch {
-          case e: Exception => logger.error(e.getMessage, e)
-        }
     }
     this
   }
