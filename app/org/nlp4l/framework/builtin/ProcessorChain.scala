@@ -250,7 +250,10 @@ class ProcessorChainBuilder() {
             buf += wrapBuild(pConf)
           } else {
             val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-            val settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+            var settings: Map[String, Object] = Map()
+            if(pConf.hasPath("settings")) {
+              settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+            }
             val facP = constructor.newInstance(settings).asInstanceOf[ProcessorFactory]
             val p = facP.getInstance()
             buf += p
@@ -267,7 +270,10 @@ class ProcessorChainBuilder() {
     val pConf = config.getConfigList("dictionary").get(0)
     val className = pConf.getString("class")
     val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-    val settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+    var settings: Map[String, Object] = Map()
+    if(pConf.hasPath("settings")) {
+      settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+    }
     val facP = constructor.newInstance(settings).asInstanceOf[DictionaryAttributeFactory]
     facP.getInstance()
   }
@@ -279,7 +285,10 @@ class ProcessorChainBuilder() {
     try {
       val className = pConf.getString("class")
       val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-      val settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+      var settings: Map[String, Object] = Map()
+      if(pConf.hasPath("settings")) {
+        settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+      }
       val facP = constructor.newInstance(settings).asInstanceOf[RecordProcessorFactory]
       val p = facP.getInstance()
       buf = buf :+ p
