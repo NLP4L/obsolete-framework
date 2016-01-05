@@ -32,28 +32,44 @@ abstract class ConfiguredFactory(val settings: Map[String, Any]){
   def getIntParam(name: String, default: Int): Int = {
     // this is implemented by using cast???
     //val value = settings.getOrElse(name, default.toString)
-    val value = settings.get(name)
-    value match {
+    settings.get(name) match {
       case None => default
       case Some(v: Int) => v
-      case _ => value.get.toString.toInt
+      case a => a.get.toString.toInt
     }
   }
   def getIntParamRequired(name: String): Int = {
     settings.apply(name).toString.toInt
   }
+  def getLongParam(name: String, default: Long): Long = {
+    settings.get(name) match {
+      case None => default
+      case Some(v: Int) => v.toLong
+      case Some(v: Long) => v
+      case a => a.get.toString.toLong
+    }
+  }
+  def getLongParamRequired(name: String): Long = {
+    settings.apply(name).toString.toLong
+  }
   def getFloatParam(name: String, default: Float): Float = {
-    // this is implemented by using cast???
-    //val value = settings.getOrElse(name, default.toString)
-    val value = settings.get(name)
-    value match {
+    settings.get(name) match {
       case None => default
       case Some(v: String) => v.toFloat
-      case _ => value.get.toString.toFloat
+      case a => a.get.toString.toFloat
     }
   }
   def getFloatParamRequired(name: String): Float = {
     settings.apply(name).toString.toFloat
+  }
+  def getBoolParam(name: String, default: Boolean): Boolean = {
+    settings.get(name) match {
+      case None => default
+      case a => a.get.toString.toBoolean
+    }
+  }
+  def getBoolParamRequired(name: String): Boolean = {
+    settings.apply(name).toString.toBoolean
   }
 }
 
