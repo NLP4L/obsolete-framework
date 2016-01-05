@@ -83,7 +83,10 @@ class ValidatorChainBuilder() {
         try {
           val className = pConf.getString("class")
           val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-          val settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+          var settings: Map[String, Object] = Map()
+          if(pConf.hasPath("settings")) {
+            settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+          }
           val facP = constructor.newInstance(settings).asInstanceOf[ValidatorFactory]
           val p:Validator = facP.getInstance()
           buf += p
