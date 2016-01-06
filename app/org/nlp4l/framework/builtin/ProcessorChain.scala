@@ -154,7 +154,7 @@ object ProcessorChain {
         val errjs = JobStatus(None, jobId, runId, 0, -1, e.getMessage)
         runDAO.insertJobStatus(errjs)
         logger.error(e.getMessage)
-        null
+        throw e
       }
     }
   }

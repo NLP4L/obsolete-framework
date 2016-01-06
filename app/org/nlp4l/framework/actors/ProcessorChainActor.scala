@@ -29,7 +29,7 @@ class ProcessorChainActor @Inject()(jobDAO: JobDAO, runDAO: RunDAO) extends Acto
   override def receive: Receive = {
     case JobMessage(jobId) =>
       val dicAttr = ProcessorChain.getDictionaryAttribute(jobDAO, jobId)
-      val chain = ProcessorChain.getChain(jobDAO, jobId)
+      val chain = ProcessorChain.getChain(jobDAO, runDAO, jobId)
       chain.process(jobDAO, runDAO, jobId, dicAttr)
   }
 }
