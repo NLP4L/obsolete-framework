@@ -117,7 +117,7 @@ object DbModels {
   implicit val fWJobStatusWrites = new Writes[JobStatus] {
     override def writes(js: JobStatus): JsValue = {
       var status: String = if(js.total == js.done) { "Done" } else {"Running" }
-      if(js.done < 0) status = "Error"
+      if(js.message != null && !js.message.isEmpty()) status = "Error"
       Json.obj(
         "status" -> status,
         "jobId" -> js.jobId,

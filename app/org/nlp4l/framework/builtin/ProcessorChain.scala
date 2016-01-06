@@ -82,7 +82,7 @@ class ProcessorChain (val chain: List[Processor]) {
         }
       } catch {
         case e: Exception => {
-          val errjs = JobStatus(js.id, js.jobId, js.runId, js.total, -js.done, e.getMessage)
+          val errjs = JobStatus(js.id, js.jobId, js.runId, js.total, js.done, e.getMessage)
           runDAO.updateJobStatus(errjs)
           logger.error(e.getMessage)
         }
@@ -151,7 +151,7 @@ object ProcessorChain {
     } catch {
       case e: Exception => {
         val runId = job.lastRunId + 1
-        val errjs = JobStatus(None, jobId, runId, 0, -1, e.getMessage)
+        val errjs = JobStatus(None, jobId, runId, 0, 0, e.getMessage)
         runDAO.insertJobStatus(errjs)
         logger.error(e.getMessage)
         throw e
