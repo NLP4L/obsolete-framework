@@ -21,7 +21,7 @@ import org.nlp4l.framework.models.DictionaryAttribute
 import org.nlp4l.framework.models.Record
 
 
-abstract class DictionaryAttributeFactory(val settings: Map[String, String]) {
+abstract class DictionaryAttributeFactory(settings: Map[String, String]) extends ConfiguredFactory(settings){
   def getInstance(): DictionaryAttribute
 }
 
@@ -77,7 +77,7 @@ abstract class ProcessorFactory(settings: Map[String, String]) extends Configure
   def getInstance(): Processor
 }
 
-abstract class RecordProcessorFactory(val settings: Map[String, String]) {
+abstract class RecordProcessorFactory(settings: Map[String, String]) extends ConfiguredFactory(settings){
   def getInstance(): RecordProcessor
 }
 
