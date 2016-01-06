@@ -174,6 +174,7 @@ object ProcessorChain {
      }
      dicAttr.addedRecordList = addedRecordList
      dicAttr.modifiedRecordList = modifiedRecordList
+     dicAttr.deletedRecordList = jobDAO.fetchReplayOfDel(jobId)
 
      dicAttr
   }
