@@ -24,6 +24,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.UUID
 import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -235,7 +236,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     val f: Future[Job] = jobDAO.get(jobId)
     val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
     val dicAttr: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
-    var cellList: Seq[Cell] = Seq()
+    val cellList = ListBuffer.empty[Cell]
     
     val formData: Map[String, Seq[String]]  = request.body.asFormUrlEncoded.getOrElse(Map())
     dicAttr.cellAttributeList foreach { c: CellAttribute =>
@@ -256,7 +257,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
           null
         }
       }
-      cellList = cellList :+ Cell(c.name.toLowerCase(), v.getOrElse(null))
+      cellList += Cell(c.name.toLowerCase(), v.getOrElse(null))
     }
     val r = Record(cellList)
     val hashcode: Int = r.hashCode
@@ -296,9 +297,9 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     val f: Future[Job] = jobDAO.get(jobId)
     val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
     val dicAttr: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
-    var cellList: Seq[Cell] = Seq()
-    var oldCellList: Seq[Cell] = Seq()
-    
+    val cellList = ListBuffer.empty[Cell]
+    val oldCellList = ListBuffer.empty[Cell]
+
     val formData: Map[String, Seq[String]]  = request.body.asFormUrlEncoded.getOrElse(Map())
     val oldRecordMap = runDAO.fetchRecordData(jobId, runId, recordId)
     val d = for {m <- oldRecordMap} yield { 
@@ -330,7 +331,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
           null
         }
       }
-      cellList = cellList :+ Cell(c.name.toLowerCase(), v.getOrElse(null))
+      cellList += Cell(c.name.toLowerCase(), v.getOrElse(null))
       
       val vv = d.get(c.name.toLowerCase()) map { x =>
         if(x != null) {
@@ -351,7 +352,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
           null
         }
       }
-      oldCellList = oldCellList :+ Cell(c.name.toLowerCase(), vv.getOrElse(null))
+      oldCellList += Cell(c.name.toLowerCase(), vv.getOrElse(null))
     }
     val newr = Record(cellList)
     val oldr = Record(oldCellList)

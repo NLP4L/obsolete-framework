@@ -111,7 +111,7 @@ object ProcessorChain {
         job => {
           val pcb = new ProcessorChainBuilder()
            mapP += (jobId -> pcb.procBuild(jobId, job.config).result())
-           var dicAttr = pcb.dicBuild(job.config)
+           val dicAttr = pcb.dicBuild(job.config)
 
            // Replay data
            var addedRecordList: Map[Int, Record] = Map()
@@ -162,7 +162,7 @@ object ProcessorChain {
   def getDictionaryAttribute(jobDAO: JobDAO, jobId: Int): DictionaryAttribute = {
     val job = Await.result(jobDAO.get(jobId), scala.concurrent.duration.Duration.Inf)
     val pcb = new ProcessorChainBuilder()
-    var dicAttr = pcb.dicBuild(job.config)
+    val dicAttr = pcb.dicBuild(job.config)
 
      // Replay data
      var addedRecordList: Map[Int, Record] = Map()

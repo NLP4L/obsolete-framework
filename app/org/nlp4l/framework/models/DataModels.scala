@@ -21,6 +21,8 @@ import java.util.Date
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 
+import scala.collection.mutable.ListBuffer
+
 /**
  * Data unit
  */
@@ -67,13 +69,13 @@ case class Record (
    * Merge two record having same cell value of key with glue string 
    */
   def merge(key: String, glue:String, that:Record): Record = {
-    var celllist: Seq[Cell] = Seq()
+    val celllist = ListBuffer.empty[Cell]
     this.cellList foreach { thisCell =>
       val thatCell = that.cellList.filter(_.name == thisCell.name).head
       if(thisCell.name == key) {
-        celllist = celllist :+ thisCell
+        celllist += thisCell
       } else {
-        celllist = celllist :+ thisCell.merge(thatCell, glue)
+        celllist += thisCell.merge(thatCell, glue)
       }
     }
     Record(celllist)

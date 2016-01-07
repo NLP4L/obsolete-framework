@@ -19,6 +19,7 @@
  */
 package org.nlp4l.framework.dao
 
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -172,35 +173,35 @@ class JobDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   
   def fetchReplayOfAdd(jobId: Int): List[(Int, Int)] = {
     val tableName = s"replay_${jobId}"
-    var ss: List[(Int, Int)] = List()
+    val ss = ListBuffer.empty[(Int, Int)]
     val selectSql = s"select runId, hashcode from ${tableName} where replay='ADD'"
     val r = Await.result(db.run(sql"#$selectSql".as[(Int, Int)]), scala.concurrent.duration.Duration.Inf)
     r foreach { rr:(Int, Int) =>
-      ss = ss :+ rr
+      ss += rr
     }
-    ss
+    ss.toList
   }
   
   def fetchReplayOfDel(jobId: Int): List[Int] = {
     val tableName = s"replay_${jobId}"
-    var ss: List[Int] = List()
+    val ss = ListBuffer.empty[Int]
     val selectSql = s"select hashcode from ${tableName} where replay='DEL'"
     val r = Await.result(db.run(sql"#$selectSql".as[Int]), scala.concurrent.duration.Duration.Inf)
     r foreach { rr:Int =>
-      ss = ss :+ rr
+      ss += rr
     }
-    ss
+    ss.toList
   }
   
   def fetchReplayOfMod(jobId: Int): List[(Int, Int, Int)] = {
     val tableName = s"replay_${jobId}"
-    var ss: List[(Int, Int, Int)] = List()
+    val ss = ListBuffer.empty[(Int, Int, Int)]
     val selectSql = s"select runId, hashcode, modToHashcode from ${tableName} where replay='MOD'"
     val r = Await.result(db.run(sql"#$selectSql".as[(Int, Int, Int)]), scala.concurrent.duration.Duration.Inf)
     r foreach { rr:(Int, Int, Int) =>
-      ss = ss :+ rr
+      ss += rr
     }
-    ss
+    ss.toList
   }
   
   def insertReplay(jobId: Int, r: Replay): Future[Int] = {
@@ -214,7 +215,7 @@ class JobDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   def fetchRecordByHashcode(jobId: Int, runId: Int, hashcode: Int): Option[Record] = {
     val tableName = s"run_${jobId}_${runId}"
     var colTypeMap: Map[String, String] = Map()
-    var colOrder: Seq[String] = Seq()
+    val colOrder = ListBuffer.empty[String]
     var selectSql = "select"
     var t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
     if(t == None) {
@@ -228,7 +229,7 @@ class JobDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
         if(colname != "replay" && colname != "id" && colname != "hashcode") {
           selectSql += s" ${col.name.toLowerCase()},"
           colTypeMap += (col.name.toLowerCase() -> col.sqlTypeName.getOrElse(""))
-          colOrder = colOrder :+ col.name.toLowerCase()
+          colOrder += col.name.toLowerCase()
         }
       }
       selectSql = selectSql.stripSuffix(",")
@@ -238,19 +239,19 @@ class JobDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     val r = Await.result(db.run(sql"#$selectSql".as[Map[String, Any]].headOption), scala.concurrent.duration.Duration.Inf)
     r match {
       case Some(rr) => {
-        var cells: Seq[Cell] = Seq()
+        val cells = ListBuffer.empty[Cell]
         colOrder foreach { colName: String =>
           val v: Any = rr.getOrElse(colName, null)
           if(v != null) {
             colTypeMap.get(colName) match {
-                case Some("INTEGER") => cells = cells :+ Cell(colName, v.asInstanceOf[String].toInt)
-                case Some("DOUBLE") => cells = cells :+ Cell(colName, v.asInstanceOf[String].toDouble)
-                case Some("FLOAT") => cells = cells :+ Cell(colName, v.asInstanceOf[String].toFloat)
-                case Some("DATE") => cells = cells :+ Cell(colName, DateTime.parse(v.asInstanceOf[String]))
-                case _ => cells = cells :+ Cell(colName, v.asInstanceOf[String])
+                case Some("INTEGER") => cells += Cell(colName, v.asInstanceOf[String].toInt)
+                case Some("DOUBLE") => cells += Cell(colName, v.asInstanceOf[String].toDouble)
+                case Some("FLOAT") => cells += Cell(colName, v.asInstanceOf[String].toFloat)
+                case Some("DATE") => cells += Cell(colName, DateTime.parse(v.asInstanceOf[String]))
+                case _ => cells += Cell(colName, v.asInstanceOf[String])
             }
           } else {
-            cells = cells :+ Cell(colName, null)
+            cells += Cell(colName, null)
           }
         }
         Some(Record(cells))
