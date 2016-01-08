@@ -79,3 +79,7 @@ slick.dbs.default.db.password=""
 play.http.parser.maxMemoryBuffer=1024k
 play.modules.enabled += "org.nlp4l.framework.actors.modules.FrameworkModule"
 
+#akka {
+#  loggers = ["akka.event.slf4j.Slf4jLogger"]
+#  loglevel="DEBUG"
+#}
