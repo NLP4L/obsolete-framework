@@ -16,6 +16,7 @@
 
 package org.nlp4l.framework.dao
 
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -309,7 +310,7 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   }
   
   def selectRunList(jobId: Int, lastRunId: Int): Seq[Int]  = {
-    var res: Seq[Int] = Seq()
+    val res = ListBuffer.empty[Int]
     (1 to lastRunId) foreach { runId =>
       val tableName = s"run_${jobId}_${runId}"
       var t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
@@ -317,7 +318,7 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
         t = Await.result(db.run(MTable.getTables(tableName.toLowerCase()).headOption ), scala.concurrent.duration.Duration.Inf)
       }
       t map { x =>
-        res = runId +: res
+        runId +=: res
       }
       
     }
@@ -338,10 +339,10 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   }
   
   def fetch(tableName: String, job: Job, dic: DictionaryAttribute, sort: String, order: String, offset: Int = 0, size: Int = 10, filter: String): Dictionary = {
-    var ss: Seq[Record] = Seq()
+    val ss = ListBuffer.empty[Record]
     var colTypeMap: Map[String, String] = Map()
-    var colOrder: Seq[String] = Seq()
-    var selectSql = "select"
+    val colOrder = ListBuffer.empty[String]
+    val selectSql = new StringBuilder("select")
     var t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
     if(t == None) {
       t = Await.result(db.run(MTable.getTables(tableName.toLowerCase()).headOption ), scala.concurrent.duration.Duration.Inf)
@@ -349,31 +350,31 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     t map { tt =>
       val cols = Await.result(db.run( tt.getColumns ), scala.concurrent.duration.Duration.Inf)
       for (col: MColumn <- cols) {
-        selectSql += s" ${col.name.toLowerCase()},"
+        selectSql append s" ${col.name.toLowerCase()},"
         colTypeMap += (col.name.toLowerCase() -> col.sqlTypeName.getOrElse(""))
-        colOrder = colOrder :+ col.name.toLowerCase()
+        colOrder += col.name.toLowerCase()
       }
-      selectSql += s" id from ${tableName}${filter}"
-      selectSql += s" order by ${sort} ${order} limit ${size} offset ${offset}"
+      selectSql append s" id from ${tableName}${filter}"
+      selectSql append s" order by ${sort} ${order} limit ${size} offset ${offset}"
     }
     val r = Await.result(db.run(sql"#$selectSql".as[Map[String, Any]]), scala.concurrent.duration.Duration.Inf)
     r foreach { rr:Map[String, Any] =>
-      var cells: Seq[Cell] = Seq()
+      val cells = ListBuffer.empty[Cell]
       colOrder foreach { colName: String =>
         val v: Any = rr.getOrElse(colName, null)
         if(v != null) {
           colTypeMap.get(colName) match {
-              case Some("INTEGER") => cells = cells :+ Cell(colName, v.asInstanceOf[String].toInt)
-              case Some("DOUBLE") => cells = cells :+ Cell(colName, v.asInstanceOf[String].toDouble)
-              case Some("FLOAT") => cells = cells :+ Cell(colName, v.asInstanceOf[String].toFloat)
-              case Some("DATE") => cells = cells :+ Cell(colName, DateTime.parse(v.asInstanceOf[String]))
-              case _ => cells = cells :+ Cell(colName, v.asInstanceOf[String])
+              case Some("INTEGER") => cells += Cell(colName, v.asInstanceOf[String].toInt)
+              case Some("DOUBLE") => cells += Cell(colName, v.asInstanceOf[String].toDouble)
+              case Some("FLOAT") => cells += Cell(colName, v.asInstanceOf[String].toFloat)
+              case Some("DATE") => cells += Cell(colName, DateTime.parse(v.asInstanceOf[String]))
+              case _ => cells += Cell(colName, v.asInstanceOf[String])
           }
         } else {
-          cells = cells :+ Cell(colName, null)
+          cells += Cell(colName, null)
         }
       }
-      ss = ss :+ Record(cells)
+      ss += Record(cells)
     }
     
     Dictionary(ss)
@@ -382,9 +383,9 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   
   def fetchAll(jobId: Int, runId: Int, sort: String = "id", order: String = "asc"): Dictionary = {
     val tableName = s"run_${jobId}_${runId}"
-    var ss: Seq[Record] = Seq()
+    val ss = ListBuffer.empty[Record]
     var colTypeMap: Map[String, String] = Map()
-    var colOrder: Seq[String] = Seq()
+    val colOrder = ListBuffer.empty[String]
     var selectSql = "select"
     var t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
     if(t == None) {
@@ -397,7 +398,7 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
         if(colname != "replay" && colname != "id" && colname != "hashcode") {
           selectSql += s" ${col.name.toLowerCase()},"
           colTypeMap += (col.name.toLowerCase() -> col.sqlTypeName.getOrElse(""))
-          colOrder = colOrder :+ col.name.toLowerCase()
+          colOrder += col.name.toLowerCase()
         }
       }
       selectSql = selectSql.stripSuffix(",")
@@ -408,22 +409,22 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     logger.debug(selectSql)
     val r = Await.result(db.run(sql"#$selectSql".as[Map[String, Any]]), scala.concurrent.duration.Duration.Inf)
     r foreach { rr:Map[String, Any] =>
-      var cells: Seq[Cell] = Seq()
+      val cells = ListBuffer.empty[Cell]
       colOrder foreach { colName: String =>
         val v: Any = rr.getOrElse(colName, null)
         if(v != null) {
           colTypeMap.get(colName) match {
-              case Some("INTEGER") => cells = cells :+ Cell(colName, v.asInstanceOf[String].toInt)
-              case Some("DOUBLE") => cells = cells :+ Cell(colName, v.asInstanceOf[String].toDouble)
-              case Some("FLOAT") => cells = cells :+ Cell(colName, v.asInstanceOf[String].toFloat)
-              case Some("DATE") => cells = cells :+ Cell(colName, DateTime.parse(v.asInstanceOf[String]))
-              case _ => cells = cells :+ Cell(colName, v.asInstanceOf[String])
+              case Some("INTEGER") => cells += Cell(colName, v.asInstanceOf[String].toInt)
+              case Some("DOUBLE") => cells += Cell(colName, v.asInstanceOf[String].toDouble)
+              case Some("FLOAT") => cells += Cell(colName, v.asInstanceOf[String].toFloat)
+              case Some("DATE") => cells += Cell(colName, DateTime.parse(v.asInstanceOf[String]))
+              case _ => cells += Cell(colName, v.asInstanceOf[String])
           }
         } else {
-          cells = cells :+ Cell(colName, null)
+          cells += Cell(colName, null)
         }
       }
-      ss = ss :+ Record(cells)
+      ss += Record(cells)
     }
     
     Dictionary(ss)
@@ -432,7 +433,7 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   def fetchRecordById(jobId: Int, runId: Int, recordId: Int): Option[Record] = {
     val tableName = s"run_${jobId}_${runId}"
     var colTypeMap: Map[String, String] = Map()
-    var colOrder: Seq[String] = Seq()
+    val colOrder = ListBuffer.empty[String]
     var selectSql = "select"
     var t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
     if(t == None) {
@@ -445,7 +446,7 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
         if(colname != "replay" && colname != "id" && colname != "hashcode") {
           selectSql += s" ${colname},"
           colTypeMap += (col.name.toLowerCase() -> col.sqlTypeName.getOrElse(""))
-          colOrder = colOrder :+ col.name.toLowerCase()
+          colOrder += col.name.toLowerCase()
         }
       }
       selectSql = selectSql.stripSuffix(",")
@@ -456,19 +457,19 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     val r = Await.result(db.run(sql"#$selectSql".as[Map[String, Any]].headOption), scala.concurrent.duration.Duration.Inf)
     r match {
       case Some(rr) => {
-        var cells: Seq[Cell] = Seq()
+        val cells = ListBuffer.empty[Cell]
         colOrder foreach { colName: String =>
           val v: Any = rr.getOrElse(colName, null)
           if(v != null) {
             colTypeMap.get(colName) match {
-                case Some("INTEGER") => cells = cells :+ Cell(colName, v.asInstanceOf[String].toInt)
-                case Some("DOUBLE") => cells = cells :+ Cell(colName, v.asInstanceOf[String].toDouble)
-                case Some("FLOAT") => cells = cells :+ Cell(colName, v.asInstanceOf[String].toFloat)
-                case Some("DATE") => cells = cells :+ Cell(colName, DateTime.parse(v.asInstanceOf[String]))
-                case _ => cells = cells :+ Cell(colName, v.asInstanceOf[String])
+                case Some("INTEGER") => cells += Cell(colName, v.asInstanceOf[String].toInt)
+                case Some("DOUBLE") => cells += Cell(colName, v.asInstanceOf[String].toDouble)
+                case Some("FLOAT") => cells += Cell(colName, v.asInstanceOf[String].toFloat)
+                case Some("DATE") => cells += Cell(colName, DateTime.parse(v.asInstanceOf[String]))
+                case _ => cells += Cell(colName, v.asInstanceOf[String])
             }
           } else {
-            cells = cells :+ Cell(colName, null)
+            cells += Cell(colName, null)
           }
         }
         Some(Record(cells))
@@ -481,7 +482,7 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   
   def fetchRecordData(jobId: Int, runId: Int, recordId: Int): Map[String, Any] = {
     val tableName = s"run_${jobId}_${runId}"
-    var selectSql = "select"
+    val selectSql = new StringBuilder("select")
     var t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
     if(t == None) {
       t = Await.result(db.run(MTable.getTables(tableName.toLowerCase()).headOption ), scala.concurrent.duration.Duration.Inf)
@@ -489,32 +490,32 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     t map { tt =>
       val cols = Await.result(db.run( tt.getColumns ), scala.concurrent.duration.Duration.Inf)
       for (col: MColumn <- cols) {
-        selectSql += s" ${col.name.toLowerCase()},"
+        selectSql append s" ${col.name.toLowerCase()},"
       }
-      selectSql += s" id from ${tableName} where id=${recordId}"
+      selectSql append s" id from ${tableName} where id=${recordId}"
     }
 
-    logger.debug(selectSql)
+    logger.debug(selectSql.toString)
     Await.result(db.run(sql"#$selectSql".as[Map[String, Any]].head), scala.concurrent.duration.Duration.Inf)
   }
   
   def fetchCellValueList(jobId: Int, runId: Int, cellname: String): List[Any] = {
     val tableName = s"run_${jobId}_${runId}"
-    var selectSql = s"select distinct ${cellname} from ${tableName} order by ${cellname} asc"
+    val selectSql = s"select distinct ${cellname} from ${tableName} order by ${cellname} asc"
     
     logger.debug(selectSql)
-    var filterlist: List[Any] = List()
+    val filterlist: List[Any] = List()
     val r = Await.result(db.run(sql"#$selectSql".as[Map[String,Any]]), scala.concurrent.duration.Duration.Inf)
-    var res: List[Any] = List()
+    val res = ListBuffer.empty[Any]
     r.foreach { rr: Map[String, Any] =>
-      res = res :+ rr.values.head
+      res += rr.values.head
     }
-    res
+    res.toList
   }
   
   def fetchRecordHashcode(jobId: Int, runId: Int, recordId: Int): Int = {
     val tableName = s"run_${jobId}_${runId}"
-    var selectSql = "select"
+    val selectSql = new StringBuilder("select")
     var t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
     if(t == None) {
       t = Await.result(db.run(MTable.getTables(tableName.toLowerCase()).headOption ), scala.concurrent.duration.Duration.Inf)
@@ -522,9 +523,9 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     t map { tt =>
       val cols = Await.result(db.run( tt.getColumns ), scala.concurrent.duration.Duration.Inf)
       for (col: MColumn <- cols) {
-        selectSql += s" ${col.name.toLowerCase()},"
+        selectSql append s" ${col.name.toLowerCase()},"
       }
-      selectSql += s" id from ${tableName} where id=${recordId}"
+      selectSql append s" id from ${tableName} where id=${recordId}"
     }
     Await.result(db.run(sql"select hashcode from run_#${jobId}_#${runId} where id=#${recordId}".as[Int].head), scala.concurrent.duration.Duration.Inf)
   }
@@ -536,9 +537,9 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   
   def fetchAllColumn(jobId: Int, runId: Int): Dictionary = {
     val tableName = s"run_${jobId}_${runId}"
-    var ss: Seq[Record] = Seq()
+    val ss = ListBuffer.empty[Record]
     var colTypeMap: Map[String, String] = Map()
-    var colOrder: Seq[String] = Seq()
+    val colOrder = ListBuffer.empty[String]
     var selectSql = "select"
     var t = Await.result(db.run(MTable.getTables(tableName.toUpperCase()).headOption ), scala.concurrent.duration.Duration.Inf)
     if(t == None) {
@@ -551,7 +552,7 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
         if(colname != "hashcode") {
           selectSql += s" ${col.name.toLowerCase()},"
           colTypeMap += (col.name.toLowerCase() -> col.sqlTypeName.getOrElse(""))
-          colOrder = colOrder :+ col.name.toLowerCase()
+          colOrder += col.name.toLowerCase()
         }
       }
       selectSql = selectSql.stripSuffix(",")
@@ -561,22 +562,22 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     val r = Await.result(db.run(sql"#$selectSql".as[Map[String, Any]]), scala.concurrent.duration.Duration.Inf)
     
     r foreach { rr:Map[String, Any] =>
-      var cells: Seq[Cell] = Seq()
+      val cells = ListBuffer.empty[Cell]
       colOrder foreach { colName: String =>
         val v: Any = rr.getOrElse(colName, null)
         if(v != null) {
           colTypeMap.get(colName) match {
-              case Some("INTEGER") => cells = cells :+ Cell(colName, v.asInstanceOf[String].toInt)
-              case Some("DOUBLE") => cells = cells :+ Cell(colName, v.asInstanceOf[String].toDouble)
-              case Some("FLOAT") => cells = cells :+ Cell(colName, v.asInstanceOf[String].toFloat)
-              case Some("DATE") => cells = cells :+ Cell(colName, DateTime.parse(v.asInstanceOf[String]))
-              case _ => cells = cells :+ Cell(colName, v.asInstanceOf[String])
+              case Some("INTEGER") => cells += Cell(colName, v.asInstanceOf[String].toInt)
+              case Some("DOUBLE") => cells += Cell(colName, v.asInstanceOf[String].toDouble)
+              case Some("FLOAT") => cells += Cell(colName, v.asInstanceOf[String].toFloat)
+              case Some("DATE") => cells += Cell(colName, DateTime.parse(v.asInstanceOf[String]))
+              case _ => cells += Cell(colName, v.asInstanceOf[String])
           }
         } else {
-          cells = cells :+ Cell(colName, null)
+          cells += Cell(colName, null)
         }
       }
-      ss = ss :+ Record(cells)
+      ss += Record(cells)
     }
     
     Dictionary(ss)

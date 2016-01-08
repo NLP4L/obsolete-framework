@@ -16,6 +16,7 @@
 
 package org.nlp4l.framework.builtin
 
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.Await
 import scala.util.{ Try, Success, Failure }
 import org.nlp4l.framework.dao.JobDAO
@@ -32,14 +33,14 @@ import org.nlp4l.framework.processors.Processor
 
 class WrapProcessor(val childList: Seq[RecordProcessor]) extends Processor {
   override def execute(data: Option[Dictionary]): Option[Dictionary] = {
-    var reclist: Seq[Record] = Seq()
+    val reclist = ListBuffer.empty[Record]
     data map { dic =>
       dic.recordList foreach { rec: Record =>
         var rec2:Option[Record] = Some(rec)
         childList foreach { recProc: RecordProcessor =>
           rec2 = recProc.execute(rec2)
         }
-        reclist = reclist :+ rec2.getOrElse(rec)
+        reclist += rec2.getOrElse(rec)
       }
     }
     Some(Dictionary(reclist))
@@ -140,20 +141,20 @@ class ReplayProcessorFactory(settings: Map[String, String]) extends ProcessorFac
 
 final class ReplayProcessor extends Processor {
   def replay(jobDAO: JobDAO, runDAO: RunDAO, jobId: Int, dicAttr: DictionaryAttribute, dic: Option[Dictionary]): Option[Dictionary] = {
-    var recordList: Seq[Record] = Seq()
+    val recordList = ListBuffer.empty[Record]
     dic map { d =>
       d.recordList foreach { r: Record =>
         val hashcode: Int = r.hashCode
         if(dicAttr.modifiedRecordList.contains(hashcode)) {
           dicAttr.modifiedRecordList.get(hashcode) map { modr =>
-            recordList = recordList :+ modr
+            recordList += modr
           }
         } else if(!dicAttr.deletedRecordList.contains(hashcode)) {
-          recordList = recordList :+ r
+          recordList += r
         }
       }
       dicAttr.addedRecordList foreach { r =>
-        recordList = recordList :+ r._2
+        recordList += r._2
       }
       Dictionary(recordList)
     }

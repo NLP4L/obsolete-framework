@@ -84,23 +84,23 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     val jobId = job.jobId.getOrElse(0)
     
     val dic: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
-    var ths: String = "<th data-field=\"id\" data-formatter=\"RecordIdFormatter\">ID</th>"
-    var addtable: String = ""
-    var addtableHead: String = ""
+    val ths = new StringBuilder("<th data-field=\"id\" data-formatter=\"RecordIdFormatter\">ID</th>")
+    val addtable = new StringBuilder
+    val addtableHead = new StringBuilder
     dic.cellAttributeList foreach { c: CellAttribute =>
       c.isFilterable match {
-        case true => ths += "<th data-field=\"" + c.name.toLowerCase() + "\" data-filter-control=\"input\""
-        case _ =>    ths += "<th data-field=\"" + c.name.toLowerCase() + "\""
+        case true => ths append "<th data-field=\"" + c.name.toLowerCase() + "\" data-filter-control=\"input\""
+        case _ =>    ths append "<th data-field=\"" + c.name.toLowerCase() + "\""
       }
-      addtableHead += "<th>" + c.name.toLowerCase() + "</th>"      
-      addtable += "<td><input type=\"text\" class=\"form-control\" id=\"form_" + c.name.toLowerCase() + "\" name=\"" + c.name.toLowerCase() + "\"></td>"
+      addtableHead append "<th>" + c.name.toLowerCase() + "</th>"
+      addtable append "<td><input type=\"text\" class=\"form-control\" id=\"form_" + c.name.toLowerCase() + "\" name=\"" + c.name.toLowerCase() + "\"></td>"
       c.isSortable match {
-        case true => ths += " data-sortable=\"true\""
-        case _ => ths += " data-sortable=\"false\""
+        case true => ths append " data-sortable=\"true\""
+        case _ => ths append " data-sortable=\"false\""
       }
-      ths += ">" + c.name.toLowerCase()  + "</th>\n"
+      ths append ">" + c.name.toLowerCase()  + "</th>\n"
     }
-    ths += "<th data-field=\"replay\" data-filter-control=\"select\" data-filter-data=\"url:/job/result/filterlist/"+jobId+"/"+runId+"/replay\">Replay</th>"
+    ths append "<th data-field=\"replay\" data-filter-control=\"select\" data-filter-data=\"url:/job/result/filterlist/"+jobId+"/"+runId+"/replay\">Replay</th>"
 
     val listTable = s"""<table id="table"
            data-toolbar="#toolbar"

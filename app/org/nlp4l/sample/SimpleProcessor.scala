@@ -105,24 +105,23 @@ class SimpleRecordProcessor() extends RecordProcessor {
   override def execute(data: Option[Record]): Option[Record] = {
     data match {
       case Some(rec) => {
-        var celllist: Seq[Cell] = Seq()
-        celllist = celllist :+ rec.cellList(0)
-        celllist = celllist :+ rec.cellList(1)
-        celllist = celllist :+ rec.cellList(2)
-        var newCell3 = null
+        val celllist = ListBuffer.empty[Cell]
+        celllist += rec.cellList(0)
+        celllist += rec.cellList(1)
+        celllist += rec.cellList(2)
         val orgCell3 = rec.cellList(3)
         val cell1 = rec.cellList(1)
         if(cell1.value != null && cell1.value.asInstanceOf[Int] % 2 == 0) {
           val newCell3 = Cell(orgCell3.name, "EVEN")
-          celllist = celllist :+ newCell3
+          celllist += newCell3
         } else if(cell1.value != null && cell1.value.asInstanceOf[Int] % 2 == 1) {
           val newCell3 = Cell(orgCell3.name, "ODD")
-          celllist = celllist :+ newCell3
+          celllist += newCell3
         } else {
           val newCell3 = Cell(orgCell3.name, null)
-          celllist = celllist :+ newCell3
+          celllist += newCell3
         }
-        celllist = celllist :+ rec.cellList(4)
+        celllist += rec.cellList(4)
         Some(Record(celllist))
       }
       case None => {
