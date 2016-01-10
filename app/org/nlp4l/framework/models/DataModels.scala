@@ -86,6 +86,12 @@ case class Record (
     val thatCell = that.cellList.filter(_.name == key).head
     thisCell.value == thatCell.value
   }
+  override def hashCode: Int = {
+    cellList.foldLeft(0){
+      //(a, b) => (a ^ b.hashCode) << 1
+      (a, b) => (((a.toString.hashCode << 16) + a) ^ b.hashCode) << 1
+    }
+  }
 }
 
 /**
@@ -162,7 +168,7 @@ class DictionaryAttribute(val name: String, val cellAttributeList: Seq[CellAttri
   // These lists are for Replay Processor
   var addedRecordList: Map[Int, Record] = Map()      // New added record hashCode and record data
   var deletedRecordList: List[Int] = List()      // Deleted record hashCode
-  var modifiedRecordList: Map[Int, Record] = Map()      // Original record hashCode and modified record data 
+  var modifiedRecordList: Map[Int, Record] = Map()      // Original record hashCode and modified record data
   
   def getCellAttribute(name: String): Option[CellAttribute] = {
     cellAttributeList.filter(_.name.toLowerCase() == name.toLowerCase()).headOption

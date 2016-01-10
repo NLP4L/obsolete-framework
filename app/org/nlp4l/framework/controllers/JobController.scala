@@ -29,6 +29,7 @@ import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.TimeoutException
+import scala.concurrent.duration.Duration
 import scala.util.Failure
 import scala.util.Success
 import com.google.inject.name.Named
@@ -221,9 +222,9 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     val hashcode: Int= runDAO.fetchRecordHashcode(jobId, runId, recordId)
     runDAO.deleteRecord(jobId, runId, recordId) map {
       case (a) => {
-        jobDAO.deleteOldReplay(jobId, runId, hashcode)
+        Await.result(jobDAO.deleteOldReplay(jobId, runId, hashcode), Duration.Inf)
         val replay = Replay(runId, hashcode, "DEL", 0)
-        jobDAO.insertReplay(jobId, replay)
+        Await.result(jobDAO.insertReplay(jobId, replay), Duration.Inf)
         Ok(Json.toJson(ActionResult(true, Seq("success"))))
       }
     } recover {
