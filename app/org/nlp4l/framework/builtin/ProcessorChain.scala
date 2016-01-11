@@ -253,6 +253,11 @@ class ProcessorChainBuilder() {
 
   def procBuild(jobId: Int, confStr: String): ProcessorChainBuilder = {
     val config = ConfigFactory.parseString(confStr)
+    
+    var gSettings: Map[String, String] = Map()
+    if(config.hasPath("settings")) {
+      gSettings = config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
+    }
 
     config.getConfigList("processors").foreach {
       pConf =>
@@ -261,10 +266,11 @@ class ProcessorChainBuilder() {
             buf += wrapBuild(pConf)
           } else {
             val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-            var settings: Map[String, Object] = Map()
+            var lSettings: Map[String, String] = Map()
             if(pConf.hasPath("settings")) {
-              settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+              lSettings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
             }
+            val settings = gSettings ++ lSettings
             val facP = constructor.newInstance(settings).asInstanceOf[ProcessorFactory]
             val p = facP.getInstance()
             buf += p
@@ -275,13 +281,20 @@ class ProcessorChainBuilder() {
   
   def dicBuild(confStr: String): DictionaryAttribute = {
     val config = ConfigFactory.parseString(confStr)
+    
+    var gSettings: Map[String, String] = Map()
+    if(config.hasPath("settings")) {
+      gSettings = config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
+    }
+    
     val pConf = config.getConfigList("dictionary").get(0)
     val className = pConf.getString("class")
     val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-    var settings: Map[String, Object] = Map()
+    var lSettings: Map[String, String] = Map()
     if(pConf.hasPath("settings")) {
-      settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+      lSettings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
     }
+    val settings = gSettings ++ lSettings
     val facP = constructor.newInstance(settings).asInstanceOf[DictionaryAttributeFactory]
     facP.getInstance()
   }
@@ -293,9 +306,9 @@ class ProcessorChainBuilder() {
     try {
       val className = pConf.getString("class")
       val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-      var settings: Map[String, Object] = Map()
+      var settings: Map[String, String] = Map()
       if(pConf.hasPath("settings")) {
-        settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+        settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
       }
       val facP = constructor.newInstance(settings).asInstanceOf[RecordProcessorFactory]
       val p = facP.getInstance()
