@@ -28,17 +28,22 @@ import scala.collection.mutable.ListBuffer
  */
 case class Cell (
     name: String,
-    value: Any
+    value: Any,
+    userDefinedHashCode:(Any) => Int = null
 ) {
   override def hashCode: Int = {
-    val prime:Int = 31
-    var result: Int = 1
-    if(value == null) {
-      result = prime * result + 0
+    if(userDefinedHashCode != null) {
+      userDefinedHashCode(value)
     } else {
-      result = prime * result + value.toString().hashCode
+      val prime:Int = 31
+      var result: Int = 1
+      if(value == null) {
+        result = prime * result + 0
+      } else {
+        result = prime * result + value.toString().hashCode
+      }
+      result
     }
-    result
   }
   
   /**
@@ -86,6 +91,20 @@ case class Record (
     val thatCell = that.cellList.filter(_.name == key).head
     thisCell.value == thatCell.value
   }
+  
+  def setUserDefinedHashCode(dicAttr: DictionaryAttribute): Record = {
+    val celllist = ListBuffer.empty[Cell]
+    this.cellList foreach { thisCell =>
+      val cellAttr = dicAttr.cellAttributeList.filter(_.name == thisCell.name).head
+      if(cellAttr.userDefinedHashCode != null) {
+        celllist += Cell(thisCell.name, thisCell.value, cellAttr.userDefinedHashCode)
+      } else {
+        celllist += thisCell
+      } 
+    }
+    Record(celllist)
+  }
+  
   override def hashCode: Int = {
     cellList.foldLeft(0){
       //(a, b) => (a ^ b.hashCode) << 1
@@ -100,7 +119,15 @@ case class Record (
  */
 case class Dictionary (
     recordList: Seq[Record] 
-)
+) {
+  def setUserDefinedHashCode(dicAttr: DictionaryAttribute): Dictionary = {
+    val recordList = ListBuffer.empty[Record]
+    this.recordList foreach { r =>
+        recordList += r.setUserDefinedHashCode(dicAttr)
+    }
+    Dictionary(recordList)
+  }
+}
 
 trait CellView {
   /**
@@ -137,7 +164,8 @@ case class CellAttribute(
     val name: String,
     val cellType: CellType, // String, Int, Float, Double, DateTime
     val isFilterable: Boolean = false,
-    val isSortable: Boolean = false
+    val isSortable: Boolean = false,
+    val userDefinedHashCode:(Any) => Int = null // user defined hashCode
     ) extends CellView {
   
   def columnName: String = {

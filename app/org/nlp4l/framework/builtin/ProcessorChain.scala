@@ -51,11 +51,15 @@ class ProcessorChain (val chain: List[Processor]) {
     val runId = job.lastRunId + 1
     jobDAO.update(Job(job.jobId, job.name, job.config, runId, Some(new DateTime()), job.lastDeployAt))
     def loop(li: List[Processor], js: JobStatus, data:Option[Dictionary] = None): Unit = {
+      val indata = data match {
+        case Some(d) => Some(d.setUserDefinedHashCode(dicAttr))
+        case None => None
+      }
       try {
         li match {
           case Nil => ()
           case head :: Nil =>
-            var out: Option[Dictionary] = head.execute(data)
+            var out: Option[Dictionary] = head.execute(indata)
             val cname = head.asInstanceOf[AnyRef].getClass.getName
             if(cname == Constants.SORTPROCESSOR_CLASS) {
               out = head.asInstanceOf[SortProcessor].sort(jobDAO, runDAO, jobId, runId, dicAttr, out)
@@ -67,7 +71,7 @@ class ProcessorChain (val chain: List[Processor]) {
             runDAO.updateJobStatus(JobStatus(js.id, js.jobId, js.runId, js.total, js.total-li.size+1))
             ProcessorChain.outputResult(jobDAO, runDAO, jobId, runId, dicAttr, out)
           case head :: tail =>
-            var out:Option[Dictionary]  = head.execute(data)
+            var out:Option[Dictionary]  = head.execute(indata)
             val cname = head.asInstanceOf[AnyRef].getClass.getName
             if(cname == Constants.SORTPROCESSOR_CLASS) {
               out = head.asInstanceOf[SortProcessor].sort(jobDAO, runDAO, jobId, runId, dicAttr, out)
@@ -196,6 +200,7 @@ object ProcessorChain {
   def outputResult(jobDAO: JobDAO, runDAO: RunDAO, jobId: Int, runId: Int, dicAttr: DictionaryAttribute, dic: Option[Dictionary]): Unit = {
     jobDAO.get(jobId) map {job: Job =>
       dic map { d =>
+        val d2 = d.setUserDefinedHashCode(dicAttr)
         val f1 = runDAO.dropTable(jobId, runId)
         Await.ready(f1, scala.concurrent.duration.Duration.Inf)
         f1.value.get match {
@@ -205,7 +210,7 @@ object ProcessorChain {
         val f2 = runDAO.createTable(jobId, runId, dicAttr)
         Await.ready(f2, scala.concurrent.duration.Duration.Inf)
         f2.value.get match {
-          case Success(n) => runDAO.insertData(jobId, runId, dicAttr, d)
+          case Success(n) => runDAO.insertData(jobId, runId, dicAttr, d2)
           case Failure(ex) => throw(ex)
         }
       }

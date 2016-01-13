@@ -35,19 +35,26 @@ class SimpleDictionaryAttributeFactory(settings: Map[String, String]) extends Di
   override def getInstance: DictionaryAttribute = {
     
     /**
-     * format function customization
+     * User defined cell hashcode function
      */
-    class SimpleCellAttribute(name: String, cellType: CellType, isEditable: Boolean, isSortable: Boolean) extends CellAttribute(name, cellType, isEditable, isSortable) {
+    def ignoreThisCell(d: Any): Int = {
+      0
+    }
+    
+    /**
+     * User defined format function
+     */
+    class SimpleCellAttribute(name: String, cellType: CellType, isEditable: Boolean, isSortable: Boolean, userDefinedHashCode:(Any) => Int) extends CellAttribute(name, cellType, isEditable, isSortable, userDefinedHashCode) {
       override def format(cell: Any): String = {
         "<a href='https://github.com/NLP4L'>" + cell.toString() + "</a>"
       }
     }
     val list = Seq[CellAttribute](
       CellAttribute("cell01", CellType.StringType, true, true),
-      new SimpleCellAttribute("cell02", CellType.IntType, false, true),
-      CellAttribute("cell03", CellType.DoubleType, false, true),
-      CellAttribute("cell02_check", CellType.StringType, false, false),
-      CellAttribute("cell04", CellType.FloatType, false, true)
+      new SimpleCellAttribute("cell02", CellType.IntType, false, true, ignoreThisCell),
+      CellAttribute("cell03", CellType.DoubleType, false, true, ignoreThisCell),
+      CellAttribute("cell02_check", CellType.StringType, false, false, ignoreThisCell),
+      CellAttribute("cell04", CellType.FloatType, false, true, ignoreThisCell)
       )
     new DictionaryAttribute("simple", list)
   }
