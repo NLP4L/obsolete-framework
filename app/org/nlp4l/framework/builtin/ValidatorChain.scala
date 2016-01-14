@@ -77,16 +77,22 @@ class ValidatorChainBuilder() {
   def build(confStr: String): ValidatorChainBuilder = {
     val config = ConfigFactory.parseString(confStr)
 
+    var gSettings: Map[String, Object] = Map()
+    if(config.hasPath("settings")) {
+      gSettings = config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+    }
+    
     val v = config.getConfigList("validators")
     v.foreach {
       pConf =>
         try {
           val className = pConf.getString("class")
           val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-          var settings: Map[String, Object] = Map()
+          var lSettings: Map[String, Object] = Map()
           if(pConf.hasPath("settings")) {
-            settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+            lSettings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
           }
+          val settings = gSettings ++ lSettings
           val facP = constructor.newInstance(settings).asInstanceOf[ValidatorFactory]
           val p:Validator = facP.getInstance()
           buf += p

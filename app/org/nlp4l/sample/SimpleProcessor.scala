@@ -39,7 +39,7 @@ class SimpleDictionaryAttributeFactory(settings: Map[String, String]) extends Di
      */
     class SimpleCellAttribute(name: String, cellType: CellType, isEditable: Boolean, isSortable: Boolean) extends CellAttribute(name, cellType, isEditable, isSortable) {
       override def format(cell: Any): String = {
-        "<a href='https://github.com/NLP4L'>" + cell.toString() + "</a>"
+        "<a href='https://github.com/NLP4L#" + cell.toString() + "'>" + cell.toString() + "</a>"
       }
     }
     val list = Seq[CellAttribute](
@@ -69,10 +69,7 @@ class SimpleProcessor(val param1: Option[String], val param2: Option[String]) ex
     data match {
       case Some(dic) => {
         val ss = dic.recordList.toBuffer
-        (ss.size+1 to ss.size+20).toList.foreach { n=>
-          val rcrd = Record(Seq(Cell("cell01", n.toString()), Cell("cell02", n), Cell("cell03", n.toDouble), Cell("cell02_check", null), Cell("cell04", n.toFloat)))
-          ss += rcrd
-        }
+        ss += rcrd01
         Some(Dictionary(ss))
       }
       case None => {
