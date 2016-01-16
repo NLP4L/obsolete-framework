@@ -55,10 +55,7 @@ import org.nlp4l.framework.models.Dictionary
 import org.nlp4l.framework.models.DictionaryAttribute
 import org.nlp4l.framework.models.Record
 import org.nlp4l.framework.models.RecordWithAttrbute
-import org.nlp4l.framework.builtin.DeployerChain
-import org.nlp4l.framework.processors.ProcessorChain
-import org.nlp4l.framework.processors.ProcessorChainBuilder
-import org.nlp4l.framework.builtin.ValidatorChain
+import org.nlp4l.framework.processors.{ValidatorChain, DeployerChain, ProcessorChain, ProcessorChainBuilder}
 import org.nlp4l.framework.builtin.Replay
 import org.nlp4l.framework.builtin.JobMessage
 import org.nlp4l.framework.builtin.ActionResult

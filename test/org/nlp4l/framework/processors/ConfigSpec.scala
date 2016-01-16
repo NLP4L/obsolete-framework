@@ -17,7 +17,6 @@
 package org.nlp4l.framework.processors
 
 import org.nlp4l.framework.models._
-import org.nlp4l.framework.builtin.{ValidatorChainBuilder, DeployerChainBuilder}
 import org.specs2.mutable.Specification
 
 class ConfigSpec extends Specification {
