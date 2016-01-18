@@ -136,7 +136,7 @@ object ProcessorChain {
              val runId: Int = hd._1
              val hashcode: Int = hd._2
              jobDAO.fetchRecordByHashcode(jobId, runId, hashcode) map { rec: Record =>
-               addedRecordList += (hashcode -> rec)
+               addedRecordList += (hashcode -> rec.setUserDefinedHashCode(dicAttr))
              }
            }
            val modifiedList: List[(Int, Int, Int)] = jobDAO.fetchReplayOfMod(jobId)
@@ -145,7 +145,7 @@ object ProcessorChain {
              val hashcode: Int = hd._2
              val modToHashcode: Int = hd._3
              jobDAO.fetchRecordByHashcode(jobId, runId, modToHashcode) map { rec: Record =>
-               modifiedRecordList += (hashcode -> rec)
+               modifiedRecordList += (hashcode -> rec.setUserDefinedHashCode(dicAttr))
              }
            }
            dicAttr.addedRecordList = addedRecordList
@@ -186,7 +186,7 @@ object ProcessorChain {
        val runId: Int = hd._1
        val hashcode: Int = hd._2
        jobDAO.fetchRecordByHashcode(jobId, runId, hashcode) map { rec: Record =>
-         addedRecordList += (hashcode -> rec)
+         addedRecordList += (hashcode -> rec.setUserDefinedHashCode(dicAttr))
        }
      }
      val modifiedList: List[(Int, Int, Int)] = jobDAO.fetchReplayOfMod(jobId)
@@ -195,7 +195,7 @@ object ProcessorChain {
        val hashcode: Int = hd._2
        val modToHashcode: Int = hd._3
        jobDAO.fetchRecordByHashcode(jobId, runId, modToHashcode) map { rec: Record =>
-         modifiedRecordList += (hashcode -> rec)
+         modifiedRecordList += (hashcode -> rec.setUserDefinedHashCode(dicAttr))
        }
      }
      dicAttr.addedRecordList = addedRecordList
