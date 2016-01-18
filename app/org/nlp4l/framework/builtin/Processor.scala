@@ -29,25 +29,6 @@ import org.nlp4l.framework.processors.RecordProcessor
 import org.nlp4l.framework.processors.ProcessorFactory
 import org.nlp4l.framework.processors.Processor
 
-
-
-class WrapProcessor(val childList: Seq[RecordProcessor]) extends Processor {
-  override def execute(data: Option[Dictionary]): Option[Dictionary] = {
-    val reclist = ListBuffer.empty[Record]
-    data map { dic =>
-      dic.recordList foreach { rec: Record =>
-        var rec2:Option[Record] = Some(rec)
-        childList foreach { recProc: RecordProcessor =>
-          rec2 = recProc.execute(rec2)
-        }
-        reclist += rec2.getOrElse(rec)
-      }
-    }
-    Some(Dictionary(reclist))
-  }
-}
-
-
 /**
  * Sort processor factory
  */

@@ -16,32 +16,43 @@
 
 package org.nlp4l.framework.processors
 
-import scala.collection.JavaConversions.asScalaBuffer
-import scala.collection.JavaConversions.asScalaSet
-import scala.collection.mutable
-import scala.concurrent.Await
-import scala.util.{ Try, Success, Failure }
-import scala.collection.convert.WrapAsScala._
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigParseOptions
-import com.typesafe.config.ConfigSyntax
+import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigSyntax}
+import org.joda.time.DateTime
+import org.nlp4l.framework.builtin.{Job, JobStatus, MergeProcessor, ReplayProcessor, SortProcessor}
+import org.nlp4l.framework.dao.{JobDAO, RunDAO}
+import org.nlp4l.framework.models.{Dictionary, DictionaryAttribute, Record}
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import org.joda.time.DateTime
-import org.nlp4l.framework.dao.JobDAO
-import org.nlp4l.framework.dao.RunDAO
-import org.nlp4l.framework.models.Dictionary
-import org.nlp4l.framework.models.DictionaryAttribute
-import org.nlp4l.framework.models.Record
-import org.nlp4l.framework.builtin.ReplayProcessor
-import org.nlp4l.framework.builtin.WrapProcessor
-import org.nlp4l.framework.builtin.SortProcessor
-import org.nlp4l.framework.builtin.MergeProcessor
-import org.nlp4l.framework.builtin.Constants
-import org.nlp4l.framework.builtin.JobStatus
-import org.nlp4l.framework.builtin.Job
 
+import scala.collection.JavaConversions.{asScalaBuffer, asScalaSet}
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
+import scala.concurrent.Await
+import scala.util.{Failure, Success}
+
+
+object Constants {
+  val WRAPPROCESSOR_CLASS = "org.nlp4l.framework.processors.WrapProcessor"
+  val SORTPROCESSOR_CLASS = "org.nlp4l.framework.builtin.SortProcessor"
+  val MERGEPROCESSOR_CLASS = "org.nlp4l.framework.builtin.MergeProcessor"
+  val REPLAYPROCESSOR_CLASS = "org.nlp4l.framework.builtin.ReplayProcessor"
+}
+
+class WrapProcessor(val childList: Seq[RecordProcessor]) extends Processor {
+  override def execute(data: Option[Dictionary]): Option[Dictionary] = {
+    val reclist = ListBuffer.empty[Record]
+    data map { dic =>
+      dic.recordList foreach { rec: Record =>
+        var rec2:Option[Record] = Some(rec)
+        childList foreach { recProc: RecordProcessor =>
+          rec2 = recProc.execute(rec2)
+        }
+        reclist += rec2.getOrElse(rec)
+      }
+    }
+    Some(Dictionary(reclist))
+  }
+}
 
 class ProcessorChain (val chain: List[Processor]) {
   private val logger = Logger(this.getClass)
@@ -258,6 +269,11 @@ class ProcessorChainBuilder() {
 
   def procBuild(jobId: Int, confStr: String): ProcessorChainBuilder = {
     val config = ConfigFactory.parseString(confStr)
+    
+    var gSettings: Map[String, String] = Map()
+    if(config.hasPath("settings")) {
+      gSettings = config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
+    }
 
     config.getConfigList("processors").foreach {
       pConf =>
@@ -266,10 +282,11 @@ class ProcessorChainBuilder() {
             buf += wrapBuild(pConf)
           } else {
             val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-            var settings: Map[String, Object] = Map()
+            var lSettings: Map[String, String] = Map()
             if(pConf.hasPath("settings")) {
-              settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+              lSettings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
             }
+            val settings = gSettings ++ lSettings
             val facP = constructor.newInstance(settings).asInstanceOf[ProcessorFactory]
             val p = facP.getInstance()
             buf += p
@@ -280,13 +297,20 @@ class ProcessorChainBuilder() {
   
   def dicBuild(confStr: String): DictionaryAttribute = {
     val config = ConfigFactory.parseString(confStr)
+    
+    var gSettings: Map[String, String] = Map()
+    if(config.hasPath("settings")) {
+      gSettings = config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
+    }
+    
     val pConf = config.getConfigList("dictionary").get(0)
     val className = pConf.getString("class")
     val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-    var settings: Map[String, Object] = Map()
+    var lSettings: Map[String, String] = Map()
     if(pConf.hasPath("settings")) {
-      settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+      lSettings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
     }
+    val settings = gSettings ++ lSettings
     val facP = constructor.newInstance(settings).asInstanceOf[DictionaryAttributeFactory]
     facP.getInstance()
   }
@@ -298,9 +322,9 @@ class ProcessorChainBuilder() {
     try {
       val className = pConf.getString("class")
       val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-      var settings: Map[String, Object] = Map()
+      var settings: Map[String, String] = Map()
       if(pConf.hasPath("settings")) {
-        settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+        settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
       }
       val facP = constructor.newInstance(settings).asInstanceOf[RecordProcessorFactory]
       val p = facP.getInstance()

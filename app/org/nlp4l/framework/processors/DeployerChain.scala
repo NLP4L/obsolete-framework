@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package org.nlp4l.framework.builtin
-
-import scala.collection.mutable
-import scala.concurrent.Await
-import scala.collection.convert.WrapAsScala._
-
-import org.joda.time.DateTime
-import org.nlp4l.framework.dao.JobDAO
-import org.nlp4l.framework.models.Dictionary
-import org.nlp4l.framework.processors.Deployer
-import org.nlp4l.framework.processors.DeployerFactory
+package org.nlp4l.framework.processors
 
 import com.typesafe.config.ConfigFactory
-
+import org.joda.time.DateTime
+import org.nlp4l.framework.builtin.Job
+import org.nlp4l.framework.dao.JobDAO
+import org.nlp4l.framework.models.Dictionary
 import play.api.Logger
+
+import scala.collection.convert.WrapAsScala._
+import scala.collection.mutable
+import scala.concurrent.Await
 
 class DeployerChain (val chain: List[Deployer]) {
   private val logger = Logger(this.getClass)
@@ -67,6 +64,11 @@ class DeployerChainBuilder() {
 
   def build(confStr: String): DeployerChainBuilder = {
     val config = ConfigFactory.parseString(confStr)
+    
+    var gSettings: Map[String, Object] = Map()
+    if(config.hasPath("settings")) {
+      gSettings = config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+    }
 
     val v = config.getConfigList("deployers")
     v.foreach {
@@ -74,10 +76,12 @@ class DeployerChainBuilder() {
         try {
           val className = pConf.getString("class")
           val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-          var settings: Map[String, Object] = Map()
+          var lSettings: Map[String, Object] = Map()
           if(pConf.hasPath("settings")) {
-            settings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+            lSettings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
           }
+          val settings = gSettings ++ lSettings
+          println(settings)
           val facP = constructor.newInstance(settings).asInstanceOf[DeployerFactory]
           val p:Deployer = facP.getInstance()
           buf += p

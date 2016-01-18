@@ -197,13 +197,5 @@ case class JobMessage(jobId: Int)
  */
 case class ActionResult(status:Boolean, message:Seq[String])
 
-object Constants {
-  val WRAPPROCESSOR_CLASS = "org.nlp4l.framework.builtin.WrapProcessor"
-  val REPLAYPROCESSORFACTORY_CLASS = "org.nlp4l.framework.builtin.ReplayProcessorFactory"
-  val SORTPROCESSOR_CLASS = "org.nlp4l.framework.builtin.SortProcessor"
-  val MERGEPROCESSOR_CLASS = "org.nlp4l.framework.builtin.MergeProcessor"
-  val REPLAYPROCESSOR_CLASS = "org.nlp4l.framework.builtin.ReplayProcessor"
-}
-
 
 
