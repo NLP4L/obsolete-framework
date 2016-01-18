@@ -60,7 +60,12 @@ final class SortProcessor(val key: Option[String], val order: Option[String]) ex
         }
         var newout:Dictionary = runDAO.fetchAll(jobId, tmpRunId, key.getOrElse("id"), order.getOrElse("asc"))
         out = Some(newout)
-        runDAO.dropTable(jobId, tmpRunId)
+        val f2 = runDAO.dropTable(jobId, tmpRunId)
+        Await.ready(f2, scala.concurrent.duration.Duration.Inf)
+        f1.value.get match {
+          case Success(n) => 0
+          case Failure(ex) => logger.warn(ex.getMessage)
+        }
       }
     }
     out
