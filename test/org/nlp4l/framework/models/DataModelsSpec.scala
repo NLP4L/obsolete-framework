@@ -34,6 +34,12 @@ class DataModelsSpec extends Specification {
     "hashCode of a Cell must not equal to hashCode of different Cell" in {
       compareHeads(cells)
     }
+
+    "hashCode of a Cell can be overridden by userDefinedHashCode" in {
+      Cell("name", "aa").hashCode mustNotEqual Cell("name", "bb").hashCode
+      Cell("name", "aa", _ => 0).hashCode mustEqual Cell("name", "bb", _=> 0).hashCode
+      Cell("name", "aa", _ => 10).hashCode mustNotEqual Cell("name", "bb", _=> 100).hashCode
+    }
   }
 
   "Record.hashCode" should {
