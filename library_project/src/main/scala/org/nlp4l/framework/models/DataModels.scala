@@ -70,6 +70,16 @@ case class Cell (
 case class Record (
     cellList: Seq[Cell]
 ) {
+
+  val cellMap: Map[String, Cell] = cellList.map(cell => (cell.name -> cell)).toMap
+
+  def cellValue(name: String): Option[Any] = {
+    cellMap.get(name) match {
+      case Some(cell) => Some(cell.value)
+      case _ => None
+    }
+  }
+
   /**
    * Merge two record having same cell value of key with glue string 
    */
