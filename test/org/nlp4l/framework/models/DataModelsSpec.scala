@@ -554,5 +554,34 @@ class DataModelsSpec extends Specification {
       val ha2 = records.map(r => r.hashCode)
       ha1.sameElements(ha2)
     }
+
+    val record = Record(Seq(Cell("n1", "v1"), Cell("n2", "v2"), Cell("n3", 3)))
+
+    "Record" should {
+      "generate a Map so that one can get a certan Cell by name from the list of Cells" in {
+        record.cellMap.get("nX") must_== None
+        record.cellMap.get("n1") must_!= None
+        record.cellMap.get("n1").get.value must_== "v1"
+        record.cellMap.get("n2") must_!= None
+        record.cellMap.get("n2").get.value must_== "v2"
+        record.cellMap.get("n3") must_!= None
+        record.cellMap.get("n3").get.value must_== 3
+      }
+    }
+
+    "Record.cellValue" should {
+      "return None when there is no such name" in {
+        record.cellValue("nX") must_== None
+      }
+
+      "return value" in {
+        record.cellValue("n1") must_!= None
+        record.cellValue("n1").get must_== "v1"
+        record.cellValue("n2").get must_== "v2"
+        record.cellValue("n2") must_!= None
+        record.cellValue("n3").get must_== 3
+        record.cellValue("n3") must_!= None
+      }
+    }
   }
 }
