@@ -45,9 +45,10 @@ class WrapProcessor(val childList: Seq[RecordProcessor]) extends Processor {
       dic.recordList foreach { rec: Record =>
         var rec2:Option[Record] = Some(rec)
         childList foreach { recProc: RecordProcessor =>
-          rec2 = recProc.execute(rec2)
+          if(rec2 != None)
+            rec2 = recProc.execute(rec2)
         }
-        reclist += rec2.getOrElse(rec)
+        if(rec2 != None) reclist += rec2.get
       }
     }
     Some(Dictionary(reclist))
