@@ -105,12 +105,17 @@ case class Record (
   def setUserDefinedHashCode(dicAttr: DictionaryAttribute): Record = {
     val celllist = ListBuffer.empty[Cell]
     this.cellList foreach { thisCell =>
-      val cellAttr = dicAttr.cellAttributeList.filter(_.name == thisCell.name).head
-      if(cellAttr.userDefinedHashCode != null) {
-        celllist += Cell(thisCell.name, thisCell.value, cellAttr.userDefinedHashCode)
-      } else {
+      val cellAttrs = dicAttr.cellAttributeList.filter(_.name == thisCell.name)
+      if(cellAttrs.length > 0){
+        if(cellAttrs.head.userDefinedHashCode != null) {
+          celllist += Cell(thisCell.name, thisCell.value, cellAttrs.head.userDefinedHashCode)
+        } else {
+          celllist += thisCell
+        }
+      }
+      else{
         celllist += thisCell
-      } 
+      }
     }
     Record(celllist)
   }
@@ -131,11 +136,14 @@ case class Dictionary (
     recordList: Seq[Record] 
 ) {
   def setUserDefinedHashCode(dicAttr: DictionaryAttribute): Dictionary = {
+/*
     val recordList = ListBuffer.empty[Record]
     this.recordList foreach { r =>
-        recordList += r.setUserDefinedHashCode(dicAttr)
+      recordList += r.setUserDefinedHashCode(dicAttr)
     }
-    Dictionary(recordList)
+    */
+    val list = recordList.map(r => r.setUserDefinedHashCode(dicAttr))
+    Dictionary(list)
   }
 }
 

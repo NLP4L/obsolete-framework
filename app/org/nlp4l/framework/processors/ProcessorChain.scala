@@ -100,7 +100,7 @@ class ProcessorChain (val chain: List[Processor]) {
         case e: Exception => {
           val errjs = JobStatus(js.id, js.jobId, js.runId, js.total, js.done, e.getMessage)
           runDAO.updateJobStatus(errjs)
-          logger.error(e.getMessage)
+          logger.error(e.getMessage, e)
         }
       }
     }

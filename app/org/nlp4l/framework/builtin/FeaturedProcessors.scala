@@ -20,6 +20,7 @@ import java.io.File
 
 import org.nlp4l.framework.models._
 import org.nlp4l.framework.processors._
+import play.api.Logger
 
 import scala.io.Source
 import scala.util.matching.Regex
@@ -35,7 +36,7 @@ class TextRecordsProcessor(val file: String, val encoding: String) extends Proce
     val ff = new File(file).getAbsoluteFile
     val f = Source.fromFile(ff, encoding)
     try {
-      Some(Dictionary(f.getLines().map(a => Record(Seq(Cell("text", a)))).toList))
+      Some(Dictionary(f.getLines().map(a => Record(Seq(Cell("text", a.trim)))).toList))
     }
     finally {
       f.close()
@@ -53,19 +54,23 @@ class StandardSolrQueryLogProcessorFactory(settings: Map[String, String]) extend
 }
 
 class StandardSolrQueryLogProcessor(val pattern: Regex, val separator: String) extends RecordProcessor {
+
+  private val logger = Logger(this.getClass)
+
   override def execute(data: Option[Record]): Option[Record] = {
     data match {
       case Some(record) => {
         val value = record.cellList(0).value.asInstanceOf[String]
         value match {
           case pattern(a,b,c,d) => {
+            logger.debug(s"$a $b $c $d")
             val cellDate = Cell("date", a)
             val params = b.split("&")
             val q = params.filter(_.startsWith("q=")).map(a => a.substring(2))
             val cellQ = if(q.length > 0) Cell("q", q(0)) else Cell("q", "")
             val cellFq = Cell("fq", params.filter(_.startsWith("fq=")).map(a => a.substring(3)).mkString(separator))
-            val cellFacetField = Cell("facet.field", params.filter(_.startsWith("facet.field=")).map(a => a.substring(12)).mkString(","))
-            val cellFacetQuery = Cell("facet.query", params.filter(_.startsWith("facet.query=")).map(a => a.substring(12)).mkString(","))
+            val cellFacetField = Cell("facet_field", params.filter(_.startsWith("facet.field=")).map(a => a.substring(12)).mkString(separator))
+            val cellFacetQuery = Cell("facet_query", params.filter(_.startsWith("facet.query=")).map(a => a.substring(12)).mkString(separator))
             val cellHits = Cell("hits", c.toInt)
             val cellQTime = Cell("QTime", d.toInt)
             Some(Record(Seq(cellDate, cellQ, cellFq, cellFacetField, cellFacetQuery, cellHits, cellQTime)))
@@ -85,8 +90,8 @@ class StandardSolrQueryLogDictionaryAttributeFactory(settings: Map[String, Strin
       CellAttribute("date", CellType.StringType, true, true),
       CellAttribute("q", CellType.StringType, true, true),
       CellAttribute("fq", CellType.StringType, true, true),
-      CellAttribute("facet.field", CellType.StringType, true, true),
-      CellAttribute("facet.query", CellType.StringType, true, true),
+      CellAttribute("facet_field", CellType.StringType, true, true),
+      CellAttribute("facet_query", CellType.StringType, true, true),
       CellAttribute("hits", CellType.IntType, true, true),
       CellAttribute("QTime", CellType.IntType, true, true)
     )
