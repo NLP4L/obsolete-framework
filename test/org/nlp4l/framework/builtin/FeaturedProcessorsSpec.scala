@@ -91,4 +91,47 @@ class FeaturedProcessorsSpec extends Specification {
     if(value == None) false
     else value.get must_== v
   }
+
+  val swCode =
+    "a,an,and,are,as,at,be,but,by,for,if,in,into,is,it,no,not,of,on,or,such,that,the,their,then,there,these,they,this,to,was,will,with"
+      .split(",").toSet
+
+  "StopWordsUtil" should {
+
+    "read stopwords.txt that contains comments and empty lines" in {
+      val swFile = StopWordsUtil.stopwords("test/resources/org/nlp4l/framework/builtin/stopwords-simple.txt", "UTF-8", ",", 1)
+      swFile must_== swCode
+    }
+
+    "read stopwords.txt that contains comments and empty lines and even column errors" in {
+      val swFile = StopWordsUtil.stopwords("test/resources/org/nlp4l/framework/builtin/stopwords-multiplecolumns.txt", "UTF-8", ",", 3)
+      swFile must_== swCode.filterNot(a => (a == "but") || (a == "for"))
+    }
+  }
+
+  "StopWordsProcessor" should {
+    "stopRecord must return false when it has no Cell that is named" in {
+      val record = Record(Seq(Cell("name1", "val1"), Cell("name2", "val2")))
+      val processor = new StopWordsProcessor(swCode, "mycell")
+      processor.stopRecord(record) must_== false
+    }
+
+    "stopRecord must return false when it has Cell that is named but the value is not stop word" in {
+      val record = Record(Seq(Cell("name1", "val1"), Cell("mycell", "val2")))
+      val processor = new StopWordsProcessor(swCode, "mycell")
+      processor.stopRecord(record) must_== false
+    }
+
+    "stopRecord must return true when it has a Cell that contain a stop word" in {
+      val record = Record(Seq(Cell("name1", "val1"), Cell("mycell", "they")))
+      val processor = new StopWordsProcessor(swCode, "mycell")
+      processor.stopRecord(record) must_== true
+    }
+
+    "stopRecord must return true even if it has a numeric value" in {
+      val record = Record(Seq(Cell("name1", "val1"), Cell("mycell", 10)))
+      val processor = new StopWordsProcessor("2,4,6,8,10".split(",").toSet, "mycell")
+      processor.stopRecord(record) must_== true
+    }
+  }
 }
