@@ -257,7 +257,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       }
       cellList += Cell(c.name.toLowerCase(), v.getOrElse(null))
     }
-    val r = Record(cellList)
+    val r = Record(cellList).setUserDefinedHashCode(dicAttr)
     val hashcode: Int = r.hashCode
     
 
@@ -352,8 +352,8 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       }
       oldCellList += Cell(c.name.toLowerCase(), vv.getOrElse(null))
     }
-    val newr = Record(cellList)
-    val oldr = Record(oldCellList)
+    val newr = Record(cellList).setUserDefinedHashCode(dicAttr)
+    val oldr = Record(oldCellList).setUserDefinedHashCode(dicAttr)
     
     runDAO.updateRecord(jobId, runId, recordId, dicAttr, newr) map {
       case (a) => {
