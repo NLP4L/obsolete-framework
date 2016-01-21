@@ -181,12 +181,23 @@ class StopWordsProcessor(val stopwords: Set[String], val cellName: String) exten
   }
 }
 
+object JaUserDictionary {
+  val NOREADING = "NOREADING"
+}
+
 class JaUserDictionaryDictionaryAttributeFactory(settings: Map[String, String]) extends DictionaryAttributeFactory(settings) {
+
   override def getInstance: DictionaryAttribute = {
+    class WarningCellAttribute(name: String, cellType: CellType, isEditable: Boolean, isSortable: Boolean)
+      extends CellAttribute(name, cellType, isEditable, isSortable) {
+      override def format(cellValue: Any): String = {
+        cellValue.toString.replaceAll(JaUserDictionary.NOREADING, s"""<b class="text-danger">${JaUserDictionary.NOREADING}</b>""")
+      }
+    }
     val list = Seq[CellAttribute](
       CellAttribute("surface", CellType.StringType, true, true),
       CellAttribute("terms", CellType.StringType, true, true),
-      CellAttribute("readings", CellType.StringType, true, true),
+      new WarningCellAttribute("readings", CellType.StringType, true, true),
       CellAttribute("pos", CellType.StringType, true, true)
     )
     new DictionaryAttribute("jaUserDict", list)
@@ -233,7 +244,7 @@ class JaUserDictionaryProcessor(val cellname: String, val pos: String) extends P
       if(readAttr.getReading != null)
         readings += readAttr.getReading
       else
-        readings += "NOREADING"
+        readings += JaUserDictionary.NOREADING
     }
     tokenStream.end()
     tokenStream.close()
