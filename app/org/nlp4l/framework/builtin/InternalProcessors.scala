@@ -83,7 +83,7 @@ class MergeProcessorFactory(settings: Map[String, String]) extends ProcessorFact
 }
 
 /**
- * Sort Processor
+ * Merge Processor
  * 
  * @param key Merge key name
  * @param glue string to concatenate
