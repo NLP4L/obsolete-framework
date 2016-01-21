@@ -134,4 +134,37 @@ class FeaturedProcessorsSpec extends Specification {
       processor.stopRecord(record) must_== true
     }
   }
+
+  "JaUserDictionaryProcessor" should {
+    "generate terms and readings from a surface phrase" in {
+      val proc = new JaUserDictionaryProcessor("", "")
+      val tr: (String, String) = proc.generateRecord("応用情報処理技術者")
+      tr._1 must_== "応用 情報処理 技術 者"
+      tr._2 must_== "オウヨウ ジョウホウショリ ギジュツ シャ"
+    }
+
+    "generate terms and readings from a sequence of surface phrases" in {
+      val proc = new JaUserDictionaryProcessor("", "")
+      val tr1: (String, String) = proc.generateRecord("応用情報処理技術者")
+      tr1._1 must_== "応用 情報処理 技術 者"
+      tr1._2 must_== "オウヨウ ジョウホウショリ ギジュツ シャ"
+      val tr2: (String, String) = proc.generateRecord("基本情報処理技術者")
+      tr2._1 must_== "基本 情報処理 技術 者"
+      tr2._2 must_== "キホン ジョウホウショリ ギジュツ シャ"
+    }
+
+    "work correctly even when the surface is unknown" in {
+      val proc = new JaUserDictionaryProcessor("", "")
+      val tr: (String, String) = proc.generateRecord("フメイモジレツ")
+      tr._1 must_== "フメイモジレツ"
+      tr._2 must_== "NOREADING"
+    }
+
+    "work correctly even when the surface contains unknown terms" in {
+      val proc = new JaUserDictionaryProcessor("", "")
+      val tr: (String, String) = proc.generateRecord("ブログ記事")
+      tr._1 must_== "ブログ 記事"
+      tr._2 must_== "NOREADING キジ"
+    }
+  }
 }
