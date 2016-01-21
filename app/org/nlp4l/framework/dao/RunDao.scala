@@ -339,7 +339,6 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   }
   
   def fetch(tableName: String, job: Job, dic: DictionaryAttribute, sort: String, order: String, offset: Int = 0, size: Int = 10, filter: String): Dictionary = {
-    val ss = ListBuffer.empty[Record]
     var colTypeMap: Map[String, String] = Map()
     val colOrder = ListBuffer.empty[String]
     val selectSql = new StringBuilder("select")
@@ -358,32 +357,31 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
       selectSql append s" order by ${sort} ${order} limit ${size} offset ${offset}"
     }
     val r = Await.result(db.run(sql"#$selectSql".as[Map[String, Any]]), scala.concurrent.duration.Duration.Inf)
-    r foreach { rr:Map[String, Any] =>
+    val records = for(rr:Map[String, Any] <- r) yield {
       val cells = ListBuffer.empty[Cell]
       colOrder foreach { colName: String =>
         val v: Any = rr.getOrElse(colName, null)
         if(v != null) {
           colTypeMap.get(colName) match {
-              case Some("INTEGER") => cells += Cell(colName, v.asInstanceOf[String].toInt)
-              case Some("DOUBLE") => cells += Cell(colName, v.asInstanceOf[String].toDouble)
-              case Some("FLOAT") => cells += Cell(colName, v.asInstanceOf[String].toFloat)
-              case Some("DATE") => cells += Cell(colName, DateTime.parse(v.asInstanceOf[String]))
-              case _ => cells += Cell(colName, v.asInstanceOf[String])
+            case Some("INTEGER") => cells += Cell(colName, v.asInstanceOf[String].toInt)
+            case Some("DOUBLE") => cells += Cell(colName, v.asInstanceOf[String].toDouble)
+            case Some("FLOAT") => cells += Cell(colName, v.asInstanceOf[String].toFloat)
+            case Some("DATE") => cells += Cell(colName, DateTime.parse(v.asInstanceOf[String]))
+            case _ => cells += Cell(colName, v.asInstanceOf[String])
           }
         } else {
           cells += Cell(colName, null)
         }
       }
-      ss += Record(cells)
+      Record(cells)
     }
-    
-    Dictionary(ss)
+
+    Dictionary(records)
   }
   
   
   def fetchAll(jobId: Int, runId: Int, sort: String = "id", order: String = "asc"): Dictionary = {
     val tableName = s"run_${jobId}_${runId}"
-    val ss = ListBuffer.empty[Record]
     var colTypeMap: Map[String, String] = Map()
     val colOrder = ListBuffer.empty[String]
     var selectSql = "select"
@@ -408,26 +406,26 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     
     logger.debug(selectSql)
     val r = Await.result(db.run(sql"#$selectSql".as[Map[String, Any]]), scala.concurrent.duration.Duration.Inf)
-    r foreach { rr:Map[String, Any] =>
+    val records = for(rr:Map[String, Any] <- r) yield {
       val cells = ListBuffer.empty[Cell]
       colOrder foreach { colName: String =>
         val v: Any = rr.getOrElse(colName, null)
         if(v != null) {
           colTypeMap.get(colName) match {
-              case Some("INTEGER") => cells += Cell(colName, v.asInstanceOf[String].toInt)
-              case Some("DOUBLE") => cells += Cell(colName, v.asInstanceOf[String].toDouble)
-              case Some("FLOAT") => cells += Cell(colName, v.asInstanceOf[String].toFloat)
-              case Some("DATE") => cells += Cell(colName, DateTime.parse(v.asInstanceOf[String]))
-              case _ => cells += Cell(colName, v.asInstanceOf[String])
+            case Some("INTEGER") => cells += Cell(colName, v.asInstanceOf[String].toInt)
+            case Some("DOUBLE") => cells += Cell(colName, v.asInstanceOf[String].toDouble)
+            case Some("FLOAT") => cells += Cell(colName, v.asInstanceOf[String].toFloat)
+            case Some("DATE") => cells += Cell(colName, DateTime.parse(v.asInstanceOf[String]))
+            case _ => cells += Cell(colName, v.asInstanceOf[String])
           }
         } else {
           cells += Cell(colName, null)
         }
       }
-      ss += Record(cells)
+      Record(cells)
     }
-    
-    Dictionary(ss)
+
+    Dictionary(records)
   }
   
   def fetchRecordById(jobId: Int, runId: Int, recordId: Int): Option[Record] = {
@@ -537,7 +535,6 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   
   def fetchAllColumn(jobId: Int, runId: Int): Dictionary = {
     val tableName = s"run_${jobId}_${runId}"
-    val ss = ListBuffer.empty[Record]
     var colTypeMap: Map[String, String] = Map()
     val colOrder = ListBuffer.empty[String]
     var selectSql = "select"
@@ -560,26 +557,26 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     }
 
     val r = Await.result(db.run(sql"#$selectSql".as[Map[String, Any]]), scala.concurrent.duration.Duration.Inf)
-    
-    r foreach { rr:Map[String, Any] =>
+
+    val records = for(rr:Map[String, Any] <- r) yield {
       val cells = ListBuffer.empty[Cell]
       colOrder foreach { colName: String =>
         val v: Any = rr.getOrElse(colName, null)
         if(v != null) {
           colTypeMap.get(colName) match {
-              case Some("INTEGER") => cells += Cell(colName, v.asInstanceOf[String].toInt)
-              case Some("DOUBLE") => cells += Cell(colName, v.asInstanceOf[String].toDouble)
-              case Some("FLOAT") => cells += Cell(colName, v.asInstanceOf[String].toFloat)
-              case Some("DATE") => cells += Cell(colName, DateTime.parse(v.asInstanceOf[String]))
-              case _ => cells += Cell(colName, v.asInstanceOf[String])
+            case Some("INTEGER") => cells += Cell(colName, v.asInstanceOf[String].toInt)
+            case Some("DOUBLE") => cells += Cell(colName, v.asInstanceOf[String].toDouble)
+            case Some("FLOAT") => cells += Cell(colName, v.asInstanceOf[String].toFloat)
+            case Some("DATE") => cells += Cell(colName, DateTime.parse(v.asInstanceOf[String]))
+            case _ => cells += Cell(colName, v.asInstanceOf[String])
           }
         } else {
           cells += Cell(colName, null)
         }
       }
-      ss += Record(cells)
+      Record(cells)
     }
-    
-    Dictionary(ss)
+
+    Dictionary(records)
   }
 }
