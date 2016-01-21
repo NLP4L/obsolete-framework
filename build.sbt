@@ -16,6 +16,8 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-slick" % "1.1.0",
   "mysql" % "mysql-connector-java" % "5.1.38",
   "org.postgresql" % "postgresql" % "9.4-1206-jdbc41",
+  "org.apache.lucene" % "lucene-analyzers-common" % "5.3.1",
+  "org.apache.lucene" % "lucene-analyzers-kuromoji" % "5.3.1",
   "org.apache.lucene" % "lucene-suggest" % "5.3.1",
   "org.apache.opennlp" % "opennlp-tools" % "1.6.0",
   "com.jsuereth" %% "scala-arm" % "1.4",

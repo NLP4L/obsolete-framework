@@ -18,10 +18,16 @@ package org.nlp4l.framework.builtin
 
 import java.io.File
 
+import org.apache.lucene.analysis.ja.{JapaneseTokenizer, JapaneseAnalyzer}
+import org.apache.lucene.analysis.ja.tokenattributes.ReadingAttribute
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute
+import org.apache.lucene.analysis.util.CharArraySet
 import org.nlp4l.framework.models._
 import org.nlp4l.framework.processors._
 import play.api.Logger
 
+import scala.collection.mutable.ListBuffer
+import collection.JavaConversions._
 import scala.io.Source
 import scala.util.matching.Regex
 
@@ -172,5 +178,65 @@ class StopWordsProcessor(val stopwords: Set[String], val cellName: String) exten
     else{
       stopwords.contains(cell.get.value.toString)
     }
+  }
+}
+
+class JaUserDictionaryDictionaryAttributeFactory(settings: Map[String, String]) extends DictionaryAttributeFactory(settings) {
+  override def getInstance: DictionaryAttribute = {
+    val list = Seq[CellAttribute](
+      CellAttribute("surface", CellType.StringType, true, true),
+      CellAttribute("terms", CellType.StringType, true, true),
+      CellAttribute("readings", CellType.StringType, true, true),
+      CellAttribute("pos", CellType.StringType, true, true)
+    )
+    new DictionaryAttribute("jaUserDict", list)
+  }
+}
+
+class JaUserDictionaryProcessorFactory(settings: Map[String, String]) extends ProcessorFactory(settings) {
+  override def getInstance: Processor = {
+    new JaUserDictionaryProcessor(getStrParamRequired("cellName"), settings.getOrElse("pos", "カスタム名詞"))
+  }
+}
+
+class JaUserDictionaryProcessor(val cellname: String, val pos: String) extends Processor {
+
+  val analyzer = new JapaneseAnalyzer(null, JapaneseTokenizer.Mode.NORMAL, CharArraySet.EMPTY_SET, Set.empty[String])
+
+  override def execute(data: Option[Dictionary]): Option[Dictionary] = {
+    data match {
+      case Some(dic) => {
+        val records = ListBuffer.empty[Record]
+        dic.recordList.foreach( record => {
+          val value = record.cellValue(cellname)
+          if(value != None){
+            val surface = value.get.toString
+            val tr: (String, String) = generateRecord(surface)
+            records += Record(Seq(Cell("surface", surface), Cell("terms", tr._1), Cell("readings", tr._2), Cell("pos", pos)))
+          }
+        })
+        Some(Dictionary(records))
+      }
+      case _ => None
+    }
+  }
+
+  def generateRecord(surface: String): (String, String) = {
+    val terms = ListBuffer.empty[String]
+    val readings = ListBuffer.empty[String]
+    val tokenStream = analyzer.tokenStream("", surface)
+    val termAttr = tokenStream.getAttribute(classOf[CharTermAttribute])
+    val readAttr = tokenStream.getAttribute(classOf[ReadingAttribute])
+    tokenStream.reset()
+    while(tokenStream.incrementToken()){
+      terms += termAttr.toString
+      if(readAttr.getReading != null)
+        readings += readAttr.getReading
+      else
+        readings += "NOREADING"
+    }
+    tokenStream.end()
+    tokenStream.close()
+    (terms.mkString(" "), readings.mkString(" "))
   }
 }
