@@ -173,35 +173,23 @@ class JobDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   
   def fetchReplayOfAdd(jobId: Int): List[(Int, Int)] = {
     val tableName = s"replay_${jobId}"
-    val ss = ListBuffer.empty[(Int, Int)]
     val selectSql = s"select runId, hashcode from ${tableName} where replay='ADD'"
     val r = Await.result(db.run(sql"#$selectSql".as[(Int, Int)]), scala.concurrent.duration.Duration.Inf)
-    r foreach { rr:(Int, Int) =>
-      ss += rr
-    }
-    ss.toList
+    r.toList
   }
   
   def fetchReplayOfDel(jobId: Int): List[Int] = {
     val tableName = s"replay_${jobId}"
-    val ss = ListBuffer.empty[Int]
     val selectSql = s"select hashcode from ${tableName} where replay='DEL'"
     val r = Await.result(db.run(sql"#$selectSql".as[Int]), scala.concurrent.duration.Duration.Inf)
-    r foreach { rr:Int =>
-      ss += rr
-    }
-    ss.toList
+    r.toList
   }
   
   def fetchReplayOfMod(jobId: Int): List[(Int, Int, Int)] = {
     val tableName = s"replay_${jobId}"
-    val ss = ListBuffer.empty[(Int, Int, Int)]
     val selectSql = s"select runId, hashcode, modToHashcode from ${tableName} where replay='MOD'"
     val r = Await.result(db.run(sql"#$selectSql".as[(Int, Int, Int)]), scala.concurrent.duration.Duration.Inf)
-    r foreach { rr:(Int, Int, Int) =>
-      ss += rr
-    }
-    ss.toList
+    r.toList
   }
   
   def insertReplay(jobId: Int, r: Replay): Future[Int] = {

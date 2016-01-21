@@ -567,6 +567,16 @@ class DataModelsSpec extends Specification {
         record.cellMap.get("n3") must_!= None
         record.cellMap.get("n3").get.value must_== 3
       }
+
+      /*
+       * Record.merge is never called if those cells don't have same key at the moment
+       */
+      "merge two cells" in {
+        val r = Record(Seq(Cell("n1", "v1"), Cell("n2", "myval")))
+        val cell = record.merge("n1", "/", r).cellMap.get("n2")
+        cell must_!= None
+        cell.get.value must_== "v2/myval"
+      }
     }
 
     "Record.cellValue" should {
@@ -581,6 +591,27 @@ class DataModelsSpec extends Specification {
         record.cellValue("n2") must_!= None
         record.cellValue("n3").get must_== 3
         record.cellValue("n3") must_!= None
+      }
+    }
+
+    "Record.canMerge" should {
+      "work correctly even when a cell is empty" in {
+        record.canMerge("name", Record(Seq())) must_== false
+        Record(Seq()).canMerge("name", record) must_== false
+      }
+
+      "work correctly when a key that is never appeared" in {
+        record.canMerge("nokey", record) must_== false
+      }
+
+      "return false when there is no same names between two cells" in {
+        val r = Record(Seq(Cell("na1", "v1"), Cell("na2", "v2")))
+        record.canMerge("n1", r) must_== false
+      }
+
+      "return true when two cells has a same cell name" in {
+        val r = Record(Seq(Cell("na1", "v1"), Cell("n2", "v2")))
+        record.canMerge("n2", r) must_== true
       }
     }
   }
