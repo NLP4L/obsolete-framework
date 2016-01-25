@@ -16,8 +16,9 @@
 
 package org.nlp4l.framework.builtin
 
-import java.io.File
+import java.io.{FileInputStream, InputStreamReader, File}
 
+import org.apache.lucene.analysis.ja.dict.UserDictionary
 import org.apache.lucene.analysis.ja.{JapaneseTokenizer, JapaneseAnalyzer}
 import org.apache.lucene.analysis.ja.tokenattributes.ReadingAttribute
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute
@@ -206,13 +207,22 @@ class JaUserDictionaryDictionaryAttributeFactory(settings: Map[String, String]) 
 
 class JaUserDictionaryProcessorFactory(settings: Map[String, String]) extends ProcessorFactory(settings) {
   override def getInstance: Processor = {
-    new JaUserDictionaryProcessor(getStrParamRequired("cellName"), settings.getOrElse("pos", "カスタム名詞"))
+    val userdic = settings.get("userDictionary") match {
+      case Some(file) => {
+        val encoding = settings.getOrElse("encoding", "UTF-8")
+        val fis = new FileInputStream(file)
+        val isr = new InputStreamReader(fis, encoding)
+        UserDictionary.open(isr)
+      }
+      case None => null
+    }
+    new JaUserDictionaryProcessor(userdic, getStrParamRequired("cellName"), settings.getOrElse("pos", "カスタム名詞"))
   }
 }
 
-class JaUserDictionaryProcessor(val cellname: String, val pos: String) extends Processor {
+class JaUserDictionaryProcessor(val userdic: UserDictionary, val cellname: String, val pos: String) extends Processor {
 
-  val analyzer = new JapaneseAnalyzer(null, JapaneseTokenizer.Mode.NORMAL, CharArraySet.EMPTY_SET, Set.empty[String])
+  val analyzer = new JapaneseAnalyzer(userdic, JapaneseTokenizer.Mode.NORMAL, CharArraySet.EMPTY_SET, Set.empty[String])
 
   override def execute(data: Option[Dictionary]): Option[Dictionary] = {
     data match {

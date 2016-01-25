@@ -16,8 +16,9 @@
 
 package org.nlp4l.framework.builtin
 
-import java.io.FileNotFoundException
+import java.io.{StringReader, FileNotFoundException}
 
+import org.apache.lucene.analysis.ja.dict.UserDictionary
 import org.nlp4l.framework.models._
 import org.specs2.mutable.Specification
 
@@ -137,14 +138,14 @@ class FeaturedProcessorsSpec extends Specification {
 
   "JaUserDictionaryProcessor" should {
     "generate terms and readings from a surface phrase" in {
-      val proc = new JaUserDictionaryProcessor("", "")
+      val proc = new JaUserDictionaryProcessor(null, "", "")
       val tr: (String, String) = proc.generateRecord("応用情報処理技術者")
       tr._1 must_== "応用 情報処理 技術 者"
       tr._2 must_== "オウヨウ ジョウホウショリ ギジュツ シャ"
     }
 
     "generate terms and readings from a sequence of surface phrases" in {
-      val proc = new JaUserDictionaryProcessor("", "")
+      val proc = new JaUserDictionaryProcessor(null, "", "")
       val tr1: (String, String) = proc.generateRecord("応用情報処理技術者")
       tr1._1 must_== "応用 情報処理 技術 者"
       tr1._2 must_== "オウヨウ ジョウホウショリ ギジュツ シャ"
@@ -154,17 +155,33 @@ class FeaturedProcessorsSpec extends Specification {
     }
 
     "work correctly even when the surface is unknown" in {
-      val proc = new JaUserDictionaryProcessor("", "")
+      val proc = new JaUserDictionaryProcessor(null, "", "")
       val tr: (String, String) = proc.generateRecord("フメイモジレツ")
       tr._1 must_== "フメイモジレツ"
       tr._2 must_== "NOREADING"
     }
 
     "work correctly even when the surface contains unknown terms" in {
-      val proc = new JaUserDictionaryProcessor("", "")
+      val proc = new JaUserDictionaryProcessor(null, "", "")
       val tr: (String, String) = proc.generateRecord("ブログ記事")
       tr._1 must_== "ブログ 記事"
       tr._2 must_== "NOREADING キジ"
+    }
+
+    "be applied user dictionary" in {
+      val USER_DICT =
+        """
+          |応用情報処理技術者,応用情報処理技術者,オウヨウジョウホウショリギジュツシャ,資格名詞
+          |基本情報処理技術者,基本情報処理技術者,キホンジョウホウショリギジュツシャ,資格名詞
+        """.stripMargin
+      val userdic = UserDictionary.open(new StringReader(USER_DICT))
+      val proc = new JaUserDictionaryProcessor(userdic, "", "")
+      val tr1: (String, String) = proc.generateRecord("応用情報処理技術者")
+      tr1._1 must_== "応用情報処理技術者"
+      tr1._2 must_== "オウヨウジョウホウショリギジュツシャ"
+      val tr2: (String, String) = proc.generateRecord("基本情報処理技術者")
+      tr2._1 must_== "基本情報処理技術者"
+      tr2._2 must_== "キホンジョウホウショリギジュツシャ"
     }
   }
 }
