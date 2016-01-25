@@ -146,6 +146,17 @@ case class Dictionary (
     val list = recordList.map(r => r.setUserDefinedHashCode(dicAttr))
     Dictionary(list)
   }
+
+  def cellList[A](cellname: String, f: (Any) => A): Seq[A] = {
+    recordList.map { r =>
+      r.cellMap.get(cellname) match {
+        case Some(cell) => {
+          f(cell.value)
+        }
+        case None => throw new IllegalArgumentException(s"""cell name '$cellname' is not found""")
+      }
+    }
+  }
 }
 
 trait CellView {

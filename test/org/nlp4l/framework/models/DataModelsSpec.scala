@@ -615,4 +615,25 @@ class DataModelsSpec extends Specification {
       }
     }
   }
+
+  "Dictionary.cellList" should {
+
+    val dic = Dictionary(Seq(
+      Record(Seq(Cell("na1", "va11"), Cell("na2", "va12"), Cell("na3", 100))),
+      Record(Seq(Cell("na1", "va21"), Cell("na2", "va22"), Cell("na3", 200))),
+      Record(Seq(Cell("na1", "va31"), Cell("na2", "va32"), Cell("na3", 300)))
+    ))
+
+    "return a list of the Cell strings" in {
+      dic.cellList[String]("na2", (a) => a.toString) must_== Seq("va12", "va22", "va32")
+    }
+
+    "return a list of the Cell integers" in {
+      dic.cellList[Int]("na3", (a) => a.toString.toInt) must_== Seq(100, 200, 300)
+    }
+
+    "throw an Exception when the specified cell name is not found" in {
+      dic.cellList[String]("XXXXX", (a) => a.toString) must throwA[IllegalArgumentException]
+    }
+  }
 }
