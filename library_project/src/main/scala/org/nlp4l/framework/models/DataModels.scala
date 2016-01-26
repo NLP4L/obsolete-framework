@@ -84,40 +84,47 @@ case class Record (
    * Merge two record having same cell value of key with glue string 
    */
   def merge(key: String, glue:String, that:Record): Record = {
-    val celllist = ListBuffer.empty[Cell]
-    this.cellList foreach { thisCell =>
-      val thatCell = that.cellList.filter(_.name == thisCell.name).head
+    val cells = for(thisCell <- cellList) yield {
       if(thisCell.name == key) {
-        celllist += thisCell
+        thisCell
       } else {
-        celllist += thisCell.merge(thatCell, glue)
+        val a = that.cellList.filter(_.name == thisCell.name)
+        if(a.isEmpty) thisCell
+        else{
+          thisCell.merge(a.head, glue)
+        }
       }
     }
-    Record(celllist)
+    Record(cells)
   }
   
   def canMerge(key: String, that:Record): Boolean = {
-    val thisCell = this.cellList.filter(_.name == key).head
-    val thatCell = that.cellList.filter(_.name == key).head
-    thisCell.value == thatCell.value
+    val a = this.cellList.filter(_.name == key)
+    if(a.isEmpty) false
+    else{
+      val b = that.cellList.filter(_.name == key)
+      if(b.isEmpty) false
+      else{
+        a.head.value == b.head.value
+      }
+    }
   }
   
   def setUserDefinedHashCode(dicAttr: DictionaryAttribute): Record = {
-    val celllist = ListBuffer.empty[Cell]
-    this.cellList foreach { thisCell =>
+    val cells = for(thisCell <- cellList) yield {
       val cellAttrs = dicAttr.cellAttributeList.filter(_.name == thisCell.name)
       if(cellAttrs.length > 0){
         if(cellAttrs.head.userDefinedHashCode != null) {
-          celllist += Cell(thisCell.name, thisCell.value, cellAttrs.head.userDefinedHashCode)
+          Cell(thisCell.name, thisCell.value, cellAttrs.head.userDefinedHashCode)
         } else {
-          celllist += thisCell
+          thisCell
         }
       }
       else{
-        celllist += thisCell
+        thisCell
       }
     }
-    Record(celllist)
+    Record(cells)
   }
   
   override def hashCode: Int = {
@@ -136,14 +143,19 @@ case class Dictionary (
     recordList: Seq[Record] 
 ) {
   def setUserDefinedHashCode(dicAttr: DictionaryAttribute): Dictionary = {
-/*
-    val recordList = ListBuffer.empty[Record]
-    this.recordList foreach { r =>
-      recordList += r.setUserDefinedHashCode(dicAttr)
-    }
-    */
     val list = recordList.map(r => r.setUserDefinedHashCode(dicAttr))
     Dictionary(list)
+  }
+
+  def cellList[A](cellname: String, f: (Any) => A): Seq[A] = {
+    recordList.map { r =>
+      r.cellMap.get(cellname) match {
+        case Some(cell) => {
+          f(cell.value)
+        }
+        case None => throw new IllegalArgumentException(s"""cell name '$cellname' is not found""")
+      }
+    }
   }
 }
 
@@ -220,7 +232,3 @@ class DictionaryAttribute(val name: String, val cellAttributeList: Seq[CellAttri
     cellAttributeList.filter(_.name.toLowerCase() == name.toLowerCase()).headOption
   }
 }
-
-
-
-
