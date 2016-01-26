@@ -426,7 +426,7 @@ class TestDeployerFactory(settings: Map[String, String]) extends DeployerFactory
 }
 
 class TestDeployer(val settings: Map[String, String]) extends Deployer {
-  def deploy (data: Option[Dictionary]): Tuple2[Boolean, Seq[String]] = {
-    (true, Seq())
+  def deploy (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]] = {
+    (true, Seq(), Seq())
   }
 }

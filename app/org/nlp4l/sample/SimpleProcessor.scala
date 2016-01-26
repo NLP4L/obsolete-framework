@@ -180,10 +180,10 @@ class SimpleDeployerFactory(settings: Map[String, String]) extends DeployerFacto
 
 
 class SimpleDeployer(val filename: Option[String]) extends Deployer {
-  override def deploy (data: Option[Dictionary]): Tuple2[Boolean, Seq[String]] = {
+  override def deploy (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]] = {
     Thread.sleep(3000)
     
-    (false, Seq("err 01", "err 02", filename.getOrElse("")))
+    (false, Seq("err 01", "err 02", filename.getOrElse("")), Seq())
     //(true, Seq())
   }
 }
