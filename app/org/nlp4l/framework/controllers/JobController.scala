@@ -55,7 +55,7 @@ import org.nlp4l.framework.models.Dictionary
 import org.nlp4l.framework.models.DictionaryAttribute
 import org.nlp4l.framework.models.Record
 import org.nlp4l.framework.models.RecordWithAttrbute
-import org.nlp4l.framework.processors.{ValidatorChain, DeployerChain, ProcessorChain, ProcessorChainBuilder}
+import org.nlp4l.framework.processors._
 import org.nlp4l.framework.builtin.Replay
 import org.nlp4l.framework.builtin.JobMessage
 import org.nlp4l.framework.builtin.ActionResult
@@ -407,27 +407,18 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       case e: Exception => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
     }
   }
-  
-  
+
   def deployResult(jobId: Int, runId: Int) = Action {
     try {
-
       val dic = runDAO.fetchAll(jobId, runId)
-      val chain = DeployerChain.getChain(jobDAO, jobId)
-      val errMsg = chain.process(jobDAO, jobId, runId, dic)
-      
-      if(errMsg.isEmpty) {
-        Ok(Json.toJson(ActionResult(true, Seq("success"))))
-      } else {
-        Ok(Json.toJson(ActionResult(false, errMsg)))
-      }
-
+      val deployer = DeployerBuilder.build(jobDAO, jobId)
+      val result = deployer.deploy(Some(dic))
+      Ok(Json.toJson(ActionResult(result._1, result._2)))
     } catch {
       case e: Exception => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
     }
   }
-  
-  
+
   def jobStatus() = Action.async {request =>
     val offset = request.getQueryString("offset") match {
       case Some(x) if x != "" => x.toInt

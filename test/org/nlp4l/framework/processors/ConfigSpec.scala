@@ -71,22 +71,13 @@ class ConfigSpec extends Specification {
       |    }
       |  ]
       |
-      |  deployers : [
+      |  deployer :
       |    {
       |      class : org.nlp4l.framework.processors.TestDeployerFactory
       |      settings : {
       |        code : "deploy-1"
       |      }
       |    }
-      |    {
-      |      class : org.nlp4l.framework.processors.Test2DeployerFactory
-      |      settings : {
-      |        greeting : "this is deployer"
-      |        name : "Tom"
-      |        code : "deploy-2"
-      |      }
-      |    }
-      |  ]
       |}
     """.stripMargin
 
@@ -115,9 +106,8 @@ class ConfigSpec extends Specification {
       vp1.settings.getOrElse("name", "") must_== "Mike"
     }
 
-    "can be seen from DeployerFactories that don't override them" in {
-      val dChain = new DeployerChainBuilder().build(conf1).result()
-      val dp0 : TestDeployer = dChain.chain(0).asInstanceOf[TestDeployer]
+    "can be seen from DeployerFactory that doesn't override them" in {
+      val dp0 : TestDeployer = DeployerBuilder.build(conf1).asInstanceOf[TestDeployer]
       dp0.settings.getOrElse("greeting", "") must_== "this is global"
       dp0.settings.getOrElse("name", "") must_== "Mike"
     }
@@ -147,13 +137,232 @@ class ConfigSpec extends Specification {
     }
 
     "can be overridden by DeployerFactories" in {
-      val dChain = new DeployerChainBuilder().build(conf1).result()
-      val dp0 : TestDeployer = dChain.chain(0).asInstanceOf[TestDeployer]
+      val dp0 : TestDeployer = DeployerBuilder.build(conf1).asInstanceOf[TestDeployer]
       dp0.settings.getOrElse("code", "") must_== "deploy-1"
-      val dp1 : Test2Deployer = dChain.chain(1).asInstanceOf[Test2Deployer]
-      dp1.settings.getOrElse("greeting", "") must_== "this is deployer"
-      dp1.settings.getOrElse("name", "") must_== "Tom"
-      dp1.settings.getOrElse("code", "") must_== "deploy-2"
+    }
+  }
+
+  val conf2_missing_dic =
+    """
+      |{
+      |  settings : {
+      |    greeting : "this is global"
+      |    name : "Mike"
+      |    code : "global-1"
+      |  }
+      |
+      |  processors : [
+      |    {
+      |      class : org.nlp4l.framework.processors.TestProcessorFactory
+      |      settings : {
+      |        greeting : "this is processor"
+      |        code : "proc-1"
+      |      }
+      |    }
+      |    {
+      |      class : org.nlp4l.framework.processors.Test2ProcessorFactory
+      |      settings : {
+      |        code : "proc-2"
+      |      }
+      |    }
+      |  ]
+      |
+      |  validators : [
+      |    {
+      |      class : org.nlp4l.framework.processors.TestValidatorFactory
+      |      settings : {
+      |        name : "Tom"
+      |        code : "valid-1"
+      |      }
+      |    }
+      |    {
+      |      class : org.nlp4l.framework.processors.Test2ValidatorFactory
+      |      settings : {
+      |        greeting : "this is validator"
+      |        code : "valid-2"
+      |      }
+      |    }
+      |  ]
+      |
+      |  deployer :
+      |    {
+      |      class : org.nlp4l.framework.processors.TestDeployerFactory
+      |      settings : {
+      |        code : "deploy-1"
+      |      }
+      |    }
+      |}
+    """.stripMargin
+
+  val conf3_missing_procs =
+    """
+      |{
+      |  settings : {
+      |    greeting : "this is global"
+      |    name : "Mike"
+      |    code : "global-1"
+      |  }
+      |  dictionary : [
+      |    {
+      |      class : org.nlp4l.framework.processors.TestDictionaryAttributeFactory
+      |      settings : {
+      |        code : "dic-1"
+      |      }
+      |    }
+      |  ]
+      |
+      |  validators : [
+      |    {
+      |      class : org.nlp4l.framework.processors.TestValidatorFactory
+      |      settings : {
+      |        name : "Tom"
+      |        code : "valid-1"
+      |      }
+      |    }
+      |    {
+      |      class : org.nlp4l.framework.processors.Test2ValidatorFactory
+      |      settings : {
+      |        greeting : "this is validator"
+      |        code : "valid-2"
+      |      }
+      |    }
+      |  ]
+      |
+      |  deployer :
+      |    {
+      |      class : org.nlp4l.framework.processors.TestDeployerFactory
+      |      settings : {
+      |        code : "deploy-1"
+      |      }
+      |    }
+      |}
+    """.stripMargin
+
+  val conf4_missing_dicclass =
+    """
+      |{
+      |  dictionary : [
+      |    {
+      |      settings : {
+      |        code : "dic-1"
+      |      }
+      |    }
+      |  ]
+      |
+      |  processors : [
+      |    {
+      |      class : org.nlp4l.framework.processors.TestProcessorFactory
+      |      settings : {
+      |        greeting : "this is processor"
+      |        code : "proc-1"
+      |      }
+      |    }
+      |  ]
+      |}
+    """.stripMargin
+
+  val conf5_missing_procclass =
+    """
+      |{
+      |  dictionary : [
+      |    {
+      |      class : org.nlp4l.framework.processors.TestDictionaryAttributeFactory
+      |      settings : {
+      |        code : "dic-1"
+      |      }
+      |    }
+      |  ]
+      |
+      |  processors : [
+      |    {
+      |      settings : {
+      |        greeting : "this is processor"
+      |        code : "proc-1"
+      |      }
+      |    }
+      |  ]
+      |}
+    """.stripMargin
+
+  val conf6_missing_validclass =
+    """
+      |{
+      |  dictionary : [
+      |    {
+      |      class : org.nlp4l.framework.processors.TestDictionaryAttributeFactory
+      |      settings : {
+      |        code : "dic-1"
+      |      }
+      |    }
+      |  ]
+      |
+      |  processors : [
+      |    {
+      |      class : org.nlp4l.framework.processors.TestProcessorFactory
+      |      settings : {
+      |        greeting : "this is processor"
+      |        code : "proc-1"
+      |      }
+      |    }
+      |  ]
+      |
+      |  validators : [
+      |    {
+      |      settings : {
+      |        name : "Tom"
+      |        code : "valid-1"
+      |      }
+      |    }
+      |  ]
+      |}
+    """.stripMargin
+
+  val conf7_missing_deployclass =
+    """
+      |{
+      |  dictionary : [
+      |    {
+      |      class : org.nlp4l.framework.processors.TestDictionaryAttributeFactory
+      |      settings : {
+      |        code : "dic-1"
+      |      }
+      |    }
+      |  ]
+      |
+      |  processors : [
+      |    {
+      |      class : org.nlp4l.framework.processors.TestProcessorFactory
+      |      settings : {
+      |        greeting : "this is processor"
+      |        code : "proc-1"
+      |      }
+      |    }
+      |  ]
+      |
+      |  deployer :
+      |    {
+      |      settings : {
+      |        code : "deploy-1"
+      |      }
+      |    }
+      |}
+    """.stripMargin
+
+  "ProcessorChain.validateConf" should {
+    "return true if the Config file has all members" in {
+      ProcessorChain.validateConf(conf1) must_== true
+    }
+
+    "return false if the config doesn't have required entries" in {
+      ProcessorChain.validateConf(conf2_missing_dic) must_== false
+      ProcessorChain.validateConf(conf3_missing_procs) must_== false
+    }
+
+    "return false if the config doesn't have class entry" in {
+      ProcessorChain.validateConf(conf4_missing_dicclass) must_== false
+      ProcessorChain.validateConf(conf5_missing_procclass) must_== false
+      ProcessorChain.validateConf(conf6_missing_validclass) must_== false
+      ProcessorChain.validateConf(conf7_missing_deployclass) must_== false
     }
   }
 }
@@ -217,18 +426,6 @@ class TestDeployerFactory(settings: Map[String, String]) extends DeployerFactory
 }
 
 class TestDeployer(val settings: Map[String, String]) extends Deployer {
-  def deploy (data: Option[Dictionary]): Tuple2[Boolean, Seq[String]] = {
-    (true, Seq())
-  }
-}
-
-class Test2DeployerFactory(settings: Map[String, String]) extends DeployerFactory(settings){
-  override def getInstance(): Deployer = {
-    new Test2Deployer(settings)
-  }
-}
-
-class Test2Deployer(val settings: Map[String, String]) extends Deployer {
   def deploy (data: Option[Dictionary]): Tuple2[Boolean, Seq[String]] = {
     (true, Seq())
   }

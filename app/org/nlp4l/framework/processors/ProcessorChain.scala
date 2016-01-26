@@ -235,7 +235,7 @@ object ProcessorChain {
   def validateConf(confStr: String): Boolean = {
     try {
       val config = ConfigFactory.parseString(confStr, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF))
-      if (!config.hasPath("dictionary") || !config.hasPath("processors") || !config.hasPath("deployers")) false
+      if (!config.hasPath("dictionary") || !config.hasPath("processors")) false
       else {
         val b1 = config.getConfigList("dictionary").toList.forall {
           pConf => pConf.hasPath("class")
@@ -243,9 +243,11 @@ object ProcessorChain {
         val b2 = config.getConfigList("processors").toList.forall {
           pConf => pConf.hasPath("class")
         }
-        val b3 = config.getConfigList("deployers").toList.forall {
-          pConf => pConf.hasPath("class")
-        }
+        val b3 =
+          if (!config.hasPath("deployer")) true
+          else {
+            config.getConfig("deployer").hasPath("class")
+          }
         val b4 =
           if (!config.hasPath("validators")) true
           else {
@@ -271,10 +273,11 @@ class ProcessorChainBuilder() {
   def procBuild(jobId: Int, confStr: String): ProcessorChainBuilder = {
     val config = ConfigFactory.parseString(confStr)
     
-    var gSettings: Map[String, String] = Map()
-    if(config.hasPath("settings")) {
-      gSettings = config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
-    }
+    val gSettings: Map[String, String] =
+      if(config.hasPath("settings")) {
+        config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
+      }
+      else Map()
 
     config.getConfigList("processors").foreach {
       pConf =>
