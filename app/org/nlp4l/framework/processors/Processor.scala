@@ -16,15 +16,9 @@
 
 package org.nlp4l.framework.processors
 
-import com.typesafe.config.{ Config, ConfigFactory }
-import org.nlp4l.framework.dao.JobDAO
 import org.nlp4l.framework.models.Dictionary
 import org.nlp4l.framework.models.DictionaryAttribute
 import org.nlp4l.framework.models.Record
-import play.api.Logger
-
-import scala.collection.convert.WrapAsScala._
-import scala.concurrent.Await
 
 
 abstract class DictionaryAttributeFactory(settings: Map[String, String]) extends ConfiguredFactory(settings){
@@ -119,42 +113,4 @@ abstract class DeployerFactory(settings: Map[String, String]) extends Configured
 }
 trait Deployer {
   def deploy (data: Option[Dictionary]): Tuple2[Boolean, Seq[String]]
-}
-
-object DeployerBuilder {
-
-  val logger = Logger(this.getClass)
-
-  def build(jobDAO: JobDAO, jobId: Int): Deployer = {
-    val job = Await.result(jobDAO.get(jobId), scala.concurrent.duration.Duration.Inf)
-    build(job.config)
-  }
-
-  def build(cfg: String): Deployer = {
-    val config = ConfigFactory.parseString(cfg)
-
-    val gSettings: Map[String, Object] =
-      if(config.hasPath("settings")) {
-        config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
-      }
-      else Map()
-
-    val pConf = config.getConfig("deployer")
-    try {
-      val className = pConf.getString("class")
-      val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-      var lSettings: Map[String, Object] = Map()
-      if(pConf.hasPath("settings")) {
-        lSettings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
-      }
-      val settings = gSettings ++ lSettings
-      val facP = constructor.newInstance(settings).asInstanceOf[DeployerFactory]
-      facP.getInstance()
-    } catch {
-      case e: Exception => {
-        logger.error(e.getMessage)
-        throw e
-      }
-    }
-  }
 }

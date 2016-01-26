@@ -114,4 +114,3 @@ abstract class DeployerFactory(settings: Map[String, String]) extends Configured
 trait Deployer {
   def deploy (data: Option[Dictionary]): Tuple2[Boolean, Seq[String]]
 }
-
