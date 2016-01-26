@@ -413,6 +413,8 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       val dic = runDAO.fetchAll(jobId, runId)
       val deployer = DeployerBuilder.build(jobDAO, jobId)
       val result = deployer.deploy(Some(dic))
+      val job = Await.result(jobDAO.get(jobId), scala.concurrent.duration.Duration.Inf)
+      jobDAO.update(Job(job.jobId, job.name, job.config, runId, job.lastRunAt, Some(new DateTime())))
       Ok(Json.toJson(ActionResult(result._1, result._2)))
     } catch {
       case e: Exception => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
