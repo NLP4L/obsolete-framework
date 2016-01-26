@@ -33,4 +33,55 @@ class FeaturedValidatorsSpec extends Specification {
       validator.unique(list) must_== None
     }
   }
+
+  "RegexValidator.checkPatterns" should {
+    "return true if all items are accepted" in {
+      val list = "aaa123,bbb123,ccc123,ddd123".split(",")
+      val validator = new RegexValidator("", "123", null)
+      val result = validator.checkPatterns(list)
+      result._1 must_== true
+    }
+
+    "return true if all items are not denied" in {
+      val list = "aaa123,bbb123,ccc123,ddd123".split(",")
+      val validator = new RegexValidator("", null, "456")
+      val result = validator.checkPatterns(list)
+      result._1 must_== true
+    }
+
+    "return true if all items are accepted and not denied" in {
+      val list = "aaa123,bbb123,ccc123,ddd123".split(",")
+      val validator = new RegexValidator("", "123", "456")
+      val result = validator.checkPatterns(list)
+      result._1 must_== true
+    }
+
+    "return false if one of items is not accepted" in {
+      val list = "aaa123,bbb123,ccc456,ddd123".split(",")
+      val validator = new RegexValidator("", "123", null)
+      val result = validator.checkPatterns(list)
+      result._1 must_== false
+    }
+
+    "return false if one of items is denied" in {
+      val list = "aaa123,bbb456,ccc123,ddd123".split(",")
+      val validator = new RegexValidator("", null, "456")
+      val result = validator.checkPatterns(list)
+      result._1 must_== false
+    }
+
+    "return false if all items are accepted but one of them is denied" in {
+      val list = "aaa123,bbb123,ccc123,ddd123456".split(",")
+      val validator = new RegexValidator("", "123", "456")
+      val result = validator.checkPatterns(list)
+      result._1 must_== false
+    }
+
+    "return false if all items are not denied but one of them is not accepted" in {
+      val list = "aaa123,bbb123,ccc123,ddd789".split(",")
+      val validator = new RegexValidator("", "123", "456")
+      val result = validator.checkPatterns(list)
+      result._1 must_== false
+    }
+  }
 }

@@ -65,3 +65,60 @@ class UniqueRecordValidator(val cellname: String) extends Validator {
     }
   }
 }
+
+class RegexValidatorFactory(settings: Map[String, String]) extends ValidatorFactory(settings) {
+  override def getInstance: Validator = {
+    val accept = settings.getOrElse("regexAccept", null)
+    val deny = settings.getOrElse("regexDeny", null)
+    (accept, deny) match {
+      case (null, null) => throw new IllegalArgumentException(s"either regexAccept or regexDeny must be set")
+      case _ => {
+        new RegexValidator(getStrParamRequired("cellName"), accept, deny)
+      }
+    }
+  }
+}
+
+class RegexValidator(val cellname: String, val accept: String, val deny: String) extends Validator {
+
+  val logger = Logger(this.getClass)
+
+  override def validate (data: Option[Dictionary]): Tuple2[Boolean, Seq[String]] = {
+    data match {
+      case Some(dic) => {
+        val list = dic.cellList[String](cellname, a => a.toString)
+        val result = checkPatterns(list)
+        if(result._1) (true, Seq())
+        else (false, Seq(result._2))
+      }
+      case None => (true, Seq())
+    }
+  }
+
+  def checkPatterns(cellList: Seq[String]): (Boolean, String) = {
+    (accept, deny) match {
+      case (null, null) => (true, "")
+      case (a, null) => checkAccept(cellList)
+      case (null, b) => checkDeny(cellList)
+      case (a, b) => {
+        val resultAccept = checkAccept(cellList)
+        if(resultAccept._1 == false) resultAccept
+        else checkDeny(cellList)
+      }
+    }
+  }
+
+  private def checkAccept(cellList: Seq[String]): (Boolean, String) = {
+    val regex = accept.r
+    val result = cellList.filter(c => regex.findFirstIn(c) == None)
+    if(result.length > 0) (false, s"""cell '${result.head}' of $cellname is not acceptable""")
+    else (true, "")
+  }
+
+  private def checkDeny(cellList: Seq[String]): (Boolean, String) = {
+    val regex = deny.r
+    val result = cellList.filter(c => regex.findFirstIn(c) != None)
+    if(result.length > 0) (false, s"""cell '${result.head}' of $cellname is denied""")
+    else (true, "")
+  }
+}
