@@ -417,13 +417,9 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       if(result._1){
         val stgs = DeployerBuilder.settings(job.config)
         val encoding = stgs.getOrElse("encoding", "UTF-8").asInstanceOf[String]
-        val tempFile = FileUtil.makeTempTextFile(result._3, encoding)
         val toUrl = stgs.apply("url").toString
         val toFile = stgs.apply("file").toString
-        val req = url(toUrl).addQueryParameter("file", toFile) <<< tempFile
-        val fres = Http(req OK as.String)
-        // TODO: GUI must support fres asynchronously
-        FileUtil.delete(tempFile)
+        JobController.transferHttp(toUrl, toFile, result._3, encoding)
       }
       jobDAO.update(Job(job.jobId, job.name, job.config, runId, job.lastRunAt, Some(new DateTime())))
       Ok(Json.toJson(ActionResult(result._1, result._2)))
@@ -547,5 +543,16 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     val r = runDAO.fetchCellValueList(jobId, runId, cellname)
     val res = r.filter(_ != null).grouped(1).map(xs => (xs(0).toString -> xs(0).toString)).toMap
     Ok(Json.toJson(res))
+  }
+}
+
+object JobController {
+
+  def transferHttp(toUrl: String, toFile: String, text: Seq[String], encoding: String): Unit = {
+    val tempFile = FileUtil.makeTempTextFile(text, encoding)
+    val req = url(toUrl).addQueryParameter("file", toFile) <<< tempFile
+    val fres = Http(req OK as.String)
+    // TODO: GUI must support fres asynchronously
+    FileUtil.delete(tempFile)
   }
 }

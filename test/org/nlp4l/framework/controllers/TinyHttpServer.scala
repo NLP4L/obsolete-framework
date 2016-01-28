@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.nlp4l.framework.builtin
+package org.nlp4l.framework.controllers
 
 import java.io.{PrintWriter, OutputStream}
 import java.net.{HttpURLConnection, InetSocketAddress, ServerSocket, Socket}
@@ -24,6 +24,7 @@ import scala.collection.mutable.ArrayBuffer
 
 class TinyHttpServer(val port: Int){
 
+  var req: Request = null
   val serverSocket = new ServerSocket()
   serverSocket.setReuseAddress(true)
   serverSocket.bind(new InetSocketAddress(port))
@@ -63,7 +64,7 @@ class TinyHttpServer(val port: Int){
       if(sock != None){
         val socket = sock.get
         try{
-          val req = new Request(socket)
+          req = new Request(socket)
           if(req.path == "/shutdown"){
             println("***** /shutdown *****")
             response(200, "OK", socket.getOutputStream())
@@ -90,11 +91,27 @@ class TinyHttpServer(val port: Int){
   }
 }
 
-object TinyHttpServer {
+class TinyHttpServerThread extends Thread {
+
+  var server: TinyHttpServer = null
+/*
   def main(args: Array[String]): Unit = {
-    val server = new TinyHttpServer(8983)
+    server = new TinyHttpServer(8983)
     server.service()
     server.shutdown()
+  }
+*/
+  override def run(): Unit = {
+    server = new TinyHttpServer(8983)
+    server.service()
+    server.shutdown()
+  }
+
+  def slowRequestCheck(): (String, String, String, Int, Array[Byte], Array[Byte]) = {
+    // TODO: To remove sleep, use Actor and its testing system!
+    Thread.sleep(1000)
+    val req = server.req
+    (req.method, req.path, req.version, req.status, req.header, req.content)
   }
 }
 

@@ -39,6 +39,7 @@ object FileUtil {
   }
 
   def delete(file: File): Unit = {
-    file.delete()
+    // TODO: would like to delete the file immediately, but...
+    file.deleteOnExit()
   }
 }
