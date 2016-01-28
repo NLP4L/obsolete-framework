@@ -133,6 +133,10 @@ case class Record (
       (a, b) => (((a.toString.hashCode << 16) + a) ^ b.hashCode) << 1
     }
   }
+
+  def mkCsvRecord(sep: String): String = {
+    cellList.map(c => c.value.toString).mkString(sep)
+  }
 }
 
 /**

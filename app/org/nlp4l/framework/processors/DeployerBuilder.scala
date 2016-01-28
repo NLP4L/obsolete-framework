@@ -16,7 +16,7 @@
 
 package org.nlp4l.framework.processors
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{ Config, ConfigFactory }
 import org.nlp4l.framework.dao.JobDAO
 import play.api.Logger
 
@@ -34,24 +34,12 @@ object DeployerBuilder {
   }
 
   def build(cfg: String): Deployer = {
-    val config = ConfigFactory.parseString(cfg)
-
-    val gSettings: Map[String, Object] =
-      if(config.hasPath("settings")) {
-        config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
-      }
-      else Map()
-
-    val pConf = config.getConfig("deployer")
+    val pConf = deployerConfig(cfg)
     try {
       val className = pConf.getString("class")
       val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-      var lSettings: Map[String, Object] = Map()
-      if(pConf.hasPath("settings")) {
-        lSettings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
-      }
-      val settings = gSettings ++ lSettings
-      val facP = constructor.newInstance(settings).asInstanceOf[DeployerFactory]
+
+      val facP = constructor.newInstance(settings(cfg)).asInstanceOf[DeployerFactory]
       facP.getInstance()
     } catch {
       case e: Exception => {
@@ -59,5 +47,26 @@ object DeployerBuilder {
         throw e
       }
     }
+  }
+
+  def settings(cfg: String): Map[String, Object] = {
+    val config = ConfigFactory.parseString(cfg)
+
+    val gSettings: Map[String, Object] =
+      if(config.hasPath("settings")) {
+        config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+      }
+      else Map()
+    val pConf = deployerConfig(cfg)
+    var lSettings: Map[String, Object] = Map()
+    if(pConf.hasPath("settings")) {
+      lSettings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+    }
+    gSettings ++ lSettings
+  }
+
+  def deployerConfig(cfg: String): Config = {
+    val config = ConfigFactory.parseString(cfg)
+    config.getConfig("deployer")
   }
 }

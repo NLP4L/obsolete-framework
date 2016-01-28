@@ -92,7 +92,7 @@ class TinyHttpServer(val port: Int){
 
 object TinyHttpServer {
   def main(args: Array[String]): Unit = {
-    val server = new TinyHttpServer(9010)
+    val server = new TinyHttpServer(8983)
     server.service()
     server.shutdown()
   }
@@ -112,6 +112,7 @@ class Request(val sock: Socket){
       case _ => (null, null, null)
     }
   }
+  println(s"method = '$method', path = '$path', version = '$version'")
 
   def process(): (Int, Array[Byte], Array[Byte]) = {
     val hbuf = ArrayBuffer.empty[Byte]
@@ -167,43 +168,3 @@ class Request(val sock: Socket){
     }
   }
 }
-
-  /*
-
-  def response(req: Request, out: OutputStream): Unit = {
-    req.method match {
-      case "GET" => {
-        println("***GET***")
-      }
-      case "POST" => {
-        println("***POST***")
-      }
-      case a => throw new IllegalArgumentException(s"unknow method: ${req.method} ${HttpURLConnection.HTTP_BAD_METHOD}")
-    }
-  }
-
-  void response(File f, OutputStream out) throws IOException {
-    responseSuccess((int)f.length(), "text/html", out);
-    BufferedInputStream bi = new BufferedInputStream(new FileInputStream(f));
-    try {
-      for (int c = bi.read(); c >= 0; c = bi.read()) {
-      out.write(c);
-    }
-    } finally {
-      bi.close();
-    }
-  }
-
-  void responseSuccess(int len, String type, OutputStream out) throws IOException {
-    PrintWriter prn = new PrintWriter(out);
-    prn.print("HTTP/1.1 200 OK\r\n");
-    prn.print("Connection: close\r\n");
-    prn.print("Content-Length: ");
-    prn.print(len);
-    prn.print("\r\n");
-    prn.print("Content-Type: ");
-    prn.print(type);
-    prn.print("\r\n\r\n");
-    prn.flush();
-  }
-*/

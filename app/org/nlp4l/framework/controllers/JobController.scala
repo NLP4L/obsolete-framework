@@ -16,6 +16,7 @@
 
 package org.nlp4l.framework.controllers
 
+import dispatch._, Defaults._
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
@@ -26,7 +27,6 @@ import java.util.UUID
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Await
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.TimeoutException
 import scala.concurrent.duration.Duration
@@ -414,6 +414,17 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       val deployer = DeployerBuilder.build(jobDAO, jobId)
       val result = deployer.deploy(Some(dic))
       val job = Await.result(jobDAO.get(jobId), scala.concurrent.duration.Duration.Inf)
+      if(result._1){
+        val stgs = DeployerBuilder.settings(job.config)
+        val encoding = stgs.getOrElse("encoding", "UTF-8").asInstanceOf[String]
+        val tempFile = FileUtil.makeTempTextFile(result._3, encoding)
+        val toUrl = stgs.apply("url").toString
+        val toFile = stgs.apply("file").toString
+        val req = url(toUrl).addQueryParameter("file", toFile) <<< tempFile
+        val fres = Http(req OK as.String)
+        // TODO: GUI must support fres asynchronously
+        FileUtil.delete(tempFile)
+      }
       jobDAO.update(Job(job.jobId, job.name, job.config, runId, job.lastRunAt, Some(new DateTime())))
       Ok(Json.toJson(ActionResult(result._1, result._2)))
     } catch {
