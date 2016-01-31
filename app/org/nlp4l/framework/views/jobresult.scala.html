@@ -116,7 +116,7 @@
           <button id="validate-button" class="btn btn-primary" data-toggle="modal" data-target="#validateModal"><i class="glyphicon glyphicon-check"></i> Validate</button>
         </div>
         <div class="col-md-2">
-          <button id="deploy-button" class="btn btn-info" data-toggle="modal" data-target="#deployModal" ><i class="glyphicon glyphicon-upload"></i> Deploy</button>
+          <button id="deploy-button" class="btn btn-info" data-toggle="modal" data-target="#deployConfirmModal" ><i class="glyphicon glyphicon-upload"></i> Deploy</button>
         </div>
         <div class="col-md-2">
           <button id="delete" type="button" class="btn btn-warning" data-toggle="modal" data-target="#deleteModal"><i class="glyphicon glyphicon-remove"></i> Delete this result</button>
@@ -206,7 +206,24 @@
             </div>
           </div>
           <!-- Modal -->
-          
+
+        <!-- Modal -->
+	          <div class="modal fade" id="deployConfirmModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+	            <div class="modal-dialog" role="document">
+	              <div class="modal-content">
+	                <div class="modal-body">
+	                  <p>
+	                    <strong>Are you sure to deploy this result?</strong>
+	                  </p>
+	                  <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+	                  <button type="button" class="btn btn-primary" data-dismiss="modal" data-toggle="modal" data-target="#deployModal" >Deploy</button>
+	                </div>
+	              </div>
+	            </div>
+	          </div>
+        <!-- Modal -->
+        
+        
           <!-- Modal -->
           <div class="modal fade" id="deployModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
             <div class="modal-dialog modal-lg" role="document">
