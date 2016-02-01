@@ -551,8 +551,8 @@ object JobController {
   def transferHttp(toUrl: String, toFile: String, text: Seq[String], encoding: String): Unit = {
     val tempFile = FileUtil.makeTempTextFile(text, encoding)
     val req = url(toUrl).addQueryParameter("file", toFile) <<< tempFile
-    val fres = Http(req OK as.String)
-    // TODO: GUI must support fres asynchronously
+    val f = Http(req OK as.String)
+    Await.result(f, scala.concurrent.duration.Duration.Inf)
     FileUtil.delete(tempFile)
   }
 }
