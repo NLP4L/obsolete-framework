@@ -25,7 +25,8 @@ libraryDependencies ++= Seq(
   "org.webjars" % "bootstrap" % "3.3.5",
   "com.github.tototoshi" %% "slick-joda-mapper" % "2.1.0",
   "joda-time" % "joda-time" % "2.7",
-  "org.joda" % "joda-convert" % "1.7"
+  "org.joda" % "joda-convert" % "1.7",
+  "net.databinder.dispatch" %% "dispatch-core" % "0.11.2"
 )
 
 

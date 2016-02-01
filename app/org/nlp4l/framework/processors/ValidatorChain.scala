@@ -73,10 +73,11 @@ class ValidatorChainBuilder() {
   def build(confStr: String): ValidatorChainBuilder = {
     val config = ConfigFactory.parseString(confStr)
 
-    var gSettings: Map[String, Object] = Map()
-    if(config.hasPath("settings")) {
-      gSettings = config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
-    }
+    val gSettings: Map[String, Object] =
+      if(config.hasPath("settings")) {
+        config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+      }
+      else Map()
     
     val v = config.getConfigList("validators")
     v.foreach {

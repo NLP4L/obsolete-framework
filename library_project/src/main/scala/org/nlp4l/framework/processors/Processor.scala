@@ -112,6 +112,5 @@ abstract class DeployerFactory(settings: Map[String, String]) extends Configured
   def getInstance(): Deployer
 }
 trait Deployer {
-  def deploy (data: Option[Dictionary]): Tuple2[Boolean, Seq[String]]
+  def deploy (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]]
 }
-

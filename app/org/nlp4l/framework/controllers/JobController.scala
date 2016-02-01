@@ -16,6 +16,7 @@
 
 package org.nlp4l.framework.controllers
 
+import dispatch._, Defaults._
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
@@ -26,7 +27,6 @@ import java.util.UUID
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Await
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.TimeoutException
 import scala.concurrent.duration.Duration
@@ -55,7 +55,7 @@ import org.nlp4l.framework.models.Dictionary
 import org.nlp4l.framework.models.DictionaryAttribute
 import org.nlp4l.framework.models.Record
 import org.nlp4l.framework.models.RecordWithAttrbute
-import org.nlp4l.framework.processors.{ValidatorChain, DeployerChain, ProcessorChain, ProcessorChainBuilder}
+import org.nlp4l.framework.processors._
 import org.nlp4l.framework.builtin.Replay
 import org.nlp4l.framework.builtin.JobMessage
 import org.nlp4l.framework.builtin.ActionResult
@@ -407,27 +407,27 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       case e: Exception => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
     }
   }
-  
-  
+
   def deployResult(jobId: Int, runId: Int) = Action {
     try {
-
       val dic = runDAO.fetchAll(jobId, runId)
-      val chain = DeployerChain.getChain(jobDAO, jobId)
-      val errMsg = chain.process(jobDAO, jobId, runId, dic)
-      
-      if(errMsg.isEmpty) {
-        Ok(Json.toJson(ActionResult(true, Seq("success"))))
-      } else {
-        Ok(Json.toJson(ActionResult(false, errMsg)))
+      val deployer = DeployerBuilder.build(jobDAO, jobId)
+      val result = deployer.deploy(Some(dic))
+      val job = Await.result(jobDAO.get(jobId), scala.concurrent.duration.Duration.Inf)
+      if(result._1){
+        val stgs = DeployerBuilder.settings(job.config)
+        val encoding = stgs.getOrElse("encoding", "UTF-8").asInstanceOf[String]
+        val toUrl = stgs.apply("url").toString
+        val toFile = stgs.apply("file").toString
+        JobController.transferHttp(toUrl, toFile, result._3, encoding)
       }
-
+      jobDAO.update(Job(job.jobId, job.name, job.config, runId, job.lastRunAt, Some(new DateTime())))
+      Ok(Json.toJson(ActionResult(result._1, result._2)))
     } catch {
       case e: Exception => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
     }
   }
-  
-  
+
   def jobStatus() = Action.async {request =>
     val offset = request.getQueryString("offset") match {
       case Some(x) if x != "" => x.toInt
@@ -543,5 +543,16 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     val r = runDAO.fetchCellValueList(jobId, runId, cellname)
     val res = r.filter(_ != null).grouped(1).map(xs => (xs(0).toString -> xs(0).toString)).toMap
     Ok(Json.toJson(res))
+  }
+}
+
+object JobController {
+
+  def transferHttp(toUrl: String, toFile: String, text: Seq[String], encoding: String): Unit = {
+    val tempFile = FileUtil.makeTempTextFile(text, encoding)
+    val req = url(toUrl).addQueryParameter("file", toFile) <<< tempFile
+    val fres = Http(req OK as.String)
+    // TODO: GUI must support fres asynchronously
+    FileUtil.delete(tempFile)
   }
 }
