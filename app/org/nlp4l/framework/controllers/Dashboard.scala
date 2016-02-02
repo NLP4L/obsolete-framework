@@ -33,6 +33,9 @@ import org.nlp4l.framework.models.CellAttribute
 import org.nlp4l.framework.models.DictionaryAttribute
 import org.nlp4l.framework.processors.ProcessorChainBuilder
 import org.nlp4l.framework.builtin.Job
+import com.typesafe.config.ConfigParseOptions
+import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigSyntax
 
 @Singleton
 class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-actor2") processActor: ActorRef) extends Controller {
@@ -72,16 +75,20 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     Await.ready(f, Duration.Inf)
     f.value.get match {
       case Success(job) => {
-        val (listTable: String, addForm: String, editForm: String) = createJobResultTable(job, runId)
+        val (listTable: String, addForm: String, editForm: String, hasValidators: Boolean, hasDeployer: Boolean) = createJobResultTable(job, runId)
         val runIdList: Seq[Int] = runDAO.selectRunList(jobId, job.lastRunId)
-        Ok(org.nlp4l.framework.views.html.jobresult(job, jobId, runId, runIdList, listTable, addForm, editForm))
+        Ok(org.nlp4l.framework.views.html.jobresult(job, jobId, runId, runIdList, listTable, addForm, editForm, hasValidators, hasDeployer))
       }
       case Failure(ex) => NotFound(org.nlp4l.framework.views.html.notFound("Job not found"))
     }
   }
   
-  def createJobResultTable(job: Job, runId: Int): (String, String, String) = {
+  def createJobResultTable(job: Job, runId: Int): (String, String, String, Boolean, Boolean) = {
     val jobId = job.jobId.getOrElse(0)
+    
+    val config = ConfigFactory.parseString(job.config, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF))
+    val hasDeployer: Boolean = config.hasPath("deployer")
+    val hasValidators: Boolean = config.hasPath("validators")
     
     val dic: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
     val ths = new StringBuilder("<th data-field=\"id\" data-formatter=\"RecordIdFormatter\">ID</th>")
@@ -158,6 +165,6 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     </form>
     """
 
-    (listTable, addform, editform)
+    (listTable, addform, editform, hasValidators, hasDeployer)
   }
 }

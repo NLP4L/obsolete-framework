@@ -29,7 +29,7 @@
       <div class="col-sm-3 col-md-2 sidebar">
         <ul class="nav nav-sidebar">
           <li><a href="/dashboard/job/@job.jobId">Job Info <span class="sr-only"/></a></li>
-          <li><hr/></li>
+
           @for(runId <- runIdList) {
           <li><a href="/dashboard/job/result/@job.jobId/@runId">#@runId<span class="sr-only"/></a></li>
           }
