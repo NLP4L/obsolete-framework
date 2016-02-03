@@ -94,7 +94,7 @@ class StandardSolrQueryLogDictionaryAttributeFactory(settings: Map[String, Strin
 
     val list = Seq[CellAttribute](
       CellAttribute("date", CellType.StringType, true, true),
-      CellAttribute("q", CellType.StringType, true, true),
+      CellAttributeUtil.textSearchLink(settings, "q"),
       CellAttribute("fq", CellType.StringType, true, true),
       CellAttribute("facet_field", CellType.StringType, true, true),
       CellAttribute("facet_query", CellType.StringType, true, true),
@@ -102,6 +102,40 @@ class StandardSolrQueryLogDictionaryAttributeFactory(settings: Map[String, Strin
       CellAttribute("QTime", CellType.IntType, true, true)
     )
     new DictionaryAttribute("solrQueryLog", list)
+  }
+}
+
+object CellAttributeUtil {
+
+  private val logger = Logger(this.getClass)
+
+  def textSearchLink(settings: Map[String, String], cellName: String): CellAttribute = {
+    settings.get("searchOnSolr") match {
+      case Some(value) => {
+        settings.get("collection") match {
+          case Some(collection) => {
+            settings.get("idField") match {
+              case Some(idField) => {
+                settings.get("hlField") match {
+                  case Some(hlField) => new StandardSolrSearchCellAttribute(value, collection,idField, hlField, cellName, CellType.StringType, true, true)
+                  case None => new StandardSolrSearchCellAttribute(value, collection, idField, null, cellName, CellType.StringType, true, true)
+                }
+              }
+              case None => {
+                logger.error(s"idField parameter must be set when using Solr server ($settings)")
+                CellAttribute(cellName, CellType.StringType, true, true)
+              }
+            }
+          }
+          case None => {
+            logger.error(s"collection parameter must be set when using Solr server ($settings)")
+            CellAttribute(cellName, CellType.StringType, true, true)
+          }
+        }
+      }
+      // TODO: check for ES
+      case None => CellAttribute("surface", CellType.StringType, true, true)
+    }
   }
 }
 
@@ -195,8 +229,9 @@ class JaUserDictionaryDictionaryAttributeFactory(settings: Map[String, String]) 
         cellValue.toString.replaceAll(JaUserDictionary.NOREADING, s"""<b class="text-danger">${JaUserDictionary.NOREADING}</b>""")
       }
     }
+
     val list = Seq[CellAttribute](
-      CellAttribute("surface", CellType.StringType, true, true),
+      CellAttributeUtil.textSearchLink(settings, "surface"),
       CellAttribute("terms", CellType.StringType, true, true),
       new WarningCellAttribute("readings", CellType.StringType, true, true),
       CellAttribute("pos", CellType.StringType, true, true)
