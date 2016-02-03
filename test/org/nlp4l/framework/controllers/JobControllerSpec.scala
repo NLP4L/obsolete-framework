@@ -49,7 +49,7 @@ class JobControllerSpec extends Specification {
       val ENCODING = "EUC_JP"
       val hello = "こんにちは、世界！"
       JobController.transferHttp("http://localhost:8983/foo", "/tmp/bar", Seq(hello), ENCODING)
-      val res = server.slowRequestCheck()
+      val res = server.getRequest()
       new String(res._6, ENCODING).trim must_== hello
     }
 
@@ -57,7 +57,7 @@ class JobControllerSpec extends Specification {
       val ENCODING = "UTF-8"
       val hello = "こんにちは、世界！"
       JobController.transferHttp("http://localhost:8983/foo", "/tmp/bar", Seq(hello), ENCODING)
-      val res = server.slowRequestCheck()
+      val res = server.getRequest()
       new String(res._6, ENCODING).trim must_== hello
     }
   }

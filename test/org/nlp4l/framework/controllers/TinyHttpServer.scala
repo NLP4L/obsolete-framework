@@ -107,9 +107,7 @@ class TinyHttpServerThread extends Thread {
     server.shutdown()
   }
 
-  def slowRequestCheck(): (String, String, String, Int, Array[Byte], Array[Byte]) = {
-    // TODO: To remove sleep, use Actor and its testing system!
-    Thread.sleep(1000)
+  def getRequest(): (String, String, String, Int, Array[Byte], Array[Byte]) = {
     val req = server.req
     (req.method, req.path, req.version, req.status, req.header, req.content)
   }
