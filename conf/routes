@@ -57,3 +57,4 @@ GET           /job/result/deploy/:jobId/:runId                  @org.nlp4l.frame
 GET           /job/result/export/:jobId/:runId                  @org.nlp4l.framework.controllers.JobController.exportResult(jobId: Int, runId: Int)
 GET           /job/result/filterlist/:jobId/:runId/:cellname    @org.nlp4l.framework.controllers.JobController.filterList(jobId: Int, runId: Int, cellname: String)
 
+GET           /search/solr/:url/:collection/:encodedQuery       @org.nlp4l.framework.controllers.SearchResult.searchBySolr(url: String, collection: String, encodedQuery: String)

@@ -44,7 +44,8 @@ class SimpleDictionaryAttributeFactory(settings: Map[String, String]) extends Di
     /**
      * User defined format function
      */
-    class SimpleCellAttribute(name: String, cellType: CellType, isEditable: Boolean, isSortable: Boolean, userDefinedHashCode:(Any) => Int) extends CellAttribute(name, cellType, isEditable, isSortable, userDefinedHashCode) {
+    class SimpleCellAttribute(name: String, cellType: CellType, isEditable: Boolean, isSortable: Boolean, userDefinedHashCode:(Any) => Int)
+      extends CellAttribute(name, cellType, isEditable, isSortable, userDefinedHashCode) {
       override def format(cell: Any): String = {
         "<a href='https://github.com/NLP4L#" + cell.toString() + "'>" + cell.toString() + "</a>"
       }

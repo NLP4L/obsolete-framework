@@ -1,0 +1,59 @@
+@import org.apache.solr.common._
+@import java.util.{Map => JMap, List => JList}
+
+@(query: String, docs: SolrDocumentList, idField: String, hlField: Option[String], hlFields: JMap[String, JMap[String, JList[String]]])
+
+<!--
+ Copyright 2016 org.NLP4L
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+@headerAddon = {
+  <link rel="stylesheet" href='//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.9.1/bootstrap-table.css'>
+  <link rel="stylesheet" href='//rawgit.com/vitalets/x-editable/master/dist/bootstrap3-editable/css/bootstrap-editable.css'>
+  <script src='//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.9.1/bootstrap-table.js'></script>
+  <script src='//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.9.1/extensions/editable/bootstrap-table-editable.js'></script>
+  <script src='//rawgit.com/vitalets/x-editable/master/dist/bootstrap3-editable/js/bootstrap-editable.js'></script>
+  <script src='//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.9.1/extensions/filter-control/bootstrap-table-filter-control.js'></script>
+}
+
+@main(headerAddon) {
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h3>search result of @query</h3>
+            <p>@docs.getNumFound hits</p>
+            @for(doc <- docs){
+              <blockquote>
+                  <p>@doc.getFieldValue(idField)</p>
+                  <p>
+                  @if(hlFields != null){
+                    @if(hlFields.get(doc.getFieldValue(idField)) != null){
+                      @if(hlFields.get(doc.getFieldValue(idField)).get(hlField.get) != null){
+                        @Html(hlFields.get(doc.getFieldValue(idField)).get(hlField.get).mkString("..."))
+                      }else{
+                        (No highlighting values)
+                      }
+                    }else{
+                      (No highlighting values)
+                    }
+                  }
+                  </p>
+              </blockquote>
+            }
+        </div>
+    </div>
+</div>
+}
