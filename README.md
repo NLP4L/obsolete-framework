@@ -281,3 +281,13 @@ To verify the result, click Validate button. To deploy this result to Solr or El
   ]
 }
 ```
+
+## Work with nlp4l components
+
+To use processors that are implemented in NLP4L/nlp4l project such as LoanWordsProcessor, TermsExtractionProcessor and BuddyWordsProcessor, nlp4l jar (fat jar at the moment) needs to be placed under lib directory. To build (fat) jar of nlp4l, executing the following sbt command.
+
+```shell
+$ sbt assembly
+```
+
+You'll see the file nlp4l-assembly-VERSION.jar under target/scala-2.11 directory. Copy the jar file to framework/lib directory.
