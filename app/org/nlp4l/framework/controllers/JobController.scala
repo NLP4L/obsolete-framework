@@ -16,6 +16,7 @@
 
 package org.nlp4l.framework.controllers
 
+import com.typesafe.config.ConfigFactory
 import dispatch._, Defaults._
 import java.io.BufferedWriter
 import java.io.File
@@ -60,9 +61,7 @@ import org.nlp4l.framework.builtin.Replay
 import org.nlp4l.framework.builtin.JobMessage
 import org.nlp4l.framework.builtin.ActionResult
 import org.nlp4l.framework.builtin.Job
-
-
-
+import scala.collection.convert.WrapAsScala._
 
 class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-actor2") processActor: ActorRef) extends Controller {
 
@@ -411,13 +410,13 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
   def deployResult(jobId: Int, runId: Int) = Action {
     try {
       val dic = runDAO.fetchAll(jobId, runId)
-      val deployer = DeployerBuilder.build(jobDAO, jobId)
-      val result = deployer.deploy(Some(dic))
+      val writer = WriterBuilder.build(jobDAO, jobId)
+      val result = writer.write(Some(dic))
       val job = Await.result(jobDAO.get(jobId), scala.concurrent.duration.Duration.Inf)
       if(result._1){
-        val stgs = DeployerBuilder.settings(job.config)
+        val stgs = settings(job.config)
         val encoding = stgs.getOrElse("encoding", "UTF-8").asInstanceOf[String]
-        val toUrl = stgs.apply("url").toString
+        val toUrl = stgs.apply("deployTo").toString
         val toFile = stgs.apply("file").toString
         JobController.transferHttp(toUrl, toFile, result._3, encoding)
       }
@@ -426,6 +425,14 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     } catch {
       case e: Exception => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
     }
+  }
+
+  def settings(cfg: String): Map[String, Object] = {
+    val config = ConfigFactory.parseString(cfg)
+    if(config.hasPath("settings")) {
+      config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+    }
+    else Map()
   }
 
   def jobStatus() = Action.async {request =>

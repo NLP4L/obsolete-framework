@@ -95,7 +95,7 @@ trait RecordProcessor {
 
 
 /**
- * Validate processor
+ * Validater
  */
 abstract class ValidatorFactory(settings: Map[String, String]) extends ConfiguredFactory(settings){
   def getInstance(): Validator
@@ -106,11 +106,11 @@ trait Validator {
 
 
 /**
- * Deploy processor
+ * Writer
  */
-abstract class DeployerFactory(settings: Map[String, String]) extends ConfiguredFactory(settings){
-  def getInstance(): Deployer
+abstract class WriterFactory(settings: Map[String, String]) extends ConfiguredFactory(settings){
+  def getInstance(): Writer
 }
-trait Deployer {
-  def deploy (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]]
+trait Writer {
+  def write (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]]
 }

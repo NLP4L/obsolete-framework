@@ -17,17 +17,17 @@
 package org.nlp4l.framework.builtin
 
 import org.nlp4l.framework.models.Dictionary
-import org.nlp4l.framework.processors.{Deployer, DeployerFactory}
+import org.nlp4l.framework.processors.{Writer, WriterFactory}
 
 
-class CSVFileDeployerFactory(settings: Map[String, String]) extends DeployerFactory(settings) {
-  override def getInstance: Deployer = {
-    new CSVFileDeployer(settings.getOrElse("separator", ","))
+class CSVFileWriterFactory(settings: Map[String, String]) extends WriterFactory(settings) {
+  override def getInstance: Writer = {
+    new CSVFileWriter(settings.getOrElse("separator", ","))
   }
 }
 
-class CSVFileDeployer(separator: String) extends Deployer {
-  override def deploy (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]] = {
+class CSVFileWriter(separator: String) extends Writer {
+  override def write (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]] = {
     data match {
       case Some(dic) => {
         val result = dic.recordList.map(r => r.mkCsvRecord(separator))
