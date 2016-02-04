@@ -71,11 +71,11 @@ class ConfigSpec extends Specification {
       |    }
       |  ]
       |
-      |  deployer :
+      |  writer :
       |    {
-      |      class : org.nlp4l.framework.processors.TestDeployerFactory
+      |      class : org.nlp4l.framework.processors.TestWriterFactory
       |      settings : {
-      |        code : "deploy-1"
+      |        code : "write-1"
       |      }
       |    }
       |}
@@ -106,8 +106,8 @@ class ConfigSpec extends Specification {
       vp1.settings.getOrElse("name", "") must_== "Mike"
     }
 
-    "can be seen from DeployerFactory that doesn't override them" in {
-      val dp0 : TestDeployer = DeployerBuilder.build(conf1).asInstanceOf[TestDeployer]
+    "can be seen from WriterFactory that doesn't override them" in {
+      val dp0 : TestWriter = WriterBuilder.build(conf1).asInstanceOf[TestWriter]
       dp0.settings.getOrElse("greeting", "") must_== "this is global"
       dp0.settings.getOrElse("name", "") must_== "Mike"
     }
@@ -136,9 +136,9 @@ class ConfigSpec extends Specification {
       vp1.settings.getOrElse("code", "") must_== "valid-2"
     }
 
-    "can be overridden by DeployerFactories" in {
-      val dp0 : TestDeployer = DeployerBuilder.build(conf1).asInstanceOf[TestDeployer]
-      dp0.settings.getOrElse("code", "") must_== "deploy-1"
+    "can be overridden by WriterFactories" in {
+      val dp0 : TestWriter = WriterBuilder.build(conf1).asInstanceOf[TestWriter]
+      dp0.settings.getOrElse("code", "") must_== "write-1"
     }
   }
 
@@ -184,11 +184,11 @@ class ConfigSpec extends Specification {
       |    }
       |  ]
       |
-      |  deployer :
+      |  writer :
       |    {
-      |      class : org.nlp4l.framework.processors.TestDeployerFactory
+      |      class : org.nlp4l.framework.processors.TestWriterFactory
       |      settings : {
-      |        code : "deploy-1"
+      |        code : "write-1"
       |      }
       |    }
       |}
@@ -228,11 +228,11 @@ class ConfigSpec extends Specification {
       |    }
       |  ]
       |
-      |  deployer :
+      |  writer :
       |    {
-      |      class : org.nlp4l.framework.processors.TestDeployerFactory
+      |      class : org.nlp4l.framework.processors.TestWriterFactory
       |      settings : {
-      |        code : "deploy-1"
+      |        code : "write-1"
       |      }
       |    }
       |}
@@ -317,7 +317,7 @@ class ConfigSpec extends Specification {
       |}
     """.stripMargin
 
-  val conf7_missing_deployclass =
+  val conf7_missing_writeclass =
     """
       |{
       |  dictionary : [
@@ -339,10 +339,10 @@ class ConfigSpec extends Specification {
       |    }
       |  ]
       |
-      |  deployer :
+      |  writer :
       |    {
       |      settings : {
-      |        code : "deploy-1"
+      |        code : "write-1"
       |      }
       |    }
       |}
@@ -362,7 +362,7 @@ class ConfigSpec extends Specification {
       ProcessorChain.validateConf(conf4_missing_dicclass) must_== false
       ProcessorChain.validateConf(conf5_missing_procclass) must_== false
       ProcessorChain.validateConf(conf6_missing_validclass) must_== false
-      ProcessorChain.validateConf(conf7_missing_deployclass) must_== false
+      ProcessorChain.validateConf(conf7_missing_writeclass) must_== false
     }
   }
 }
@@ -419,14 +419,14 @@ class Test2Validator(val settings: Map[String, String]) extends Validator {
   }
 }
 
-class TestDeployerFactory(settings: Map[String, String]) extends DeployerFactory(settings){
-  override def getInstance(): Deployer = {
-    new TestDeployer(settings)
+class TestWriterFactory(settings: Map[String, String]) extends WriterFactory(settings){
+  override def getInstance(): Writer = {
+    new TestWriter(settings)
   }
 }
 
-class TestDeployer(val settings: Map[String, String]) extends Deployer {
-  def deploy (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]] = {
+class TestWriter(val settings: Map[String, String]) extends Writer {
+  def write (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]] = {
     (true, Seq(), Seq())
   }
 }

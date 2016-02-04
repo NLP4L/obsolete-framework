@@ -173,15 +173,15 @@ class Simple2Validator extends Validator {
 }
 
 
-class SimpleDeployerFactory(settings: Map[String, String]) extends DeployerFactory(settings) {
-  override def getInstance: Deployer = {
-    new SimpleDeployer(settings.get("filename"))
+class SimpleWriterFactory(settings: Map[String, String]) extends WriterFactory(settings) {
+  override def getInstance: Writer = {
+    new SimpleWriter(settings.get("filename"))
   }
 }
 
 
-class SimpleDeployer(val filename: Option[String]) extends Deployer {
-  override def deploy (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]] = {
+class SimpleWriter(val filename: Option[String]) extends Writer {
+  override def write (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]] = {
     Thread.sleep(3000)
     
     (false, Seq("err 01", "err 02", filename.getOrElse("")), Seq())

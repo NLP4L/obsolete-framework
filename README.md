@@ -99,8 +99,8 @@ Open [http://localhost:9000/](http://localhost:9000/) with a web browser. You'll
       }
     }
   ]
-  deployer : {
-    class : org.nlp4l.sample.SimpleDeployerFactory
+  writer : {
+    class : org.nlp4l.sample.SimpleWriterFactory
     settings : {
       filename : "/tmp/nlp4l_dic.txt"
     }
@@ -168,12 +168,6 @@ To verify the result, click Validate button. To deploy this result to Solr or El
       }
     }
   ]
-
-  validators : [
-  ]
-
-  deployer : {
-  }
 }
 ```
 
@@ -242,8 +236,8 @@ To verify the result, click Validate button. To deploy this result to Solr or El
     }
   ]
 
-  deployer : {
-    class : org.nlp4l.framework.builtin.CSVFileDeployerFactory
+  writer : {
+    class : org.nlp4l.framework.builtin.CSVFileWriterFactory
     settings : {
       separator: ","
       url: "http://localhost:8983/solr/nlp4l/receive/file"

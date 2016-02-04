@@ -244,9 +244,9 @@ object ProcessorChain {
           pConf => pConf.hasPath("class")
         }
         val b3 =
-          if (!config.hasPath("deployer")) true
+          if (!config.hasPath("writer")) true
           else {
-            config.getConfig("deployer").hasPath("class")
+            config.getConfig("writer").hasPath("class")
           }
         val b4 =
           if (!config.hasPath("validators")) true

@@ -16,7 +16,7 @@
 
 package org.nlp4l.framework.processors
 
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{ ConfigFactory }
 import org.nlp4l.framework.dao.JobDAO
 import play.api.Logger
 
@@ -24,22 +24,24 @@ import scala.collection.convert.WrapAsScala._
 import scala.concurrent.Await
 
 
-object DeployerBuilder {
+object WriterBuilder {
 
   val logger = Logger(this.getClass)
 
-  def build(jobDAO: JobDAO, jobId: Int): Deployer = {
+  def build(jobDAO: JobDAO, jobId: Int): Writer = {
     val job = Await.result(jobDAO.get(jobId), scala.concurrent.duration.Duration.Inf)
     build(job.config)
   }
 
-  def build(cfg: String): Deployer = {
-    val pConf = deployerConfig(cfg)
+  def build(cfg: String): Writer = {
+    val config = ConfigFactory.parseString(cfg)
+
+    val pConf = config.getConfig("writer")
     try {
       val className = pConf.getString("class")
       val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
 
-      val facP = constructor.newInstance(settings(cfg)).asInstanceOf[DeployerFactory]
+      val facP = constructor.newInstance(settings(cfg)).asInstanceOf[WriterFactory]
       facP.getInstance()
     } catch {
       case e: Exception => {
@@ -51,22 +53,21 @@ object DeployerBuilder {
 
   def settings(cfg: String): Map[String, Object] = {
     val config = ConfigFactory.parseString(cfg)
-
-    val gSettings: Map[String, Object] =
+    val gSettings: Map[String, String] =
       if(config.hasPath("settings")) {
-        config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+        config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
       }
       else Map()
-    val pConf = deployerConfig(cfg)
-    var lSettings: Map[String, Object] = Map()
-    if(pConf.hasPath("settings")) {
-      lSettings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
+    val lSettings: Map[String, String] = Map()
+    if(config.hasPath("writer")){
+      val wConf = config.getConfig("writer")
+      if(wConf.hasPath("settings")) {
+        gSettings ++ wConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
+      } else {
+        gSettings
+      }
+    } else {
+      gSettings
     }
-    gSettings ++ lSettings
-  }
-
-  def deployerConfig(cfg: String): Config = {
-    val config = ConfigFactory.parseString(cfg)
-    config.getConfig("deployer")
   }
 }
