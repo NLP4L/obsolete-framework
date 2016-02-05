@@ -171,6 +171,10 @@ To verify the result, click Validate button. To deploy this result to Solr or El
 }
 ```
 
+The result of the loanwords dictionary looks like:
+
+![loanwords_dictionary](loanwords_dictionary.png)
+
 ### Terms Extraction
 
 ```
@@ -247,6 +251,10 @@ To verify the result, click Validate button. To deploy this result to Solr or El
   }
 }
 ```
+
+The result of the terms extraction looks like:
+
+![terms_extractor](images/terms_extractor.png)
 
 ### Buddy Words Extraction
 
