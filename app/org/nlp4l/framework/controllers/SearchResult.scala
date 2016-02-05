@@ -34,7 +34,7 @@ class SearchResult extends Controller {
       val idField = request.getQueryString("id").getOrElse("id")
       val hlField = request.getQueryString("hl")
       if(hlField != None){
-        params.add("hl", "on").add("hl.fl", hlField.get).
+        params.add("hl", "on").add("hl.fl", hlField.get).add("hl.usePhraseHighlighter", "true").
           add("hl.simple.pre", """<em class="lead">""").add("hl.simple.post", "</em>")
       }
       val req = new QueryRequest(params)
