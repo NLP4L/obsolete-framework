@@ -173,7 +173,7 @@ To verify the result, click Validate button. To deploy this result to Solr or El
 
 The result of the loanwords dictionary looks like:
 
-![loanwords_dictionary](loanwords_dictionary.png)
+![loanwords_dictionary](images/loanwords_dictionary.png)
 
 ### Terms Extraction
 
