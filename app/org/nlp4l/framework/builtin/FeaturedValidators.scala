@@ -16,9 +16,14 @@
 
 package org.nlp4l.framework.builtin
 
+import org.apache.solr.client.solrj.impl.HttpSolrClient
+import org.apache.solr.client.solrj.request.QueryRequest
+import org.apache.solr.common.params.ModifiableSolrParams
 import org.nlp4l.framework.models.Dictionary
 import org.nlp4l.framework.processors.{Validator, ValidatorFactory}
 import play.api.Logger
+
+import scala.collection.mutable.ArrayBuffer
 
 class UniqueRecordValidatorFactory(settings: Map[String, String]) extends ValidatorFactory(settings) {
   override def getInstance: Validator = {
@@ -120,5 +125,53 @@ class RegexValidator(val cellname: String, val accept: String, val deny: String)
     val result = cellList.filter(c => regex.findFirstIn(c) != None)
     if(result.length > 0) (false, s"""cell '${result.head}' of $cellname is denied""")
     else (true, "")
+  }
+}
+
+class SolrSearchValidatorFactory(settings: Map[String, String]) extends ValidatorFactory(settings) {
+  override def getInstance: Validator = {
+    val validateIn = getStrParamRequired("validateIn")
+    val collection = getStrParamRequired("collection")
+    val field = getStrParamRequired("field")
+    val cellName = getStrParamRequired("cellName")
+    val maxInvalids = getIntParam("maxInvalids", 10)
+    new SolrSearchValidator(validateIn, collection, field, cellName, maxInvalids)
+  }
+}
+
+class SolrSearchValidator(val url: String, val collection: String, val field: String, val cellName: String, val maxInvalids: Int) extends Validator {
+  val logger = Logger(this.getClass)
+  override def validate (data: Option[Dictionary]): Tuple2[Boolean, Seq[String]] = {
+    logger.info(s"url = $url collection = $collection, field = $field, cellName = $cellName, maxInvalids = $maxInvalids")
+    data match {
+      case Some(dic) => {
+        var count = 0
+        val notFounds = ArrayBuffer.empty[String]
+        dic.recordList.foreach{ r =>
+          try{
+            val solr = new HttpSolrClient(url)
+            val query = r.cellValue(cellName).toString
+            val params = new ModifiableSolrParams().add("q", query).add("rows", "0")
+            val req = new QueryRequest(params)
+            val res = solr.query(collection, params)
+            if(res.getResults.getNumFound == 0){
+              notFounds += query
+              count = count + 1
+              logger.warn(s"($count/$maxInvalids) $query cannot be found in $url")
+            }
+            if(count >= maxInvalids) return (false, Seq(s"The following terms are not found in the field '$field'", notFounds.mkString(",")))
+          }
+          catch {
+            case e: Exception => {
+              logger.error(e.getMessage)
+              (false, Seq(e.getMessage))
+            }
+          }
+        }
+        if(count == 0) (true, Seq())
+        else (false, Seq(s"The following terms are not found in the field '$field'", notFounds.mkString(",")))
+      }
+      case None => (true, Seq())
+    }
   }
 }
