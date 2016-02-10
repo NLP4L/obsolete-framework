@@ -491,21 +491,9 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       case Some(c) => c.replace("{", "").replace("}", "").replace("\"", "")
       case _ => ""
     }
-    var filterStr = "";
-    if (filter != "") {
-      val filterList = filter.split(",").toList
-      for( e <- filterList) {
-        val tmpList = e.split(":").toList
-        if (filterStr == "") {
-          filterStr = " where " + tmpList(0) + "='" + tmpList(1) + "'"
-        } else {
-          filterStr += " and " + tmpList(0) + "='" + tmpList(1) + "'"
-        }
-      }
-    }
+    val filterMap: Map[String, String] = filter.split(",").map(_ split ":") collect { case Array(k, v) => (k, v) } toMap
     var total = 0
-    //runDAO.totalCount(jobId, runId).map {
-    runDAO.totalCountFilter(jobId, runId, filterStr).map {
+    runDAO.totalCountFilter(jobId, runId, filterMap).map {
       res =>
         total = res
     }
@@ -514,13 +502,14 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
     val dic: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
     
-    val res:Dictionary = runDAO.fetch(tableName, job, dic, sort, order, offset, size, filterStr)
+    val res:Dictionary = runDAO.fetch(tableName, job, dic, sort, order, offset, size, filterMap)
     val res2 = res.recordList.map { x:Record => RecordWithAttrbute(x, dic) }
       
     val jsonResponse = Json.obj(
       "total" -> total,
       "rows" -> Json.toJson(res2)
     )
+
     Ok(jsonResponse)
     
   }

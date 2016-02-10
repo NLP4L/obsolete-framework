@@ -121,6 +121,9 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
            data-id-field="id"
            data-filter-control="true"
            data-side-pagination="server"
+           data-page-size=100
+           data-escape= false
+           data-page-list="[10, 25, 100, 200]"
            data-url="/job/result/${jobId}/${runId}">
           <thead>
             <tr>
