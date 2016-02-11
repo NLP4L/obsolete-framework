@@ -184,9 +184,11 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
       r.cellList foreach { c: Cell =>
         Option(c.value) match {
           case Some(cc) => {
-            b.append("'")
-            b.append(cc.value.toString().replace("'", "\'"))
-            b.append("',")
+            b.append(quote(cc.value.toString()))
+            b.append(",")
+//            b.append("'")
+//            b.append(cc.value.toString().replace("'", "\'"))
+//            b.append("',")
           }
           case None => {
             b.append("null,")
@@ -237,9 +239,11 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     r.cellList foreach { c: Cell =>
       Option(c.value) match {
         case Some(cc) => {
-          b.append("'")
-          b.append(cc.value.toString().replace("'", "\'"))
-          b.append("',")
+            b.append(quote(cc.value.toString()))
+            b.append(",")
+//          b.append("'")
+//          b.append(cc.value.toString().replace("'", "\'"))
+//          b.append("',")
         }
         case None => {
           b.append("null,")
@@ -335,12 +339,12 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   }
 
   def totalCountFilter(jobId: Int, runId: Int, filters: Map[String, String]): Future[Int] = {
-    val cond0: String = filters.map { case(k,v) => "%s = %s" format (k, slick.driver.H2Driver.quoteIdentifier(v))} . mkString(" and ")
+    val cond0: String = filters.map { case(k,v) => "%s = %s" format (k, quote(v))} . mkString(" and ")
     val cond: String = filters.map { 
-      case(k,v) if v.startsWith("*") && v.endsWith("*") => "%s like %s" format (k, slick.driver.H2Driver.quoteIdentifier("%"+v.substring(1, if(v.length() > 1) { v.length()-1 } else {v.length()})+"%"))
-      case(k,v) if v.startsWith("*") => "%s like %s" format (k, slick.driver.H2Driver.quoteIdentifier("%"+v.substring(1, v.length())))
-      case(k,v) if v.endsWith("*") => "%s like %s" format (k, slick.driver.H2Driver.quoteIdentifier(v.substring(0, if(v.length() > 1) { v.length()-1 } else {v.length()})+"%"))
-      case(k,v) => "%s = %s" format (k, slick.driver.H2Driver.quoteIdentifier(v))
+      case(k,v) if v.startsWith("*") && v.endsWith("*") => "%s like %s" format (k, quote("%"+v.substring(1, if(v.length() > 1) { v.length()-1 } else {v.length()})+"%"))
+      case(k,v) if v.startsWith("*") => "%s like %s" format (k, quote("%"+v.substring(1, v.length())))
+      case(k,v) if v.endsWith("*") => "%s like %s" format (k, quote(v.substring(0, if(v.length() > 1) { v.length()-1 } else {v.length()})+"%"))
+      case(k,v) => "%s = %s" format (k, quote(v))
     } . mkString(" and ")
     val filter: String = cond match {
       case "" => ""
@@ -352,10 +356,10 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   
   def fetch(tableName: String, job: Job, dic: DictionaryAttribute, sort: String, order: String, offset: Int = 0, size: Int = 10, filters: Map[String, String]): Dictionary = {
     val cond: String = filters.map { 
-      case(k,v) if v.startsWith("*") && v.endsWith("*") => "%s like %s" format (k, slick.driver.H2Driver.quoteIdentifier("%"+v.substring(1, if(v.length() > 1) { v.length()-1 } else {v.length()})+"%"))
-      case(k,v) if v.startsWith("*") => "%s like %s" format (k, slick.driver.H2Driver.quoteIdentifier("%"+v.substring(1, v.length())))
-      case(k,v) if v.endsWith("*") => "%s like %s" format (k, slick.driver.H2Driver.quoteIdentifier(v.substring(0, if(v.length() > 1) { v.length()-1 } else {v.length()})+"%"))
-      case(k,v) => "%s = %s" format (k, slick.driver.H2Driver.quoteIdentifier(v))
+      case(k,v) if v.startsWith("*") && v.endsWith("*") => "%s like %s" format (k, quote("%"+v.substring(1, if(v.length() > 1) { v.length()-1 } else {v.length()})+"%"))
+      case(k,v) if v.startsWith("*") => "%s like %s" format (k, quote("%"+v.substring(1, v.length())))
+      case(k,v) if v.endsWith("*") => "%s like %s" format (k, quote(v.substring(0, if(v.length() > 1) { v.length()-1 } else {v.length()})+"%"))
+      case(k,v) => "%s = %s" format (k, quote(v))
     } . mkString(" and ")
     val filter: String = cond match {
       case "" => ""
@@ -602,4 +606,11 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
 
     Dictionary(records)
   }
+  
+  def quote(v: String): String = {
+    val s = new StringBuilder(v.length + 4) append '''
+    for(c <- v) if(c == ''') s append "\'\'" else s append c
+    s append ''' toString
+  }
+
 }
