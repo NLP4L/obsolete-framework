@@ -150,14 +150,18 @@ class SolrSearchValidator(val url: String, val collection: String, val field: St
         dic.recordList.foreach{ r =>
           try{
             val solr = new HttpSolrClient(url)
-            val query = r.cellValue(cellName).toString
-            val params = new ModifiableSolrParams().add("q", query).add("rows", "0")
-            val req = new QueryRequest(params)
-            val res = solr.query(collection, params)
-            if(res.getResults.getNumFound == 0){
-              notFounds += query
-              count = count + 1
-              logger.warn(s"($count/$maxInvalids) $query cannot be found in $url")
+            r.cellValue(cellName) match {
+              case Some(query) => {
+                val params = new ModifiableSolrParams().add("q", query.toString).add("rows", "0")
+                val req = new QueryRequest(params)
+                val res = solr.query(collection, params)
+                if(res.getResults.getNumFound == 0){
+                  notFounds += query.toString
+                  count = count + 1
+                  logger.warn(s"($count/$maxInvalids) $query cannot be found in $url")
+                }
+              }
+              case None => {}
             }
             if(count >= maxInvalids) return (false, Seq(s"The following terms are not found in the field '$field'", notFounds.mkString(",")))
           }
