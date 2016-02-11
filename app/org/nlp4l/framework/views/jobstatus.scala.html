@@ -30,6 +30,10 @@
   function JobIdFormatter(value, row){
 		return "<a href=\"/dashboard/job/"+value+"\">"+value+"</a>"
   }
+  function RunIdFormatter(value, row){
+	  	runId = value.split('/')[1]
+		return "<a href=\"/dashboard/job/result/"+value+"\">"+runId+"</a>"
+  }
 </script>
 }
 
@@ -54,7 +58,7 @@
             <tr>
               <th data-field="status" data-formatter="StatusFormatter">Status</th>
               <th data-field="jobId" data-formatter="JobIdFormatter">JobID</th>
-              <th data-field="runId">RunID</th>
+              <th data-field="runId" data-formatter="RunIdFormatter">RunID</th>
               <th data-field="total">Total</th>
               <th data-field="done">Done</th>
               <th data-field="message">Message</th>

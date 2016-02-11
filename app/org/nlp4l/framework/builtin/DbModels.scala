@@ -118,10 +118,11 @@ object DbModels {
     override def writes(js: JobStatus): JsValue = {
       var status: String = if(js.total == js.done) { "Done" } else {"Running" }
       if(js.message != null && !js.message.isEmpty()) status = "Error"
+      val jobRun = js.jobId + "/" + js.runId
       Json.obj(
         "status" -> status,
         "jobId" -> js.jobId,
-        "runId" -> js.runId,
+        "runId" -> jobRun,
         "total" -> js.total,
         "done" -> js.done,
         "message" -> js.message)
