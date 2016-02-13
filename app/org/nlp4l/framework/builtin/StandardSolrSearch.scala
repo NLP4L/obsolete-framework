@@ -20,16 +20,27 @@ import java.net.URLEncoder
 
 import org.nlp4l.framework.models.{CellAttribute, CellType}
 
-class StandardSolrSearchCellAttribute(val searchOn: String, collection: String, idField: String, hlField: String,
+class StandardSolrSearchCellAttribute(val searchOn: String, collection: String, idField: String, hlField: String, val separatedBy: Option[String],
                                       name: String, cellType: CellType, isEditable: Boolean, isSortable: Boolean, userDefinedHashCode:(Any) => Int = null)
   extends CellAttribute(name, cellType, isEditable, isSortable, userDefinedHashCode) {
   override def format(cell: Any): String = {
-    val query = cell.toString
     val url = URLEncoder.encode(s"$searchOn", "UTF-8")
-    val encodedQuery = URLEncoder.encode(s"$query", "UTF-8")
-    hlField match {
-      case null => s"""<a href="/search/solr/$url/$collection/$encodedQuery?id=$idField">$query</a>"""
-      case _ => s"""<a href="/search/solr/$url/$collection/$encodedQuery?id=$idField&hl=$hlField">$query</a>"""
+    val queries = separatedBy match {
+      case Some(separator) => {
+        cell.toString.split(separator).map{ a => a.trim }
+      }
+      case None => Array(cell.toString)
     }
+
+    val links = for(query <- queries) yield {
+      val encodedQuery = URLEncoder.encode(s"$query", "UTF-8")
+      hlField match {
+        case null => s"""<a href="/search/solr/$url/$collection/$encodedQuery?id=$idField">$query</a>"""
+        case _ => s"""<a href="/search/solr/$url/$collection/$encodedQuery?id=$idField&hl=$hlField">$query</a>"""
+      }
+    }
+
+    val separator = separatedBy.getOrElse("")
+    links.mkString(s"$separator ")
   }
 }
