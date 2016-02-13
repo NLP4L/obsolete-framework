@@ -134,7 +134,7 @@ object CellAttributeUtil {
         }
       }
       // TODO: check for ES
-      case None => CellAttribute("surface", CellType.StringType, true, true)
+      case None => CellAttribute(cellName, CellType.StringType, true, true)
     }
   }
 }
