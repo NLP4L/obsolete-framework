@@ -110,6 +110,7 @@ object CellAttributeUtil {
   private val logger = Logger(this.getClass)
 
   def textSearchLink(settings: Map[String, String], cellName: String): CellAttribute = {
+    val separatedBy = settings.get("separatedBy")
     settings.get("searchOnSolr") match {
       case Some(value) => {
         settings.get("collection") match {
@@ -117,8 +118,8 @@ object CellAttributeUtil {
             settings.get("idField") match {
               case Some(idField) => {
                 settings.get("hlField") match {
-                  case Some(hlField) => new StandardSolrSearchCellAttribute(value, collection,idField, hlField, cellName, CellType.StringType, true, true)
-                  case None => new StandardSolrSearchCellAttribute(value, collection, idField, null, cellName, CellType.StringType, true, true)
+                  case Some(hlField) => new StandardSolrSearchCellAttribute(value, collection,idField, hlField, separatedBy, cellName, CellType.StringType, true, true)
+                  case None => new StandardSolrSearchCellAttribute(value, collection, idField, null, separatedBy, cellName, CellType.StringType, true, true)
                 }
               }
               case None => {
@@ -134,7 +135,7 @@ object CellAttributeUtil {
         }
       }
       // TODO: check for ES
-      case None => CellAttribute("surface", CellType.StringType, true, true)
+      case None => CellAttribute(cellName, CellType.StringType, true, true)
     }
   }
 }
@@ -294,5 +295,15 @@ class JaUserDictionaryProcessor(val userdic: UserDictionary, val cellname: Strin
     tokenStream.end()
     tokenStream.close()
     (terms.mkString(" "), readings.mkString(" "))
+  }
+}
+
+class TextRecordsDictionaryAttributeFactory(settings: Map[String, String]) extends DictionaryAttributeFactory(settings) {
+
+  override def getInstance: DictionaryAttribute = {
+    val cellName = getStrParamRequired("cellName")
+
+    val list = Seq[CellAttribute](CellAttributeUtil.textSearchLink(settings, cellName))
+    new DictionaryAttribute("textRecords", list)
   }
 }

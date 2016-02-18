@@ -135,14 +135,16 @@ class SolrSearchValidatorFactory(settings: Map[String, String]) extends Validato
     val field = getStrParamRequired("field")
     val cellName = getStrParamRequired("cellName")
     val maxInvalids = getIntParam("maxInvalids", 10)
-    new SolrSearchValidator(validateIn, collection, field, cellName, maxInvalids)
+    val separatedBy = settings.get("separatedBy")
+    new SolrSearchValidator(validateIn, collection, field, cellName, maxInvalids, separatedBy)
   }
 }
 
-class SolrSearchValidator(val url: String, val collection: String, val field: String, val cellName: String, val maxInvalids: Int) extends Validator {
+class SolrSearchValidator(val url: String, val collection: String, val field: String, val cellName: String,
+                          val maxInvalids: Int, val separatedBy: Option[String]) extends Validator {
   val logger = Logger(this.getClass)
   override def validate (data: Option[Dictionary]): Tuple2[Boolean, Seq[String]] = {
-    logger.info(s"url = $url collection = $collection, field = $field, cellName = $cellName, maxInvalids = $maxInvalids")
+    logger.info(s"url = $url collection = $collection, field = $field, cellName = $cellName, maxInvalids = $maxInvalids, separatedBy = ${separatedBy.getOrElse("(not set)")}")
     data match {
       case Some(dic) => {
         var count = 0
@@ -150,14 +152,24 @@ class SolrSearchValidator(val url: String, val collection: String, val field: St
         dic.recordList.foreach{ r =>
           try{
             val solr = new HttpSolrClient(url)
-            val query = r.cellValue(cellName).toString
-            val params = new ModifiableSolrParams().add("q", query).add("rows", "0")
-            val req = new QueryRequest(params)
-            val res = solr.query(collection, params)
-            if(res.getResults.getNumFound == 0){
-              notFounds += query
-              count = count + 1
-              logger.warn(s"($count/$maxInvalids) $query cannot be found in $url")
+            r.cellValue(cellName) match {
+              case Some(q) => {
+                val queries = separatedBy match {
+                  case Some(separator) => q.toString.split(separator).map(a => a.trim)
+                  case None => Array(q.toString)
+                }
+                queries.foreach{ query =>
+                  val params = new ModifiableSolrParams().add("q", query.toString).add("rows", "0")
+                  val req = new QueryRequest(params)
+                  val res = solr.query(collection, params)
+                  if(res.getResults.getNumFound == 0){
+                    notFounds += query.toString
+                    count = count + 1
+                    logger.warn(s"($count/$maxInvalids) $query cannot be found in $url")
+                  }
+                }
+              }
+              case None => {}
             }
             if(count >= maxInvalids) return (false, Seq(s"The following terms are not found in the field '$field'", notFounds.mkString(",")))
           }
