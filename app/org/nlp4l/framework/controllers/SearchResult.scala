@@ -38,6 +38,7 @@ class SearchResult extends Controller {
 
   def searchBySolr(url: String, collection: String, encodedQuery: String) = Action { request =>
     {
+/* commended by yamamoto
       val solr = new HttpSolrClient(url)
       val query = URLDecoder.decode(encodedQuery, "UTF-8")
       val params = new ModifiableSolrParams().add("q", query).set("start", 0).set("rows", 1000)
@@ -52,6 +53,7 @@ class SearchResult extends Controller {
       val hlRes = if(hlField != None) res.getHighlighting else null
       val docs = res.getResults
       val total = docs.getNumFound
+*/
       val result = Seq(Map("id" -> "1", "url" -> "aa", "body2" -> "AAAAA"), Map("id" -> "2", "url" -> "bb", "body2" -> "BBBBB"))
       val jsonResponse = Json.obj(
         "total" -> result.size,
