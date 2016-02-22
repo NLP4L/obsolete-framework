@@ -40,8 +40,28 @@ class StandardSolrSearchCellAttribute(val searchOn: String, collection: String, 
       }
     }
 
-    val replaceMap = (queries zip links).toMap
-    val replaced = replaceMap.foldLeft(cell.toString){ case (s, (q, l)) => s.replaceAll(q, l) }
+    val replaceMap = queries zip links
+    val replaced = embedLinks(replaceMap, cell.toString)
     replaced
+  }
+
+  private def embedLinks(replaceMap: Seq[(String, String)], record: String): String = {
+    def loop(str: String, res: String): String = {
+      println(str)
+      if (str.isEmpty) res
+      else {
+        // find all candidates to replace and sort by term length
+        val candidates = replaceMap.filter{ case (q, l) => str.startsWith(q)}.sortBy(_._1.length)(Ordering.Int.reverse)
+        if (candidates.nonEmpty) {
+          // replace matched substring with the longest candidate
+          val replace = candidates(0)
+          loop(str.substring(replace._1.length), res + replace._2)
+        } else {
+          loop(str.substring(1), res + str(0))
+        }
+      }
+    }
+
+    loop(record, "")
   }
 }
