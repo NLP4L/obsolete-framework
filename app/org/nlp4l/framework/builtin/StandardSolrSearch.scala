@@ -40,7 +40,8 @@ class StandardSolrSearchCellAttribute(val searchOn: String, collection: String, 
       }
     }
 
-    val separator = separatedBy.getOrElse("")
-    links.mkString(s"$separator ")
+    val replaceMap = (queries zip links).toMap
+    val replaced = replaceMap.foldLeft(cell.toString){ case (s, (q, l)) => s.replaceAll(q, l) }
+    replaced
   }
 }
