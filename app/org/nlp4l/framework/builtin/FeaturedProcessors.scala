@@ -118,8 +118,8 @@ object CellAttributeUtil {
             settings.get("idField") match {
               case Some(idField) => {
                 settings.get("hlField") match {
-                  case Some(hlField) => new StandardSolrSearchCellAttribute(value, collection,idField, hlField, separatedBy, cellName, CellType.StringType, true, true)
-                  case None => new StandardSolrSearchCellAttribute(value, collection, idField, null, separatedBy, cellName, CellType.StringType, true, true)
+                  case Some(hlField) => new StandardSolrSearchCellAttribute(value, collection,idField, hlField, settings.getOrElse("queryField", ""), separatedBy, cellName, CellType.StringType, true, true)
+                  case None => new StandardSolrSearchCellAttribute(value, collection, idField, null, settings.getOrElse("queryField", ""), separatedBy, cellName, CellType.StringType, true, true)
                 }
               }
               case None => {
