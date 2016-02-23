@@ -1,4 +1,4 @@
-@(url: String, collection: String, encodedQuery: String, query: String, idField: String, hlField: Option[String])
+@(encodedUrl: String, collection: String, encodedQuery: String, query: String, idField: String, hlField: Option[String])
 
 <!--
  Copyright 2016 org.NLP4L
@@ -38,7 +38,7 @@
                      data-pagination-last-text="Last"
                      data-id-field="id"
                      data-side-pagination="server"
-                     data-url="/search/solr/@url/@collection/@encodedQuery?id=@idField">
+                     data-url="/search/solr/@encodedUrl/@collection/@encodedQuery?id=@idField">
                   <thead>
                   <tr>
                       <th data-field="@idField">@idField</th>
@@ -55,7 +55,7 @@
                      data-pagination-last-text="Last"
                      data-id-field="id"
                      data-side-pagination="server"
-                     data-url="/search/solr/@url/@collection/@encodedQuery?id=@idField&amp;hl=@hlField.get">
+                     data-url="/search/solr/@encodedUrl/@collection/@encodedQuery?id=@idField&amp;hl=@hlField.get">
                   <thead>
                   <tr>
                       <th data-field="@idField">@idField</th>

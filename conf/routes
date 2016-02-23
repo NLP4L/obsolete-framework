@@ -58,4 +58,4 @@ GET           /job/result/export/:jobId/:runId                  @org.nlp4l.frame
 GET           /job/result/filterlist/:jobId/:runId/:cellname    @org.nlp4l.framework.controllers.JobController.filterList(jobId: Int, runId: Int, cellname: String)
 
 GET           /searchResult/solr/:url/:collection/:encodedQuery @org.nlp4l.framework.controllers.SearchResult.searchResultSolr(url: String, collection: String, encodedQuery: String)
-GET           /search/solr/:url/:collection/:encodedQuery       @org.nlp4l.framework.controllers.SearchResult.searchBySolr(url: String, collection: String, encodedQuery: String)
+GET           /search/solr/:encodedUrl/:collection/:encodedQuery       @org.nlp4l.framework.controllers.SearchResult.searchBySolr(encodedUrl: String, collection: String, encodedQuery: String)

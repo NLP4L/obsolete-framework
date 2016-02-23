@@ -16,29 +16,32 @@
 
 package org.nlp4l.framework.controllers
 
-import java.net.URLDecoder
+import java.net.{URLEncoder, URLDecoder}
 
 import org.apache.solr.client.solrj.impl._
 import org.apache.solr.client.solrj.request.QueryRequest
+import org.apache.solr.common.SolrDocument
 import org.apache.solr.common.params.ModifiableSolrParams
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc.Controller
+import collection.JavaConversions._
 
 class SearchResult extends Controller {
 
   def searchResultSolr(url: String, collection: String, encodedQuery: String) = Action { request =>
     {
+      val encodedUrl = URLEncoder.encode(url, "UTF-8")
       val query = URLDecoder.decode(encodedQuery, "UTF-8")
       val idField = request.getQueryString("id").getOrElse("id")
       val hlField = request.getQueryString("hl")
-      Ok(org.nlp4l.framework.views.html.solrSearchResult(url, collection, encodedQuery, query, idField, hlField))
+      Ok(org.nlp4l.framework.views.html.solrSearchResult(encodedUrl, collection, encodedQuery, query, idField, hlField))
     }
   }
 
-  def searchBySolr(url: String, collection: String, encodedQuery: String) = Action { request =>
+  def searchBySolr(encodedUrl: String, collection: String, encodedQuery: String) = Action { request =>
     {
-/* commended by yamamoto
+      val url = URLDecoder.decode(encodedUrl, "UTF-8")
       val solr = new HttpSolrClient(url)
       val query = URLDecoder.decode(encodedQuery, "UTF-8")
       val params = new ModifiableSolrParams().add("q", query).set("start", 0).set("rows", 1000)
@@ -52,42 +55,25 @@ class SearchResult extends Controller {
       val res = solr.query(collection, params)
       val hlRes = if(hlField != None) res.getHighlighting else null
       val docs = res.getResults
-      val total = docs.getNumFound
-*/
-      val result = Seq(Map("id" -> "1", "url" -> "aa", "body2" -> "AAAAA"), Map("id" -> "2", "url" -> "bb", "body2" -> "BBBBB"))
+      val result = docs.map{ doc: SolrDocument =>
+        val id = doc.getFieldValue(idField).toString
+        if(hlRes == null) Map(idField -> id)
+        else{
+          val snippets = if(hlRes.get(id) != null){
+            if(hlRes.get(id).get(hlField.get) != null){
+              hlRes.get(id).get(hlField.get).mkString("...")
+            }
+            else "(No highlighting values)"
+          }
+          else "(No highlighting values)"
+          Map(idField -> id, hlField.get -> snippets)
+        }
+      }
       val jsonResponse = Json.obj(
-        "total" -> result.size,
-        "rows" -> Json.toJson(result)
+        "total" -> docs.size,
+        "rows" -> Json.toJson(result.toList)
       )
       Ok(jsonResponse)
-      /*
-{
-  "total":1,
-  "rows":[
-    {"status":"Done","jobId":1,"runId":"1/1","total":4,"done":4,"message":""}
-  ]
-}
-       */
-/*
-            @for(doc <- docs){
-              <blockquote>
-                  <p>@doc.getFieldValue(idField)</p>
-                  <p>
-                  @if(hlFields != null){
-                    @if(hlFields.get(doc.getFieldValue(idField)) != null){
-                      @if(hlFields.get(doc.getFieldValue(idField)).get(hlField.get) != null){
-                        @Html(hlFields.get(doc.getFieldValue(idField)).get(hlField.get).mkString("..."))
-                      }else{
-                        (No highlighting values)
-                      }
-                    }else{
-                      (No highlighting values)
-                    }
-                  }
-                  </p>
-              </blockquote>
-            }
- */
     }
   }
 }
