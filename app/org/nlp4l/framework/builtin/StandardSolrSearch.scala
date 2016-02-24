@@ -47,7 +47,6 @@ class StandardSolrSearchCellAttribute(val searchOn: String, collection: String, 
 
   private def embedLinks(replaceMap: Seq[(String, String)], record: String): String = {
     def loop(str: String, res: String): String = {
-      //println(str)
       if (str.isEmpty) res
       else {
         // find all candidates to replace and sort by term length
