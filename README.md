@@ -8,6 +8,27 @@ Use activator to build the project and run.
 $ ./activator run
 ```
 
+## Make package for distribution
+
+### Create package
+
+```
+$ ./activator dist
+$ ls target/universal
+nlp4l-framework-x.x.x.zip
+```
+
+### Unzip and Run
+
+* You need Java 1.8+
+* You do not need Scala compiler or sbt
+
+```
+$ unzip nlp4l-framework-x.x.x.zip
+$ cd nlp4l-framework-x.x.x
+$ bin/nlp4l-framework
+```
+
 ## Play with GUI
 
 ### Access to the framework GUI
