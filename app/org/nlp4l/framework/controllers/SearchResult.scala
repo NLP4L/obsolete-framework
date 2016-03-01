@@ -41,10 +41,18 @@ class SearchResult extends Controller {
 
   def searchBySolr(encodedUrl: String, collection: String, encodedQuery: String) = Action { request =>
     {
+      val offset = request.getQueryString("offset") match {
+        case Some(x) if x != "" => x.toInt
+        case _ => 0
+      }
+      val limit = request.getQueryString("limit") match {
+        case Some(x) => x.toInt
+        case _ => 10
+      }
       val url = URLDecoder.decode(encodedUrl, "UTF-8")
       val solr = new HttpSolrClient(url)
       val query = URLDecoder.decode(encodedQuery, "UTF-8")
-      val params = new ModifiableSolrParams().add("q", query).set("start", 0).set("rows", 1000)
+      val params = new ModifiableSolrParams().add("q", query).set("start", offset).set("rows", limit)
       val idField = request.getQueryString("id").getOrElse("id")
       val hlField = request.getQueryString("hl")
       if(hlField != None){
@@ -70,7 +78,7 @@ class SearchResult extends Controller {
         }
       }
       val jsonResponse = Json.obj(
-        "total" -> docs.size,
+        "total" -> docs.getNumFound,
         "rows" -> Json.toJson(result.toList)
       )
       Ok(jsonResponse)
