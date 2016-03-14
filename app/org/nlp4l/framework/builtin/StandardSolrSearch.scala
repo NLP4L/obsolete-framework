@@ -20,7 +20,7 @@ import java.net.URLEncoder
 
 import org.nlp4l.framework.models.{CellAttribute, CellType}
 
-class StandardSolrSearchCellAttribute(val searchOn: String, collection: String, idField: String, hlField: String, val separatedBy: Option[String],
+class StandardSolrSearchCellAttribute(val searchOn: String, collection: String, idField: String, hlField: String, queryField: String, val separatedBy: Option[String],
                                       name: String, cellType: CellType, isEditable: Boolean, isSortable: Boolean, userDefinedHashCode:(Any) => Int = null)
   extends CellAttribute(name, cellType, isEditable, isSortable, userDefinedHashCode) {
   override def format(cell: Any): String = {
@@ -34,9 +34,10 @@ class StandardSolrSearchCellAttribute(val searchOn: String, collection: String, 
 
     val links = for(query <- queries) yield {
       val encodedQuery = URLEncoder.encode(s"$query", "UTF-8")
+      val qf = if (queryField == null || queryField.isEmpty) "" else queryField
       hlField match {
-        case null => s"""<a href="/search/solr/$url/$collection/$encodedQuery?id=$idField">$query</a>"""
-        case _ => s"""<a href="/search/solr/$url/$collection/$encodedQuery?id=$idField&hl=$hlField">$query</a>"""
+        case null => s"""<a href="/search/solr/$url/$collection/$encodedQuery?id=$idField&qf=$qf">$query</a>"""
+        case _ => s"""<a href="/search/solr/$url/$collection/$encodedQuery?id=$idField&qf=$qf&hl=$hlField">$query</a>"""
       }
     }
 

@@ -17,18 +17,21 @@
 package org.nlp4l.framework.controllers
 
 import java.net.URLDecoder
+import javax.inject.Inject
 
+import com.google.inject.name.Named
+import org.apache.solr.client.solrj.SolrClient
 import org.apache.solr.client.solrj.impl._
 import org.apache.solr.client.solrj.request.QueryRequest
 import org.apache.solr.common.params.ModifiableSolrParams
 import play.api.mvc.Action
 import play.api.mvc.Controller
 
-class SearchResult extends Controller {
+class SearchResult @Inject()(@Named("solr") solr: HttpSolrClient) extends Controller {
 
   def searchBySolr(url: String, collection: String, encodedQuery: String) = Action { request =>
     {
-      val solr = new HttpSolrClient(url)
+      solr.setBaseURL(url)
       val query = URLDecoder.decode(encodedQuery, "UTF-8")
       val params = new ModifiableSolrParams().add("q", query)
       val idField = request.getQueryString("id").getOrElse("id")
@@ -36,6 +39,10 @@ class SearchResult extends Controller {
       if(hlField != None){
         params.add("hl", "on").add("hl.fl", hlField.get).add("hl.usePhraseHighlighter", "true").
           add("hl.simple.pre", """<em class="lead">""").add("hl.simple.post", "</em>")
+      }
+      val qfField = request.getQueryString("qf").getOrElse("")
+      if (qfField.nonEmpty) {
+        params.add("defType", "dismax").add("qf", qfField)
       }
       val req = new QueryRequest(params)
       val res = solr.query(collection, params)
