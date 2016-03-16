@@ -35,8 +35,8 @@ class StandardSolrSearchCellAttribute(val searchOn: String, collection: String, 
     val links = for(query <- queries) yield {
       val encodedQuery = URLEncoder.encode(s"$query", "UTF-8")
       hlField match {
-        case null => s"""<a href="/search/solr/$url/$collection/$encodedQuery?id=$idField">$query</a>"""
-        case _ => s"""<a href="/search/solr/$url/$collection/$encodedQuery?id=$idField&hl=$hlField">$query</a>"""
+        case null => s"""<a href="/searchResult/solr/$url/$collection/$encodedQuery?id=$idField">$query</a>"""
+        case _ => s"""<a href="/searchResult/solr/$url/$collection/$encodedQuery?id=$idField&hl=$hlField">$query</a>"""
       }
     }
 
