@@ -100,7 +100,16 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
         case _ =>    ths append "<th data-field=\"" + c.name.toLowerCase() + "\""
       }
       addtableHead append "<th>" + c.name.toLowerCase() + "</th>"
-      addtable append "<td><input type=\"text\" class=\"form-control\" id=\"form_" + c.name.toLowerCase() + "\" name=\"" + c.name.toLowerCase() + "\"></td>"
+      addtable append "<td></td>"
+      addtable append "<td>"
+      addtable append "<div class=\"input-group\">"
+      //addtable append "<input type=\"text\" class=\"form-control\" id=\"form_" + c.name.toLowerCase() + "\" name=\"" + c.name.toLowerCase() + "\">"
+      addtable append "<input type=\"text\" class=\"form-control\"" + " name=\"" + c.name.toLowerCase() + "\">"
+      addtable append "<span class=\"input-group-btn\">"
+      addtable append "<button type=\"button\" class=\"btn btn-success addrecord-multi-add\"><span class=\"glyphicon-plus\"></button>"
+      //addtable append "<button type=\"button\" class=\"btn btn-danger addrecord-multi-rem\"><span class=\"glyphicon-minus\"></button>"
+      addtable append "</span></span></div></td>"
+
       c.isSortable match {
         case true => ths append " data-sortable=\"true\""
         case _ => ths append " data-sortable=\"false\""
@@ -139,7 +148,7 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
       <table id="addform" class="table">
         <tbody>
           <tr>
-            <td rowspan="2"><button type="submit" id="addrecord-button" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i>Add</button></td>
+            <td><button type="submit" id="addrecord-button" class="btn btn-primary"></i>Add records</button></td>
             ${addtableHead}
           </tr>
           <tr>

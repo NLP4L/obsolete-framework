@@ -222,7 +222,52 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   }
   
   
-  
+  private def createInsertRecordSql(tableName: String, dicAttr: DictionaryAttribute, r: Record, n: Int): String = {
+    val hashcode = r.hashCode
+    val b = new StringBuilder
+    b.append(s"insert into ${tableName} (")
+    dicAttr.cellAttributeList foreach { c:CellAttribute =>
+      val columnName = c.name.toLowerCase()
+      b.append(s"${columnName},")
+    }
+    b.append(s"id,replay,hashcode) values (")
+    r.cellList foreach { c: Cell =>
+      Option(c.value) match {
+        case Some(cc) => {
+          b.append(quote(cc.value.toString()))
+          b.append(",")
+        }
+        case None => {
+          b.append("null,")
+        }
+      }
+    }
+
+    // id
+    b.append(s"'${n}',")
+    // replay
+    val replay = "ADD"
+    b.append(s"'${replay}',")
+    b.append(s"${hashcode})")
+
+    b.toString
+  }
+
+  def addRecords(jobId: Int, runId: Int, dicAttr: DictionaryAttribute, records: List[Record]): Future[Int] = {
+    val tableName = s"run_${jobId}_${runId}"
+
+    val ids = for (r <- records) yield {
+      val f: Future[Int] = nextId(jobId, runId)
+      val n: Int = Await.result(f, scala.concurrent.duration.Duration.Inf)
+      val sql = createInsertRecordSql(tableName, dicAttr, r, n)
+      logger.debug(sql)
+      db.run(sqlu"#$sql")
+      n
+    }
+
+    Future(ids.last)
+  }
+
   def addRecord(jobId: Int, runId: Int, dicAttr: DictionaryAttribute, r: Record): Future[Int]  = {
     val tableName = s"run_${jobId}_${runId}"
 
