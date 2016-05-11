@@ -227,41 +227,35 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       case e => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
     }
   }
-  
-  
-  def addRecord(jobId: Int, runId: Int) = Action.async {implicit request =>
+
+  def addRecords(jobId: Int, runId: Int) = Action.async {implicit request =>
     val f: Future[Job] = jobDAO.get(jobId)
     val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
     val dicAttr: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
-    val cellList = ListBuffer.empty[Cell]
-    
+    //val cellList = ListBuffer.empty[Cell]
+    val recordList = ListBuffer.empty[Record]
+
     val formData: Map[String, Seq[String]]  = request.body.asFormUrlEncoded.getOrElse(Map())
     dicAttr.cellAttributeList foreach { c: CellAttribute =>
-      val v = formData.get(c.name.toLowerCase()) map { list: Seq[String] =>
-        val x:String = list.head
-        if(x.length() > 0) {
-          c.cellType match {
-              case CellType.StringType => x.toString
-              case CellType.IntType => c.toInt(x)
-              case CellType.FloatType => c.toFloat(x)
-              case CellType.DoubleType => c.toDouble(x)
-              case CellType.DateType => {
-                val dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
-                c.toDate(x)
-              }
+      formData.get(c.name.toLowerCase()) map { list: Seq[String] =>
+        list filter(_.length > 0) foreach { x =>
+          val v = c.cellType match {
+            case CellType.StringType => x.toString
+            case CellType.IntType => c.toInt(x)
+            case CellType.FloatType => c.toFloat(x)
+            case CellType.DoubleType => c.toDouble(x)
+            case CellType.DateType => {
+              val dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
+              c.toDate(x)
             }
-        } else {
-          null
+          }
+          recordList += Record(Seq(Cell(c.name.toLowerCase, v))).setUserDefinedHashCode(dicAttr)
         }
       }
-      cellList += Cell(c.name.toLowerCase(), v.getOrElse(null))
     }
-    val r = Record(cellList).setUserDefinedHashCode(dicAttr)
-    val hashcode: Int = r.hashCode
-    
+    //val r = Record(cellList).setUserDefinedHashCode(dicAttr)
 
-    
-    runDAO.addRecord(jobId, runId, dicAttr, r) map {
+    runDAO.addRecords(jobId, runId, dicAttr, recordList.toList) map {
       case (recordId) => {
         val hashcode = runDAO.fetchRecordHashcode(jobId, runId, recordId)
         val replay = Replay(runId, hashcode, "ADD", 0)
@@ -272,6 +266,8 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       case e => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
     }
   }
+
+
   
   
   def fetchRecord(jobId: Int, runId: Int, recordId: Int) = Action {
