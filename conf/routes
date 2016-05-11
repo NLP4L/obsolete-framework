@@ -50,7 +50,7 @@ DELETE        /job/result/:jobId/:runId                         @org.nlp4l.frame
 GET           /job/result/record/:jobId/:runId/:recordId        @org.nlp4l.framework.controllers.JobController.fetchRecord(jobId: Int, runId: Int, recordId: Int)
 GET           /job/result/record/delete/:jobId/:runId/:recordId @org.nlp4l.framework.controllers.JobController.deleteRecord(jobId: Int, runId: Int, recordId: Int)
 DELETE        /job/result/record/:jobId/:runId/:recordId        @org.nlp4l.framework.controllers.JobController.deleteRecord(jobId: Int, runId: Int, recordId: Int)
-POST          /job/result/record/add/:jobId/:runId              @org.nlp4l.framework.controllers.JobController.addRecord(jobId: Int, runId: Int)
+POST          /job/result/record/add/:jobId/:runId              @org.nlp4l.framework.controllers.JobController.addRecords(jobId: Int, runId: Int)
 POST          /job/result/record/update/:jobId/:runId/:recordId @org.nlp4l.framework.controllers.JobController.updateRecord(jobId: Int, runId: Int, recordId: Int)
 GET           /job/result/validate/:jobId/:runId                @org.nlp4l.framework.controllers.JobController.validateResult(jobId: Int, runId: Int)
 GET           /job/result/deploy/:jobId/:runId                  @org.nlp4l.framework.controllers.JobController.deployResult(jobId: Int, runId: Int)
