@@ -93,21 +93,19 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     val dic: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
     val ths = new StringBuilder("<th data-field=\"id\" data-formatter=\"RecordIdFormatter\">ID</th>")
     val addtable = new StringBuilder
-    val addtableHead = new StringBuilder
+    val tableHead = new StringBuilder
     dic.cellAttributeList foreach { c: CellAttribute =>
       c.isFilterable match {
         case true => ths append "<th data-field=\"" + c.name.toLowerCase() + "\" data-filter-control=\"input\""
         case _ =>    ths append "<th data-field=\"" + c.name.toLowerCase() + "\""
       }
-      addtableHead append "<th>" + c.name.toLowerCase() + "</th>"
+      tableHead append "<th>" + c.name.toLowerCase() + "</th>"
       addtable append "<td></td>"
       addtable append "<td>"
       addtable append "<div class=\"input-group\">"
-      //addtable append "<input type=\"text\" class=\"form-control\" id=\"form_" + c.name.toLowerCase() + "\" name=\"" + c.name.toLowerCase() + "\">"
       addtable append "<input type=\"text\" class=\"form-control\"" + " name=\"" + c.name.toLowerCase() + "\">"
       addtable append "<span class=\"input-group-btn\">"
       addtable append "<button type=\"button\" class=\"btn btn-success addrecord-multi-add\"><span class=\"glyphicon-plus\"></button>"
-      //addtable append "<button type=\"button\" class=\"btn btn-danger addrecord-multi-rem\"><span class=\"glyphicon-minus\"></button>"
       addtable append "</span></span></div></td>"
 
       c.isSortable match {
@@ -117,6 +115,15 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
       ths append ">" + c.name.toLowerCase()  + "</th>\n"
     }
     ths append "<th data-field=\"replay\" data-filter-control=\"select\" data-filter-data=\"url:/job/result/filterlist/"+jobId+"/"+runId+"/replay\">Replay</th>"
+
+    val edittable = new StringBuilder
+    dic.cellAttributeList foreach { c: CellAttribute =>
+      edittable append "<td></td>"
+      edittable append "<td>"
+      edittable append "<input type=\"text\" class=\"form-control\" id=\"form_" + c.name.toLowerCase() + "\" name=\"" + c.name.toLowerCase() + "\">"
+      edittable append "</td>"
+    }
+
 
     val listTable = s"""<table id="table"
            data-toolbar="#toolbar"
@@ -149,7 +156,7 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
         <tbody>
           <tr>
             <td><button type="submit" id="addrecord-button" class="btn btn-primary"></i>Add records</button></td>
-            ${addtableHead}
+            ${tableHead}
           </tr>
           <tr>
             ${addtable}
@@ -165,10 +172,10 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
       <table id="editform" class="table">
         <tbody>
           <tr>
-            ${addtableHead}
+            ${tableHead}
           </tr>
           <tr>
-            ${addtable}
+            ${edittable}
           </tr>
         </tbody>
       </table>
