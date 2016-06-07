@@ -169,7 +169,7 @@ object ProcessorChain {
         val runId = job.lastRunId + 1
         val errjs = JobStatus(None, jobId, runId, 0, 0, e.getMessage)
         runDAO.insertJobStatus(errjs)
-        logger.error(e.getMessage)
+        logger.error(e.getMessage, e)
         throw e
       }
     }
@@ -217,7 +217,7 @@ object ProcessorChain {
         Await.ready(f1, scala.concurrent.duration.Duration.Inf)
         f1.value.get match {
           case Success(n) => n
-          case Failure(ex) => logger.debug(ex.getMessage)
+          case Failure(ex) => logger.debug(ex.getMessage, ex)
         }
         val f2 = runDAO.createTable(jobId, runId, dicAttr)
         Await.ready(f2, scala.concurrent.duration.Duration.Inf)
@@ -259,7 +259,7 @@ object ProcessorChain {
       }
     } catch {
       case e: Exception => {
-        logger.error(e.getMessage)
+        logger.error(e.getMessage, e)
         false
       }
     }
@@ -334,7 +334,10 @@ class ProcessorChainBuilder() {
       val p = facP.getInstance()
       buf = buf :+ p
     } catch {
-      case e: Exception => logger.error(e.getMessage)
+      case e: Exception => {
+        logger.error(e.getMessage, e)
+        throw e
+      }
     }
  
     val className = Constants.WRAPPROCESSOR_CLASS
