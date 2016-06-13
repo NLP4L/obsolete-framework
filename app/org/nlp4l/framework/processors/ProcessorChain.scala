@@ -29,7 +29,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Await
 import scala.util.{Failure, Success}
-
+import collection.JavaConversions._
 
 object Constants {
   val WRAPPROCESSOR_CLASS = "org.nlp4l.framework.processors.WrapProcessor"
@@ -272,12 +272,8 @@ class ProcessorChainBuilder() {
 
   def procBuild(jobId: Int, confStr: String): ProcessorChainBuilder = {
     val config = ConfigFactory.parseString(confStr)
-    
-    val gSettings: Map[String, String] =
-      if(config.hasPath("settings")) {
-        config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
-      }
-      else Map()
+
+    val gSettings = getConfig(config, "settings")
 
     config.getConfigList("processors").foreach {
       pConf =>
@@ -285,12 +281,9 @@ class ProcessorChainBuilder() {
           if(className == Constants.WRAPPROCESSOR_CLASS) {
             buf += wrapBuild(pConf)
           } else {
-            val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-            var lSettings: Map[String, String] = Map()
-            if(pConf.hasPath("settings")) {
-              lSettings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
-            }
-            val settings = gSettings ++ lSettings
+            val constructor = Class.forName(className).getConstructor(classOf[Config])
+            val lSettings = getConfig(pConf, "settings")
+            val settings = lSettings.withFallback(gSettings)
             val facP = constructor.newInstance(settings).asInstanceOf[ProcessorFactory]
             val p = facP.getInstance()
             buf += p
@@ -301,22 +294,20 @@ class ProcessorChainBuilder() {
   
   def dicBuild(confStr: String): DictionaryAttribute = {
     val config = ConfigFactory.parseString(confStr)
-    
-    var gSettings: Map[String, String] = Map()
-    if(config.hasPath("settings")) {
-      gSettings = config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
-    }
-    
+
+    val gSettings = getConfig(config, "settings")
+
     val pConf = config.getConfigList("dictionary").get(0)
     val className = pConf.getString("class")
-    val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-    var lSettings: Map[String, String] = Map()
-    if(pConf.hasPath("settings")) {
-      lSettings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
-    }
-    val settings = gSettings ++ lSettings
+    val constructor = Class.forName(className).getConstructor(classOf[Config])
+    val lSettings = getConfig(pConf, "settings")
+    val settings = lSettings.withFallback(gSettings)
     val facP = constructor.newInstance(settings).asInstanceOf[DictionaryAttributeFactory]
     facP.getInstance()
+  }
+
+  def getConfig(src: Config, key: String): Config = {
+    if(src.hasPath(key)) src.getConfig(key) else ConfigFactory.empty()
   }
   
   def wrapBuild(wrapConf: Config): Processor = {

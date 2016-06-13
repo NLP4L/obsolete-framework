@@ -16,7 +16,7 @@
 
 package org.nlp4l.framework.processors
 
-import com.typesafe.config.{ ConfigFactory }
+import com.typesafe.config.{ Config, ConfigFactory }
 import org.nlp4l.framework.dao.JobDAO
 import play.api.Logger
 
@@ -39,9 +39,9 @@ object WriterBuilder {
     val pConf = config.getConfig("writer")
     try {
       val className = pConf.getString("class")
-      val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
+      val constructor = Class.forName(className).getConstructor(classOf[Config])
 
-      val facP = constructor.newInstance(settings(cfg)).asInstanceOf[WriterFactory]
+      val facP = constructor.newInstance(settings(config)).asInstanceOf[WriterFactory]
       facP.getInstance()
     } catch {
       case e: Exception => {
@@ -51,23 +51,18 @@ object WriterBuilder {
     }
   }
 
-  def settings(cfg: String): Map[String, Object] = {
-    val config = ConfigFactory.parseString(cfg)
-    val gSettings: Map[String, String] =
-      if(config.hasPath("settings")) {
-        config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
-      }
-      else Map()
-    val lSettings: Map[String, String] = Map()
+  def settings(config: Config): Config = {
+    val gSettings = getConfig(config, "settings")
     if(config.hasPath("writer")){
       val wConf = config.getConfig("writer")
-      if(wConf.hasPath("settings")) {
-        gSettings ++ wConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped().toString()).toMap
-      } else {
-        gSettings
-      }
+      val lSettings = getConfig(wConf, "settings")
+      lSettings.withFallback(gSettings)
     } else {
       gSettings
     }
+  }
+
+  def getConfig(src: Config, key: String): Config = {
+    if(src.hasPath(key)) src.getConfig(key) else ConfigFactory.empty()
   }
 }
