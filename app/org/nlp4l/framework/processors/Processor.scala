@@ -16,68 +16,59 @@
 
 package org.nlp4l.framework.processors
 
+import com.typesafe.config.Config
 import org.nlp4l.framework.models.Dictionary
 import org.nlp4l.framework.models.DictionaryAttribute
 import org.nlp4l.framework.models.Record
 
 
-abstract class DictionaryAttributeFactory(settings: Map[String, String]) extends ConfiguredFactory(settings){
+abstract class DictionaryAttributeFactory(settings: Config) extends ConfiguredFactory(settings){
   def getInstance(): DictionaryAttribute
 }
 
-abstract class ConfiguredFactory(val settings: Map[String, Any]){
+abstract class ConfiguredFactory(val settings: Config){
+  def getStrParam(name: String, default: String): String = {
+    if(settings.hasPath(name)) settings.getString(name) else default
+  }
   def getStrParamRequired(name: String): String = {
-    settings.apply(name).toString
+    // TODO: need to check this throws an Exception if there isn't the entry
+    settings.getString(name)
   }
   def getIntParam(name: String, default: Int): Int = {
-    // this is implemented by using cast???
-    //val value = settings.getOrElse(name, default.toString)
-    settings.get(name) match {
-      case None => default
-      case Some(v: Int) => v
-      case a => a.get.toString.toInt
-    }
+    if(settings.hasPath(name)) settings.getInt(name) else default
   }
   def getIntParamRequired(name: String): Int = {
-    settings.apply(name).toString.toInt
+    // TODO: need to check this throws an Exception if there isn't the entry
+    settings.getInt(name)
   }
   def getLongParam(name: String, default: Long): Long = {
-    settings.get(name) match {
-      case None => default
-      case Some(v: Int) => v.toLong
-      case Some(v: Long) => v
-      case a => a.get.toString.toLong
-    }
+    if(settings.hasPath(name)) settings.getLong(name) else default
   }
   def getLongParamRequired(name: String): Long = {
-    settings.apply(name).toString.toLong
+    // TODO: need to check this throws an Exception if there isn't the entry
+    settings.getLong(name)
   }
-  def getFloatParam(name: String, default: Float): Float = {
-    settings.get(name) match {
-      case None => default
-      case Some(v: String) => v.toFloat
-      case a => a.get.toString.toFloat
-    }
+  def getDoubleParam(name: String, default: Double): Double = {
+    if(settings.hasPath(name)) settings.getDouble(name) else default
   }
-  def getFloatParamRequired(name: String): Float = {
-    settings.apply(name).toString.toFloat
+  def getDoubleParamRequired(name: String): Double = {
+    // TODO: need to check this throws an Exception if there isn't the entry
+    settings.getDouble(name)
   }
   def getBoolParam(name: String, default: Boolean): Boolean = {
-    settings.get(name) match {
-      case None => default
-      case a => a.get.toString.toBoolean
-    }
+    if(settings.hasPath(name)) settings.getBoolean(name) else default
   }
   def getBoolParamRequired(name: String): Boolean = {
-    settings.apply(name).toString.toBoolean
+    // TODO: need to check this throws an Exception if there isn't the entry
+    settings.getBoolean(name)
   }
 }
 
-abstract class ProcessorFactory(settings: Map[String, String]) extends ConfiguredFactory(settings){
+abstract class ProcessorFactory(settings: Config) extends ConfiguredFactory(settings){
   def getInstance(): Processor
 }
 
-abstract class RecordProcessorFactory(settings: Map[String, String]) extends ConfiguredFactory(settings){
+abstract class RecordProcessorFactory(settings: Config) extends ConfiguredFactory(settings){
   def getInstance(): RecordProcessor
 }
 
@@ -97,7 +88,7 @@ trait RecordProcessor {
 /**
  * Validater
  */
-abstract class ValidatorFactory(settings: Map[String, String]) extends ConfiguredFactory(settings){
+abstract class ValidatorFactory(settings: Config) extends ConfiguredFactory(settings){
   def getInstance(): Validator
 }
 trait Validator {
@@ -108,7 +99,7 @@ trait Validator {
 /**
  * Writer
  */
-abstract class WriterFactory(settings: Map[String, String]) extends ConfiguredFactory(settings){
+abstract class WriterFactory(settings: Config) extends ConfiguredFactory(settings){
   def getInstance(): Writer
 }
 trait Writer {

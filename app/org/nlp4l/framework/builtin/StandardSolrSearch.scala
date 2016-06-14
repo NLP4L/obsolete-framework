@@ -20,16 +20,16 @@ import java.net.URLEncoder
 
 import org.nlp4l.framework.models.{CellAttribute, CellType}
 
-class StandardSolrSearchCellAttribute(val searchOn: String, collection: String, idField: String, hlField: String, val separatedBy: Option[String],
+class StandardSolrSearchCellAttribute(val searchOn: String, collection: String, idField: String, hlField: String, val separatedBy: String,
                                       name: String, cellType: CellType, isEditable: Boolean, isSortable: Boolean, userDefinedHashCode:(Any) => Int = null)
   extends CellAttribute(name, cellType, isEditable, isSortable, userDefinedHashCode) {
   override def format(cell: Any): String = {
     val url = URLEncoder.encode(s"$searchOn", "UTF-8")
-    val queries = separatedBy match {
-      case Some(separator) => {
-        cell.toString.split(separator).map{ a => a.trim }
-      }
-      case None => Array(cell.toString)
+    val queries = if(separatedBy != null){
+      cell.toString.split(separatedBy).map{ a => a.trim }
+    }
+    else{
+      Array(cell.toString)
     }
 
     val links = for(query <- queries) yield {

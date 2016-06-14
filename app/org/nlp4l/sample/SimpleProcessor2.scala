@@ -16,6 +16,7 @@
 
 package org.nlp4l.sample
 
+import com.typesafe.config.Config
 import org.nlp4l.framework.processors._
 import org.nlp4l.framework.models._
 
@@ -27,14 +28,14 @@ import scala.collection.mutable.ListBuffer
  */
 
 
-class SimpleProcessorFactory2(settings: Map[String, String]) extends ProcessorFactory(settings) {
+class SimpleProcessorFactory2(settings: Config) extends ProcessorFactory(settings) {
   override def getInstance: Processor = {
-    new SimpleProcessor2(settings.get("param1"), settings.get("param2"))
+    new SimpleProcessor2(getStrParam("param1", null), getStrParam("param2", null))
   }
 }
 
 
-class SimpleProcessor2(val param1: Option[String], val param2: Option[String]) extends Processor {
+class SimpleProcessor2(val param1: String, val param2: String) extends Processor {
   override def execute(data: Option[Dictionary]): Option[Dictionary] = {
 
     val rcrd01 = Record(Seq(Cell("cell01", "1"), Cell("cell02", 11111), Cell("cell03", null), Cell("cell02_check", null), Cell("cell04", null)))
