@@ -16,6 +16,7 @@
 
 package org.nlp4l.framework.processors
 
+import com.typesafe.config.Config
 import org.nlp4l.framework.models._
 import org.specs2.mutable.Specification
 
@@ -92,24 +93,24 @@ class ConfigSpec extends Specification {
     "can be seen from ProcessorFactories that don't override them" in {
       val pChain = new ProcessorChainBuilder().procBuild(1, conf1).result()
       val tp0 : TestProcessor = pChain.chain(0).asInstanceOf[TestProcessor]
-      tp0.settings.getOrElse("name", "") must_== "Mike"
+      tp0.settings.getString("name") must_== "Mike"
       val tp1 : Test2Processor = pChain.chain(1).asInstanceOf[Test2Processor]
-      tp1.settings.getOrElse("greeting", "") must_== "this is global"
-      tp1.settings.getOrElse("name", "") must_== "Mike"
+      tp1.settings.getString("greeting") must_== "this is global"
+      tp1.settings.getString("name") must_== "Mike"
     }
 
     "can be seen from ValidatorFactories that don't override them" in {
       val vChain = new ValidatorChainBuilder().build(conf1).result()
       val vp0 : TestValidator = vChain.chain(0).asInstanceOf[TestValidator]
-      vp0.settings.getOrElse("greeting", "") must_== "this is global"
+      vp0.settings.getString("greeting") must_== "this is global"
       val vp1 : Test2Validator = vChain.chain(1).asInstanceOf[Test2Validator]
-      vp1.settings.getOrElse("name", "") must_== "Mike"
+      vp1.settings.getString("name") must_== "Mike"
     }
 
     "can be seen from WriterFactory that doesn't override them" in {
       val dp0 : TestWriter = WriterBuilder.build(conf1).asInstanceOf[TestWriter]
-      dp0.settings.getOrElse("greeting", "") must_== "this is global"
-      dp0.settings.getOrElse("name", "") must_== "Mike"
+      dp0.settings.getString("greeting") must_== "this is global"
+      dp0.settings.getString("name") must_== "Mike"
     }
 
     "can be overridden by DictionaryAttributeFactory" in {
@@ -120,25 +121,25 @@ class ConfigSpec extends Specification {
     "can be overridden by ProcessorFactories" in {
       val pChain = new ProcessorChainBuilder().procBuild(1, conf1).result()
       val tp0 : TestProcessor = pChain.chain(0).asInstanceOf[TestProcessor]
-      tp0.settings.getOrElse("greeting", "") must_== "this is processor"
-      tp0.settings.getOrElse("code", "") must_== "proc-1"
+      tp0.settings.getString("greeting") must_== "this is processor"
+      tp0.settings.getString("code") must_== "proc-1"
       val tp1 : Test2Processor = pChain.chain(1).asInstanceOf[Test2Processor]
-      tp1.settings.getOrElse("code", "") must_== "proc-2"
+      tp1.settings.getString("code") must_== "proc-2"
     }
 
     "can be seen from ValidatorFactories that don't override them" in {
       val vChain = new ValidatorChainBuilder().build(conf1).result()
       val vp0 : TestValidator = vChain.chain(0).asInstanceOf[TestValidator]
-      vp0.settings.getOrElse("name", "") must_== "Tom"
-      vp0.settings.getOrElse("code", "") must_== "valid-1"
+      vp0.settings.getString("name") must_== "Tom"
+      vp0.settings.getString("code") must_== "valid-1"
       val vp1 : Test2Validator = vChain.chain(1).asInstanceOf[Test2Validator]
-      vp1.settings.getOrElse("greeting", "") must_== "this is validator"
-      vp1.settings.getOrElse("code", "") must_== "valid-2"
+      vp1.settings.getString("greeting") must_== "this is validator"
+      vp1.settings.getString("code") must_== "valid-2"
     }
 
     "can be overridden by WriterFactories" in {
       val dp0 : TestWriter = WriterBuilder.build(conf1).asInstanceOf[TestWriter]
-      dp0.settings.getOrElse("code", "") must_== "write-1"
+      dp0.settings.getString("code") must_== "write-1"
     }
   }
 
@@ -367,65 +368,65 @@ class ConfigSpec extends Specification {
   }
 }
 
-class TestDictionaryAttributeFactory(settings: Map[String, String]) extends DictionaryAttributeFactory(settings){
+class TestDictionaryAttributeFactory(settings: Config) extends DictionaryAttributeFactory(settings){
   override def getInstance(): DictionaryAttribute = {
     new DictionaryAttribute("empty", Seq(
-      CellAttribute(settings.getOrElse("greeting", "foo"), CellType.StringType, false, false),
-      CellAttribute(settings.getOrElse("name", "bar"), CellType.StringType, false, false),
-      CellAttribute(settings.getOrElse("code", "baz"), CellType.StringType, false, false))
+      CellAttribute(getStrParam("greeting", "foo"), CellType.StringType, false, false),
+      CellAttribute(getStrParam("name", "bar"), CellType.StringType, false, false),
+      CellAttribute(getStrParam("code", "baz"), CellType.StringType, false, false))
     )
   }
 }
 
-class TestProcessorFactory(settings: Map[String, String]) extends ProcessorFactory(settings){
+class TestProcessorFactory(settings: Config) extends ProcessorFactory(settings){
   override def getInstance(): Processor = {
     new TestProcessor(settings)
   }
 }
 
-class TestProcessor(val settings: Map[String, String]) extends Processor {
+class TestProcessor(val settings: Config) extends Processor {
 }
 
-class Test2ProcessorFactory(settings: Map[String, String]) extends ProcessorFactory(settings){
+class Test2ProcessorFactory(settings: Config) extends ProcessorFactory(settings){
   override def getInstance(): Processor = {
     new Test2Processor(settings)
   }
 }
 
-class Test2Processor(val settings: Map[String, String]) extends Processor {
+class Test2Processor(val settings: Config) extends Processor {
 }
 
-class TestValidatorFactory(settings: Map[String, String]) extends ValidatorFactory(settings){
+class TestValidatorFactory(settings: Config) extends ValidatorFactory(settings){
   override def getInstance(): Validator = {
     new TestValidator(settings)
   }
 }
 
-class TestValidator(val settings: Map[String, String]) extends Validator {
+class TestValidator(val settings: Config) extends Validator {
   def validate (data: Option[Dictionary]): Tuple2[Boolean, Seq[String]] = {
     (true, Seq())
   }
 }
 
-class Test2ValidatorFactory(settings: Map[String, String]) extends ValidatorFactory(settings){
+class Test2ValidatorFactory(settings: Config) extends ValidatorFactory(settings){
   override def getInstance(): Validator = {
     new Test2Validator(settings)
   }
 }
 
-class Test2Validator(val settings: Map[String, String]) extends Validator {
+class Test2Validator(val settings: Config) extends Validator {
   def validate (data: Option[Dictionary]): Tuple2[Boolean, Seq[String]] = {
     (true, Seq())
   }
 }
 
-class TestWriterFactory(settings: Map[String, String]) extends WriterFactory(settings){
+class TestWriterFactory(settings: Config) extends WriterFactory(settings){
   override def getInstance(): Writer = {
     new TestWriter(settings)
   }
 }
 
-class TestWriter(val settings: Map[String, String]) extends Writer {
+class TestWriter(val settings: Config) extends Writer {
   def write (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]] = {
     (true, Seq(), Seq())
   }

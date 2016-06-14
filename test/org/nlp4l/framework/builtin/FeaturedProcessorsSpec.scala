@@ -18,6 +18,7 @@ package org.nlp4l.framework.builtin
 
 import java.io.{StringReader, FileNotFoundException}
 
+import com.typesafe.config.ConfigFactory
 import org.apache.lucene.analysis.ja.dict.UserDictionary
 import org.nlp4l.framework.models._
 import org.specs2.mutable.Specification
@@ -26,7 +27,13 @@ class FeaturedProcessorsSpec extends Specification {
 
   "TextRecordsProcessor" should {
     "read solr.log file" in {
-      val settings = Map("file" -> "test/resources/org/nlp4l/framework/builtin/solr.log", "encoding" -> "UTF-8")
+      val settings = ConfigFactory.parseString(
+        """
+          |{
+          |  file : "test/resources/org/nlp4l/framework/builtin/solr.log"
+          |  encoding : "UTF-8"
+          |}
+        """.stripMargin)
       val processor = new TextRecordsProcessorFactory(settings).getInstance
       val result: Dictionary = processor.execute(None).get
       result must_!= None
@@ -34,13 +41,19 @@ class FeaturedProcessorsSpec extends Specification {
     }
 
     "throw a FileNotFoundException" in {
-      val settings = Map("file" -> "test/resources/org/nlp4l/framework/builtin/no_such_file", "encoding" -> "UTF-8")
+      val settings = ConfigFactory.parseString(
+        """
+          |{
+          |  file : "test/resources/org/nlp4l/framework/builtin/no_such_file"
+          |  encoding : "UTF-8"
+          |}
+        """.stripMargin)
       val processor = new TextRecordsProcessorFactory(settings).getInstance
       processor.execute(None) must throwA[FileNotFoundException]
     }
   }
 
-  val solrLogProc = new StandardSolrQueryLogProcessorFactory(Map()).getInstance
+  val solrLogProc = new StandardSolrQueryLogProcessorFactory(ConfigFactory.empty()).getInstance
 
   "StandardSolrQueryLogProcessor" should {
     "ignore records that don't match the pattern" in {

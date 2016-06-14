@@ -16,6 +16,7 @@
 
 package org.nlp4l.framework.builtin
 
+import com.typesafe.config.Config
 import java.io.{FileInputStream, InputStreamReader, File}
 
 import org.apache.lucene.analysis.ja.dict.UserDictionary
@@ -32,9 +33,9 @@ import collection.JavaConversions._
 import scala.io.Source
 import scala.util.matching.Regex
 
-class TextRecordsProcessorFactory(settings: Map[String, String]) extends ProcessorFactory(settings) {
+class TextRecordsProcessorFactory(settings: Config) extends ProcessorFactory(settings) {
   override def getInstance: Processor = {
-    new TextRecordsProcessor(getStrParamRequired("file"), settings.getOrElse("encoding", "UTF-8"))
+    new TextRecordsProcessor(getStrParamRequired("file"), getStrParam("encoding", "UTF-8"))
   }
 }
 
@@ -51,12 +52,12 @@ class TextRecordsProcessor(val file: String, val encoding: String) extends Proce
   }
 }
 
-class StandardSolrQueryLogProcessorFactory(settings: Map[String, String]) extends RecordProcessorFactory(settings) {
+class StandardSolrQueryLogProcessorFactory(settings: Config) extends RecordProcessorFactory(settings) {
 
   val REGEX = "(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}).*INFO.*o.a.s.c.S.Request.*/select params=\\{(.*)\\} hits=(\\d+) status=\\d+ QTime=(\\d+)"
 
   override def getInstance: RecordProcessor = {
-    new StandardSolrQueryLogProcessor(settings.getOrElse("regex", REGEX).r, settings.getOrElse("separator", ","))
+    new StandardSolrQueryLogProcessor(getStrParam("regex", REGEX).r, getStrParam("separator", ","))
   }
 }
 
@@ -89,7 +90,7 @@ class StandardSolrQueryLogProcessor(val pattern: Regex, val separator: String) e
   }
 }
 
-class StandardSolrQueryLogDictionaryAttributeFactory(settings: Map[String, String]) extends DictionaryAttributeFactory(settings) {
+class StandardSolrQueryLogDictionaryAttributeFactory(settings: Config) extends DictionaryAttributeFactory(settings) {
   override def getInstance: DictionaryAttribute = {
 
     val list = Seq[CellAttribute](
@@ -109,33 +110,35 @@ object CellAttributeUtil {
 
   private val logger = Logger(this.getClass)
 
-  def textSearchLink(settings: Map[String, String], cellName: String): CellAttribute = {
-    val separatedBy = settings.get("separatedBy")
-    settings.get("searchOnSolr") match {
-      case Some(value) => {
-        settings.get("collection") match {
-          case Some(collection) => {
-            settings.get("idField") match {
-              case Some(idField) => {
-                settings.get("hlField") match {
-                  case Some(hlField) => new StandardSolrSearchCellAttribute(value, collection,idField, hlField, separatedBy, cellName, CellType.StringType, true, true)
-                  case None => new StandardSolrSearchCellAttribute(value, collection, idField, null, separatedBy, cellName, CellType.StringType, true, true)
-                }
-              }
-              case None => {
-                logger.error(s"idField parameter must be set when using Solr server ($settings)")
-                CellAttribute(cellName, CellType.StringType, true, true)
-              }
-            }
+  def textSearchLink(settings: Config, cellName: String): CellAttribute = {
+    val separatedBy = settings.getString("separatedBy")
+    val searchOn = settings.getString("searchOnSolr")
+    if(searchOn != null) {
+      val collection = settings.getString("collection")
+      if (collection != null) {
+        val idField = settings.getString("idField")
+        if (idField != null) {
+          val hlField = settings.getString("hlField")
+          if (hlField != null) {
+            new StandardSolrSearchCellAttribute(searchOn, collection, idField, hlField, separatedBy, cellName, CellType.StringType, true, true)
           }
-          case None => {
-            logger.error(s"collection parameter must be set when using Solr server ($settings)")
-            CellAttribute(cellName, CellType.StringType, true, true)
+          else {
+            new StandardSolrSearchCellAttribute(searchOn, collection, idField, null, separatedBy, cellName, CellType.StringType, true, true)
           }
         }
+        else {
+          logger.error(s"idField parameter must be set when using Solr server ($settings)")
+          CellAttribute(cellName, CellType.StringType, true, true)
+        }
       }
-      // TODO: check for ES
-      case None => CellAttribute(cellName, CellType.StringType, true, true)
+      else {
+        logger.error(s"collection parameter must be set when using Solr server ($settings)")
+        CellAttribute(cellName, CellType.StringType, true, true)
+      }
+    }
+    // TODO: check for ES
+    else{
+      CellAttribute(cellName, CellType.StringType, true, true)
     }
   }
 }
@@ -171,11 +174,11 @@ object StopWordsUtil {
   }
 }
 
-class StopWordsProcessorFactory(settings: Map[String, String]) extends ProcessorFactory(settings) {
+class StopWordsProcessorFactory(settings: Config) extends ProcessorFactory(settings) {
   override def getInstance: Processor = {
     val file = getStrParamRequired("file")
-    val encoding = settings.getOrElse("encoding", "UTF-8")
-    val separator = settings.getOrElse("separator", ",")
+    val encoding = getStrParam("encoding", "UTF-8")
+    val separator = getStrParam("separator", ",")
     val columnNum = getIntParam("column", 1)
     val stopwords = StopWordsUtil.stopwords(file, encoding, separator, columnNum)
     val cellName = getStrParamRequired("cellName")
@@ -221,7 +224,7 @@ object JaUserDictionary {
   val NOREADING = "NOREADING"
 }
 
-class JaUserDictionaryDictionaryAttributeFactory(settings: Map[String, String]) extends DictionaryAttributeFactory(settings) {
+class JaUserDictionaryDictionaryAttributeFactory(settings: Config) extends DictionaryAttributeFactory(settings) {
 
   override def getInstance: DictionaryAttribute = {
     class WarningCellAttribute(name: String, cellType: CellType, isEditable: Boolean, isSortable: Boolean)
@@ -241,18 +244,19 @@ class JaUserDictionaryDictionaryAttributeFactory(settings: Map[String, String]) 
   }
 }
 
-class JaUserDictionaryProcessorFactory(settings: Map[String, String]) extends ProcessorFactory(settings) {
+class JaUserDictionaryProcessorFactory(settings: Config) extends ProcessorFactory(settings) {
   override def getInstance: Processor = {
-    val userdic = settings.get("userDictionary") match {
-      case Some(file) => {
-        val encoding = settings.getOrElse("encoding", "UTF-8")
-        val fis = new FileInputStream(file)
-        val isr = new InputStreamReader(fis, encoding)
-        UserDictionary.open(isr)
-      }
-      case None => null
+    val file = settings.getString("userDictionary")
+    val userdic = if(file != null){
+      val encoding = getStrParam("encoding", "UTF-8")
+      val fis = new FileInputStream(file)
+      val isr = new InputStreamReader(fis, encoding)
+      UserDictionary.open(isr)
     }
-    new JaUserDictionaryProcessor(userdic, getStrParamRequired("cellName"), settings.getOrElse("pos", "カスタム名詞"))
+    else{
+      null
+    }
+    new JaUserDictionaryProcessor(userdic, getStrParamRequired("cellName"), getStrParam("pos", "カスタム名詞"))
   }
 }
 
@@ -298,7 +302,7 @@ class JaUserDictionaryProcessor(val userdic: UserDictionary, val cellname: Strin
   }
 }
 
-class TextRecordsDictionaryAttributeFactory(settings: Map[String, String]) extends DictionaryAttributeFactory(settings) {
+class TextRecordsDictionaryAttributeFactory(settings: Config) extends DictionaryAttributeFactory(settings) {
 
   override def getInstance: DictionaryAttribute = {
     val cellName = getStrParamRequired("cellName")

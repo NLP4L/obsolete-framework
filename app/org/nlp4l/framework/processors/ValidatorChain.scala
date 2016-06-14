@@ -16,6 +16,7 @@
 
 package org.nlp4l.framework.processors
 
+import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import org.nlp4l.framework.dao.JobDAO
 import org.nlp4l.framework.models.Dictionary
@@ -73,23 +74,16 @@ class ValidatorChainBuilder() {
   def build(confStr: String): ValidatorChainBuilder = {
     val config = ConfigFactory.parseString(confStr)
 
-    val gSettings: Map[String, Object] =
-      if(config.hasPath("settings")) {
-        config.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
-      }
-      else Map()
-    
+    val gSettings = getConfig(config, "settings")
+
     val v = config.getConfigList("validators")
     v.foreach {
       pConf =>
         try {
           val className = pConf.getString("class")
-          val constructor = Class.forName(className).getConstructor(classOf[Map[String, String]])
-          var lSettings: Map[String, Object] = Map()
-          if(pConf.hasPath("settings")) {
-            lSettings = pConf.getConfig("settings").entrySet().map(f => f.getKey -> f.getValue.unwrapped()).toMap
-          }
-          val settings = gSettings ++ lSettings
+          val constructor = Class.forName(className).getConstructor(classOf[Config])
+          val lSettings = getConfig(pConf, "settings")
+          val settings = lSettings.withFallback(gSettings)
           val facP = constructor.newInstance(settings).asInstanceOf[ValidatorFactory]
           val p:Validator = facP.getInstance()
           buf += p
@@ -101,4 +95,8 @@ class ValidatorChainBuilder() {
   }
 
   def result() = new ValidatorChain(buf.toList)
+
+  def getConfig(src: Config, key: String): Config = {
+    if(src.hasPath(key)) src.getConfig(key) else ConfigFactory.empty()
+  }
 }

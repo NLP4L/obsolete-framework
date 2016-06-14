@@ -9,7 +9,7 @@ import org.specs2.mutable.Specification
 class StandardSolrSearchSpec extends Specification with Mockito {
 
   val searchOn = "http://localhost:8983/solr"
-  def cellAtt(separatedBy: String, hlField: String = null) = new StandardSolrSearchCellAttribute(searchOn, "collection1", "id", hlField, Some(separatedBy), "cell1", CellType.StringType, true, false)
+  def cellAtt(separatedBy: String, hlField: String = null) = new StandardSolrSearchCellAttribute(searchOn, "collection1", "id", hlField, separatedBy, "cell1", CellType.StringType, true, false)
 
   "StandardSolrSearchCellAttribute" should {
     "format cell value with a separator" in {
@@ -18,9 +18,9 @@ class StandardSolrSearchSpec extends Specification with Mockito {
 
       val expected =
         List(
-          s"""<a href="/search/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マック", "UTF-8")}?id=id">マック</a>""",
-          s"""<a href="/search/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マクド", "UTF-8")}?id=id">マクド</a>""",
-          s"""<a href="/search/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マクドナルド", "UTF-8")}?id=id">マクドナルド</a>"""
+          s"""<a href="/searchResult/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マック", "UTF-8")}?id=id">マック</a>""",
+          s"""<a href="/searchResult/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マクド", "UTF-8")}?id=id">マクド</a>""",
+          s"""<a href="/searchResult/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マクドナルド", "UTF-8")}?id=id">マクドナルド</a>"""
         ).mkString(",")
       cellAtt(",").format(mockCell) mustEqual expected
     }
@@ -31,10 +31,10 @@ class StandardSolrSearchSpec extends Specification with Mockito {
 
       val expected =
         List(
-          s"""<a href="/search/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マック", "UTF-8")}?id=id">マック</a>""",
-          s"""<a href="/search/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マクド", "UTF-8")}?id=id">マクド</a>"""
+          s"""<a href="/searchResult/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マック", "UTF-8")}?id=id">マック</a>""",
+          s"""<a href="/searchResult/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マクド", "UTF-8")}?id=id">マクド</a>"""
         ).mkString(",") +
-          " => " + s"""<a href="/search/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マクドナルド", "UTF-8")}?id=id">マクドナルド</a>"""
+          " => " + s"""<a href="/searchResult/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マクドナルド", "UTF-8")}?id=id">マクドナルド</a>"""
       cellAtt("(,)|(=>)").format(mockCell) mustEqual expected
     }
 
@@ -50,9 +50,9 @@ class StandardSolrSearchSpec extends Specification with Mockito {
 
       val expected =
         List(
-          s"""<a href="/search/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マック", "UTF-8")}?id=id&hl=body">マック</a>""",
-          s"""<a href="/search/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マクド", "UTF-8")}?id=id&hl=body">マクド</a>""",
-          s"""<a href="/search/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マクドナルド", "UTF-8")}?id=id&hl=body">マクドナルド</a>"""
+          s"""<a href="/searchResult/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マック", "UTF-8")}?id=id&hl=body">マック</a>""",
+          s"""<a href="/searchResult/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マクド", "UTF-8")}?id=id&hl=body">マクド</a>""",
+          s"""<a href="/searchResult/solr/${URLEncoder.encode(searchOn, "UTF-8")}/collection1/${URLEncoder.encode("マクドナルド", "UTF-8")}?id=id&hl=body">マクドナルド</a>"""
         ).mkString(",")
       cellAtt(",", "body").format(mockCell) mustEqual expected
     }
