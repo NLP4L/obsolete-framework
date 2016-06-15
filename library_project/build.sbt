@@ -17,3 +17,8 @@ lazy val root = (project in file(".")).
        "com.typesafe" % "config" % "1.3.0"
     )
   )
+
+scalaSource in Compile := baseDirectory.value / "../app"
+
+includeFilter in (Compile, unmanagedSources) := "DataModels.scala" || "Processor.scala"
+
