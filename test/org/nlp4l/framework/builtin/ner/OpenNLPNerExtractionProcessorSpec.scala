@@ -1,13 +1,35 @@
 package org.nlp4l.framework.builtin.ner
 
+import java.io.File
+
 import com.typesafe.config.ConfigFactory
 import org.nlp4l.framework.models.{Cell, CellType, DictionaryAttribute, Record}
-import org.specs2.mutable.Specification
+import org.specs2.mutable.{BeforeAfter, Specification}
+import dispatch._
+import scala.concurrent.ExecutionContext.Implicits.global
 
-class OpenNLPNerExtractionProcessorSpec extends Specification {
+class OpenNLPNerExtractionProcessorSpec extends Specification with BeforeAfter {
+
+  def before = {
+    val modelDir = new File("/tmp/models")
+    modelDir.mkdir()
+    downloadOneNLPModel("en-sent.bin")
+    downloadOneNLPModel("en-token.bin")
+    downloadOneNLPModel("en-ner-person.bin")
+    downloadOneNLPModel("en-ner-location.bin")
+  }
+
+  def downloadOneNLPModel(file: String): Unit = {
+    val request = url(s"http://opennlp.sourceforge.net/models-1.5/$file")
+    Http(request > as.File(new java.io.File(s"/tmp/models/$file")))
+  }
+
+  def after = {
+  }
 
   // skip test if model files are not ready.
-  skipAllIf(!new java.io.File("/tmp/models/en-sent.bin").exists())
+  //skipAllIf(!new java.io.File("/tmp/models/en-sent.bin").exists())
+  //skipAllIf(true)
 
   "OpenNLPNerExtractionDictionaryAttributeFactory" should {
     "construct with setting" in {
