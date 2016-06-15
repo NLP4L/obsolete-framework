@@ -16,6 +16,7 @@
 
 package org.nlp4l.sample
 
+import com.typesafe.config.Config
 import org.nlp4l.framework.processors._
 import org.nlp4l.framework.models._
 
@@ -31,7 +32,7 @@ import scala.collection.mutable.ListBuffer
  * Dictionary schema definition
  * 
  */
-class SimpleDictionaryAttributeFactory(settings: Map[String, String]) extends DictionaryAttributeFactory(settings) {
+class SimpleDictionaryAttributeFactory(settings: Config) extends DictionaryAttributeFactory(settings) {
   override def getInstance: DictionaryAttribute = {
     
     /**
@@ -62,18 +63,18 @@ class SimpleDictionaryAttributeFactory(settings: Map[String, String]) extends Di
 }
 
 
-class SimpleProcessorFactory(settings: Map[String, String]) extends ProcessorFactory(settings) {
+class SimpleProcessorFactory(settings: Config) extends ProcessorFactory(settings) {
   override def getInstance: Processor = {
-    new SimpleProcessor(settings.get("param1"), settings.get("param2"))
+    new SimpleProcessor(getStrParam("param1", "0001"), getIntParam("param2", 2))
   }
 }
 
 
-class SimpleProcessor(val param1: Option[String], val param2: Option[String]) extends Processor {
+class SimpleProcessor(val param1: String, val param2: Int) extends Processor {
   override def execute(data: Option[Dictionary]): Option[Dictionary] = {
     Thread.sleep(5000)
-    val rcrd01 = Record(Seq(Cell("cell01", param1.getOrElse("0001")), Cell("cell02", param2.getOrElse("2").toInt), Cell("cell03", 3.1), Cell("cell02_check", null), Cell("cell04", null)))
-    val rcrd02 = Record(Seq(Cell("cell01", param1.getOrElse("0002")), Cell("cell02", null), Cell("cell03", null), Cell("cell02_check", null), Cell("cell04", null)))
+    val rcrd01 = Record(Seq(Cell("cell01", param1), Cell("cell02", param2), Cell("cell03", 3.1), Cell("cell02_check", null), Cell("cell04", null)))
+    val rcrd02 = Record(Seq(Cell("cell01", param1), Cell("cell02", null), Cell("cell03", null), Cell("cell02_check", null), Cell("cell04", null)))
     data match {
       case Some(dic) => {
         val ss = dic.recordList.toBuffer
@@ -94,7 +95,7 @@ class SimpleProcessor(val param1: Option[String], val param2: Option[String]) ex
 }
 
 
-class SimpleRecordProcessorFactory(settings: Map[String, String]) extends RecordProcessorFactory(settings) {
+class SimpleRecordProcessorFactory(settings: Config) extends RecordProcessorFactory(settings) {
   override def getInstance: RecordProcessor = {
     new SimpleRecordProcessor()
   }
@@ -139,7 +140,7 @@ class SimpleRecordProcessor() extends RecordProcessor {
 
 
 
-class SimpleValidatorFactory(settings: Map[String, String]) extends ValidatorFactory(settings) {
+class SimpleValidatorFactory(settings: Config) extends ValidatorFactory(settings) {
   override def getInstance: Validator = {
     new SimpleValidator
   }
@@ -155,7 +156,7 @@ class SimpleValidator extends Validator {
   }
 }
 
-class Simple2ValidatorFactory(settings: Map[String, String]) extends ValidatorFactory(settings) {
+class Simple2ValidatorFactory(settings: Config) extends ValidatorFactory(settings) {
   override def getInstance: Validator = {
     new Simple2Validator
   }
@@ -173,18 +174,18 @@ class Simple2Validator extends Validator {
 }
 
 
-class SimpleWriterFactory(settings: Map[String, String]) extends WriterFactory(settings) {
+class SimpleWriterFactory(settings: Config) extends WriterFactory(settings) {
   override def getInstance: Writer = {
-    new SimpleWriter(settings.get("filename"))
+    new SimpleWriter(getStrParam("filename", ""))
   }
 }
 
 
-class SimpleWriter(val filename: Option[String]) extends Writer {
+class SimpleWriter(val filename: String) extends Writer {
   override def write (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]] = {
     Thread.sleep(3000)
     
-    (false, Seq("err 01", "err 02", filename.getOrElse("")), Seq())
+    (false, Seq("err 01", "err 02", filename), Seq())
     //(true, Seq())
   }
 }

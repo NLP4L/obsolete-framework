@@ -16,6 +16,7 @@
 
 package org.nlp4l.framework.builtin
 
+import com.typesafe.config.Config
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Await
 import scala.util.{ Try, Success, Failure }
@@ -32,9 +33,9 @@ import org.nlp4l.framework.processors.Processor
 /**
  * Sort processor factory
  */
-class SortProcessorFactory(settings: Map[String, String]) extends ProcessorFactory(settings) {
+class SortProcessorFactory(settings: Config) extends ProcessorFactory(settings) {
   override def getInstance: Processor = {
-    new SortProcessor(settings.get("cellname"), settings.get("order"))
+    new SortProcessor(getStrParam("cellname", "id"), getStrParam("order", "asc"))
   }
 }
 
@@ -44,7 +45,7 @@ class SortProcessorFactory(settings: Map[String, String]) extends ProcessorFacto
  * @param key Sort key name
  * @param order Sort order, "desc", "asc"
  */
-final class SortProcessor(val key: Option[String], val order: Option[String]) extends Processor {
+final class SortProcessor(val key: String, val order: String) extends Processor {
   private val logger = Logger(this.getClass)
   
   def sort(jobDAO: JobDAO, runDAO: RunDAO, jobId: Int, runId: Int, dicAttr: DictionaryAttribute, dic: Option[Dictionary]): Option[Dictionary] = {
@@ -58,7 +59,7 @@ final class SortProcessor(val key: Option[String], val order: Option[String]) ex
           case Success(n) => runDAO.insertData(jobId, tmpRunId, dicAttr, d)
           case Failure(ex) => throw(ex)
         }
-        var newout:Dictionary = runDAO.fetchAll(jobId, tmpRunId, key.getOrElse("id"), order.getOrElse("asc"))
+        var newout:Dictionary = runDAO.fetchAll(jobId, tmpRunId, key, order)
         out = Some(newout)
         val f2 = runDAO.dropTable(jobId, tmpRunId)
         Await.ready(f2, scala.concurrent.duration.Duration.Inf)
@@ -76,9 +77,9 @@ final class SortProcessor(val key: Option[String], val order: Option[String]) ex
 /**
  * Merge processor factory
  */
-class MergeProcessorFactory(settings: Map[String, String]) extends ProcessorFactory(settings) {
+class MergeProcessorFactory(settings: Config) extends ProcessorFactory(settings) {
   override def getInstance: Processor = {
-    new MergeProcessor(settings.get("cellname").getOrElse(""), settings.get("glue").getOrElse(""))
+    new MergeProcessor(getStrParam("cellname", ""), getStrParam("glue", ""))
   }
 }
 
@@ -119,7 +120,7 @@ final class MergeProcessor(val key: String, val glue: String) extends Processor 
  * Replay processor
  * This class is to mark that the processors must apply the replay data to dictionary
  */
-class ReplayProcessorFactory(settings: Map[String, String]) extends ProcessorFactory(settings) {
+class ReplayProcessorFactory(settings: Config) extends ProcessorFactory(settings) {
   override def getInstance: Processor = {
     new ReplayProcessor()
   }

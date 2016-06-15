@@ -16,13 +16,13 @@
 
 package org.nlp4l.framework.builtin
 
+import com.typesafe.config.Config
 import org.nlp4l.framework.models.Dictionary
 import org.nlp4l.framework.processors.{Writer, WriterFactory}
 
-
-class CSVFileWriterFactory(settings: Map[String, String]) extends WriterFactory(settings) {
+class CSVFileWriterFactory(settings: Config) extends WriterFactory(settings) {
   override def getInstance: Writer = {
-    new CSVFileWriter(settings.getOrElse("separator", ","))
+    new CSVFileWriter(getStrParam("separator", ","))
   }
 }
 

@@ -16,6 +16,7 @@
 
 package org.nlp4l.framework.builtin
 
+import com.typesafe.config.Config
 import org.apache.solr.client.solrj.impl.HttpSolrClient
 import org.apache.solr.client.solrj.request.QueryRequest
 import org.apache.solr.common.params.ModifiableSolrParams
@@ -25,7 +26,7 @@ import play.api.Logger
 
 import scala.collection.mutable.ArrayBuffer
 
-class UniqueRecordValidatorFactory(settings: Map[String, String]) extends ValidatorFactory(settings) {
+class UniqueRecordValidatorFactory(settings: Config) extends ValidatorFactory(settings) {
   override def getInstance: Validator = {
     new UniqueRecordValidator(getStrParamRequired("cellName"))
   }
@@ -71,10 +72,10 @@ class UniqueRecordValidator(val cellname: String) extends Validator {
   }
 }
 
-class RegexValidatorFactory(settings: Map[String, String]) extends ValidatorFactory(settings) {
+class RegexValidatorFactory(settings: Config) extends ValidatorFactory(settings) {
   override def getInstance: Validator = {
-    val accept = settings.getOrElse("regexAccept", null)
-    val deny = settings.getOrElse("regexDeny", null)
+    val accept = getStrParam("regexAccept", null)
+    val deny = getStrParam("regexDeny", null)
     (accept, deny) match {
       case (null, null) => throw new IllegalArgumentException(s"either regexAccept or regexDeny must be set")
       case _ => {
@@ -128,23 +129,23 @@ class RegexValidator(val cellname: String, val accept: String, val deny: String)
   }
 }
 
-class SolrSearchValidatorFactory(settings: Map[String, String]) extends ValidatorFactory(settings) {
+class SolrSearchValidatorFactory(settings: Config) extends ValidatorFactory(settings) {
   override def getInstance: Validator = {
     val validateIn = getStrParamRequired("validateIn")
     val collection = getStrParamRequired("collection")
     val field = getStrParamRequired("field")
     val cellName = getStrParamRequired("cellName")
     val maxInvalids = getIntParam("maxInvalids", 10)
-    val separatedBy = settings.get("separatedBy")
+    val separatedBy = getStrParam("separatedBy", null)
     new SolrSearchValidator(validateIn, collection, field, cellName, maxInvalids, separatedBy)
   }
 }
 
 class SolrSearchValidator(val url: String, val collection: String, val field: String, val cellName: String,
-                          val maxInvalids: Int, val separatedBy: Option[String]) extends Validator {
+                          val maxInvalids: Int, val separatedBy: String) extends Validator {
   val logger = Logger(this.getClass)
   override def validate (data: Option[Dictionary]): Tuple2[Boolean, Seq[String]] = {
-    logger.info(s"url = $url collection = $collection, field = $field, cellName = $cellName, maxInvalids = $maxInvalids, separatedBy = ${separatedBy.getOrElse("(not set)")}")
+    logger.info(s"url = $url collection = $collection, field = $field, cellName = $cellName, maxInvalids = $maxInvalids, separatedBy = $separatedBy")
     data match {
       case Some(dic) => {
         var count = 0
@@ -154,9 +155,11 @@ class SolrSearchValidator(val url: String, val collection: String, val field: St
             val solr = new HttpSolrClient(url)
             r.cellValue(cellName) match {
               case Some(q) => {
-                val queries = separatedBy match {
-                  case Some(separator) => q.toString.split(separator).map(a => a.trim)
-                  case None => Array(q.toString)
+                val queries = if(separatedBy != null){
+                  q.toString.split(separatedBy).map(a => a.trim)
+                }
+                else{
+                  Array(q.toString)
                 }
                 queries.foreach{ query =>
                   val params = new ModifiableSolrParams().add("q", query.toString).add("rows", "0")

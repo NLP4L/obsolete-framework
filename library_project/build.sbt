@@ -13,7 +13,7 @@ lazy val root = (project in file(".")).
     parallelExecution := true,
     libraryDependencies ++= Seq(
        "joda-time" % "joda-time" % "2.7",
-       "org.joda" % "joda-convert" % "1.7"
+       "org.joda" % "joda-convert" % "1.7",
+       "com.typesafe" % "config" % "1.3.0"
     )
   )
-
