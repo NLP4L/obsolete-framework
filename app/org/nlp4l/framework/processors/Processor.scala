@@ -20,6 +20,7 @@ import com.typesafe.config.Config
 import org.nlp4l.framework.models.Dictionary
 import org.nlp4l.framework.models.DictionaryAttribute
 import org.nlp4l.framework.models.Record
+import scala.collection.convert.WrapAsScala._
 
 
 abstract class DictionaryAttributeFactory(settings: Config) extends ConfiguredFactory(settings){
@@ -62,6 +63,14 @@ abstract class ConfiguredFactory(val settings: Config){
     // TODO: need to check this throws an Exception if there isn't the entry
     settings.getBoolean(name)
   }
+  def getStrListParam(name: String, default: Seq[String]): Seq[String] = {
+    if(settings.hasPath(name)) settings.getStringList(name) else default
+  }
+  def getStrListParamRequired(name: String): Seq[String] = {
+    // TODO: need to check this throws an Exception if there isn't the entry
+    settings.getStringList(name)
+  }
+
 }
 
 abstract class ProcessorFactory(settings: Config) extends ConfiguredFactory(settings){
