@@ -1,37 +1,49 @@
 package org.nlp4l.framework.builtin.ner
 
-import java.io.File
+import java.io.{FileOutputStream, File}
 
 import com.typesafe.config.ConfigFactory
 import org.nlp4l.framework.models.{Cell, CellType, DictionaryAttribute, Record}
 import org.specs2.mutable.{BeforeAfter, Specification}
-import dispatch._
-import scala.concurrent.ExecutionContext.Implicits.global
+import dispatch._, Defaults._
 
-class OpenNLPNerExtractionProcessorSpec extends Specification with BeforeAfter {
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
-  def before = {
-    val modelDir = new File("/tmp/models")
-    modelDir.mkdir()
-    downloadOneNLPModel("en-sent.bin")
-    downloadOneNLPModel("en-token.bin")
-    downloadOneNLPModel("en-ner-person.bin")
-    downloadOneNLPModel("en-ner-location.bin")
+class OpenNLPNerProcessorSpec extends Specification with BeforeAfter {
+
+  object OpenNLPModels {
+    val DIR = System.getProperty("java.io.tmpdir")
+    val FILE_SENT = "en-sent.bin"
+    val FILE_TOKEN = "en-token.bin"
+    val FILE_NER_PERSON = "en-ner-person.bin"
+    val FILE_NER_LOCATION = "en-ner-location.bin"
+
+    def sentModel(): String = { new File(DIR, FILE_SENT).getAbsolutePath }
+    def tokenModel(): String = { new File(DIR, FILE_TOKEN).getAbsolutePath }
+    def nerPersonModel(): String = { new File(DIR, FILE_NER_PERSON).getAbsolutePath }
+    def nerLocationModel(): String = { new File(DIR, FILE_NER_LOCATION).getAbsolutePath }
   }
 
-  def downloadOneNLPModel(file: String): Unit = {
-    val request = url(s"http://opennlp.sourceforge.net/models-1.5/$file")
-    Http(request > as.File(new java.io.File(s"/tmp/models/$file")))
+  def before = {
+    downloadOpenNLPModel(OpenNLPModels.FILE_SENT)
+    downloadOpenNLPModel(OpenNLPModels.FILE_TOKEN)
+    downloadOpenNLPModel(OpenNLPModels.FILE_NER_PERSON)
+    downloadOpenNLPModel(OpenNLPModels.FILE_NER_LOCATION)
+  }
+
+  def downloadOpenNLPModel(file: String): Unit = {
+    val modelFile = new File(OpenNLPModels.DIR, file)
+    if(!modelFile.exists()){
+      val request = url(s"http://opennlp.sourceforge.net/models-1.5/$file")
+      Await.result(Http(request > as.File(modelFile)), Duration.Inf)
+    }
   }
 
   def after = {
   }
 
-  // skip test if model files are not ready.
-  //skipAllIf(!new java.io.File("/tmp/models/en-sent.bin").exists())
-  //skipAllIf(true)
-
-  "OpenNLPNerExtractionDictionaryAttributeFactory" should {
+  "OpenNLPNerDictionaryAttributeFactory" should {
     "construct with setting" in {
       val config = ConfigFactory.parseString(
         """
@@ -39,7 +51,7 @@ class OpenNLPNerExtractionProcessorSpec extends Specification with BeforeAfter {
           |  fields : ["docId", "category", "body_person"]
           |}
         """.stripMargin)
-      val dict: DictionaryAttribute = new OpenNLPNerExtractionDictionaryAttributeFactory(config).getInstance()
+      val dict: DictionaryAttribute = new OpenNLPNerDictionaryAttributeFactory(config).getInstance()
 
       dict.cellAttributeList.length must_==(3)
 
@@ -57,13 +69,13 @@ class OpenNLPNerExtractionProcessorSpec extends Specification with BeforeAfter {
   "OpenNLPNerRecordProcessor" should {
     "execute extraction" in {
       val config = ConfigFactory.parseString(
-        """
+        s"""
           |{
-          | sentModel: "/tmp/models/en-sent.bin"
-          | tokenModel: "/tmp/models/en-token.bin"
+          | sentModel: "${OpenNLPModels.sentModel}"
+          | tokenModel: "${OpenNLPModels.tokenModel}"
           | nerModels: [
-          |   "/tmp/models/en-ner-person.bin",
-          |   "/tmp/models/en-ner-location.bin"
+          |   "${OpenNLPModels.nerPersonModel}",
+          |   "${OpenNLPModels.nerLocationModel}"
           |   ]
           | nerTypes: [
           |   "person",
@@ -114,12 +126,12 @@ class OpenNLPNerExtractionProcessorSpec extends Specification with BeforeAfter {
   "OpenNLPNerRecordProcessor" should {
     "execute extraction, with separator, without passThru" in {
       val config = ConfigFactory.parseString(
-        """
+        s"""
           |{
-          | sentModel: "/tmp/models/en-sent.bin"
-          | tokenModel: "/tmp/models/en-token.bin"
+          | sentModel: "${OpenNLPModels.sentModel}"
+          | tokenModel: "${OpenNLPModels.tokenModel}"
           | nerModels: [
-          |   "/tmp/models/en-ner-person.bin"
+          |   "${OpenNLPModels.nerPersonModel}"
           |   ]
           | nerTypes: [
           |   "person"

@@ -26,7 +26,7 @@ import org.nlp4l.framework.processors._
 
 import scala.collection.mutable.ArrayBuffer
 
-class OpenNLPNerExtractionDictionaryAttributeFactory(settings: Config) extends DictionaryAttributeFactory(settings) {
+class OpenNLPNerDictionaryAttributeFactory(settings: Config) extends DictionaryAttributeFactory(settings) {
 
   override def getInstance: DictionaryAttribute = {
     val fields: Seq[String] = getStrListParamRequired("fields")
