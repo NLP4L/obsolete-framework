@@ -60,20 +60,21 @@ $ ->
 
   $(document).on 'click', '.addrecord-multi-add',  ->
     # use "on" function to bind the click function to dynamic created nodes
-    row = $(@).parent().parent().parent().parent()
-    input_name = $(@).parent().parent().children('input').attr('name')
-    newRow = '<tr><td></td><td>'
-    newRow += '<div class="input-group">'
-    newRow += '<input type="text" class="form-control" name="' + input_name + '">'
-    newRow += '<span class="input-group-btn">'
+    row = $(@).parent().parent()
+    inputs = $(@).parent().parent().find('input')
+    input_names = (e.name for e in inputs)
+
+    newRow = '<tr><td></td>'
+    for name in input_names
+      newRow += '<td><input type="text" class="form-control" name="' + name + '"></td>'
+    newRow += '<td>'
     newRow += '<button type="button" class="btn btn-success addrecord-multi-add"><span class="glyphicon-plus"></span></button>'
     newRow += '<button type="button" class="btn btn-danger addrecord-multi-rem"><span class="glyphicon-minus"></span></button>'
-    newRow += '</span></div>'
     newRow += '</td></tr>'
     row.after(newRow)
 
   $(document).on 'click', '.addrecord-multi-rem', ->
-    row = $(@).parent().parent().parent().parent()
+    row = $(@).parent().parent()
     row.remove()
 
   $('#editrecord-button').click ->
