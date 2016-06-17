@@ -93,20 +93,14 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     val dic: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
     val ths = new StringBuilder("<th data-field=\"id\" data-formatter=\"RecordIdFormatter\">ID</th>")
     val addtable = new StringBuilder
-    val tableHead = new StringBuilder
+    val addtableHead = new StringBuilder
     dic.cellAttributeList foreach { c: CellAttribute =>
       c.isFilterable match {
         case true => ths append "<th data-field=\"" + c.name.toLowerCase() + "\" data-filter-control=\"input\""
         case _ =>    ths append "<th data-field=\"" + c.name.toLowerCase() + "\""
       }
-      tableHead append "<th>" + c.name.toLowerCase() + "</th>"
-      addtable append "<td></td>"
-      addtable append "<td>"
-      addtable append "<div class=\"input-group\">"
-      addtable append "<input type=\"text\" class=\"form-control\"" + " name=\"" + c.name.toLowerCase() + "\">"
-      addtable append "<span class=\"input-group-btn\">"
-      addtable append "<button type=\"button\" class=\"btn btn-success addrecord-multi-add\"><span class=\"glyphicon-plus\"></button>"
-      addtable append "</span></span></div></td>"
+      addtableHead append "<th>" + c.name.toLowerCase() + "</th>"
+      addtable append "<td><input type=\"text\" class=\"form-control\"" + " name=\"" + c.name.toLowerCase() + "\"></td>"
 
       c.isSortable match {
         case true => ths append " data-sortable=\"true\""
@@ -116,12 +110,15 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     }
     ths append "<th data-field=\"replay\" data-filter-control=\"select\" data-filter-data=\"url:/job/result/filterlist/"+jobId+"/"+runId+"/replay\">Replay</th>"
 
+    // for adding multiple records
+    addtableHead append "<td></td>"
+    addtable append "<td><button type=\"button\" class=\"btn btn-success addrecord-multi-add\"><span class=\"glyphicon-plus\"></button></td>"
+
     val edittable = new StringBuilder
+    val edittableHead = new StringBuilder
     dic.cellAttributeList foreach { c: CellAttribute =>
-      edittable append "<td></td>"
-      edittable append "<td>"
-      edittable append "<input type=\"text\" class=\"form-control\" id=\"form_" + c.name.toLowerCase() + "\" name=\"" + c.name.toLowerCase() + "\">"
-      edittable append "</td>"
+      edittableHead append "<th>" + c.name.toLowerCase() + "</th>"
+      edittable append "<td><input type=\"text\" class=\"form-control\" id=\"form_" + c.name.toLowerCase() + "\" name=\"" + c.name.toLowerCase() + "\"></td>"
     }
 
 
@@ -153,12 +150,15 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     val addform = s"""
     <form id="addrecord-form" method="post">
       <table id="addform" class="table">
-        <tbody>
+        <thead>
           <tr>
             <td><button type="submit" id="addrecord-button" class="btn btn-primary"></i>Add records</button></td>
-            ${tableHead}
+            ${addtableHead}
           </tr>
+        </thead>
+        <tbody>
           <tr>
+            <td></td>
             ${addtable}
           </tr>
         </tbody>
@@ -170,10 +170,12 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     val editform = s"""
     <form id="editrecord-form" method="post">
       <table id="editform" class="table">
-        <tbody>
+        <thead>
           <tr>
-            ${tableHead}
+            ${edittableHead}
           </tr>
+        </thead>
+        <tbody>
           <tr>
             ${edittable}
           </tr>

@@ -232,28 +232,29 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     val f: Future[Job] = jobDAO.get(jobId)
     val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
     val dicAttr: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
-    //val cellList = ListBuffer.empty[Cell]
     val recordList = ListBuffer.empty[Record]
 
     val formData: Map[String, Seq[String]]  = request.body.asFormUrlEncoded.getOrElse(Map())
-    dicAttr.cellAttributeList foreach { c: CellAttribute =>
-      formData.get(c.name.toLowerCase()) map { list: Seq[String] =>
-        list filter(_.length > 0) foreach { x =>
-          val v = c.cellType match {
-            case CellType.StringType => x.toString
-            case CellType.IntType => c.toInt(x)
-            case CellType.FloatType => c.toFloat(x)
-            case CellType.DoubleType => c.toDouble(x)
-            case CellType.DateType => {
-              val dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
-              c.toDate(x)
-            }
+    val rowCount = if (formData.isEmpty) 0 else formData.values.head.length
+    (0 until rowCount).foreach(i => {
+      val cols = ListBuffer.empty[Cell]
+      dicAttr.cellAttributeList map { c: CellAttribute =>
+
+        val x = formData.getOrElse(c.name.toLowerCase, Seq())(i)
+        val v = c.cellType match {
+          case CellType.StringType => x.toString
+          case CellType.IntType => c.toInt(x)
+          case CellType.FloatType => c.toFloat(x)
+          case CellType.DoubleType => c.toDouble(x)
+          case CellType.DateType => {
+            val dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
+            c.toDate(x)
           }
-          recordList += Record(Seq(Cell(c.name.toLowerCase, v))).setUserDefinedHashCode(dicAttr)
         }
+        cols += Cell(c.name.toLowerCase(), v)
       }
-    }
-    //val r = Record(cellList).setUserDefinedHashCode(dicAttr)
+      recordList += Record(cols).setUserDefinedHashCode(dicAttr)
+    })
 
     runDAO.addRecords(jobId, runId, dicAttr, recordList.toList) map {
       case (recordId) => {
