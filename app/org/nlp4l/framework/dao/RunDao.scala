@@ -253,21 +253,6 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
     b.toString
   }
 
-  def addRecords(jobId: Int, runId: Int, dicAttr: DictionaryAttribute, records: List[Record]): Future[Int] = {
-    val tableName = s"run_${jobId}_${runId}"
-
-    val ids = for (r <- records) yield {
-      val f: Future[Int] = nextId(jobId, runId)
-      val n: Int = Await.result(f, scala.concurrent.duration.Duration.Inf)
-      val sql = createInsertRecordSql(tableName, dicAttr, r, n)
-      logger.debug(sql)
-      db.run(sqlu"#$sql")
-      n
-    }
-
-    Future(ids.last)
-  }
-
   def addRecord(jobId: Int, runId: Int, dicAttr: DictionaryAttribute, r: Record): Future[Int]  = {
     val tableName = s"run_${jobId}_${runId}"
 

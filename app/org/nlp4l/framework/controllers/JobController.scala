@@ -228,7 +228,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     }
   }
 
-  def addRecords(jobId: Int, runId: Int) = Action.async {implicit request =>
+  def addRecords(jobId: Int, runId: Int) = Action {implicit request =>
     val f: Future[Job] = jobDAO.get(jobId)
     val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
     val dicAttr: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
@@ -256,17 +256,21 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       recordList += Record(cols).setUserDefinedHashCode(dicAttr)
     })
 
-    runDAO.addRecords(jobId, runId, dicAttr, recordList.toList) map {
-      case (recordId) => {
-        val hashcode = runDAO.fetchRecordHashcode(jobId, runId, recordId)
+    recordList.foreach { record =>
+      try {
+        val f = runDAO.addRecord(jobId, runId, dicAttr, record)
+        val id = Await.result(f, scala.concurrent.duration.Duration.Inf)
+        val hashcode = runDAO.fetchRecordHashcode(jobId, runId, id)
         val replay = Replay(runId, hashcode, "ADD", 0)
         jobDAO.insertReplay(jobId, replay)
-        Ok(Json.toJson(ActionResult(true, Seq("success"))))
+      } catch {
+        case e => InternalServerError(Json.toJson(ActionResult(false, Seq(e.getMessage))))
       }
-    } recover {
-      case e => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
     }
+
+    Ok(Json.toJson(ActionResult(true, Seq("success"))))
   }
+
 
 
   
