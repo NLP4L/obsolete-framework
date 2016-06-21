@@ -35,10 +35,10 @@ class OpenNLPNerProcessorSpec extends Specification with BeforeAfter {
     val FILE_NER_PERSON = "en-ner-person.bin"
     val FILE_NER_LOCATION = "en-ner-location.bin"
 
-    def sentModel(): String = { new File(DIR, FILE_SENT).getAbsolutePath }
-    def tokenModel(): String = { new File(DIR, FILE_TOKEN).getAbsolutePath }
-    def nerPersonModel(): String = { new File(DIR, FILE_NER_PERSON).getAbsolutePath }
-    def nerLocationModel(): String = { new File(DIR, FILE_NER_LOCATION).getAbsolutePath }
+    def sentModel(): String = { new File(DIR, FILE_SENT).getAbsolutePath.replace('\\', '/') }
+    def tokenModel(): String = { new File(DIR, FILE_TOKEN).getAbsolutePath.replace('\\', '/') }
+    def nerPersonModel(): String = { new File(DIR, FILE_NER_PERSON).getAbsolutePath.replace('\\', '/') }
+    def nerLocationModel(): String = { new File(DIR, FILE_NER_LOCATION).getAbsolutePath.replace('\\', '/') }
   }
 
   def before = {
@@ -58,29 +58,6 @@ class OpenNLPNerProcessorSpec extends Specification with BeforeAfter {
 
   def after = {
   }
-
-  "OpenNLPNerDictionaryAttributeFactory" should {
-    "construct with setting" in {
-      val config = ConfigFactory.parseString(
-        """
-          |{
-          |  fields : ["docId", "category", "body_person"]
-          |}
-        """.stripMargin)
-      val dict: DictionaryAttribute = new OpenNLPNerDictionaryAttributeFactory(config).getInstance()
-
-      dict.cellAttributeList.length must_==(3)
-
-      dict.getCellAttribute("docId") must_!= None
-      dict.getCellAttribute("category") must_!= None
-      dict.getCellAttribute("body_person") must_!= None
-
-      dict.getCellAttribute("body_person").get.cellType must_== CellType.StringType
-      dict.getCellAttribute("body_person").get.isFilterable must_== true
-      dict.getCellAttribute("body_person").get.isSortable must_== true
-    }
-  }
-
 
   "OpenNLPNerRecordProcessor" should {
     "execute extraction" in {
