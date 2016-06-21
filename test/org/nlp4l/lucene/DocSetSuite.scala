@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 RONDHUIT Co.,LTD.
+ * Copyright 2016 org.NLP4L
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,6 @@
 
 package org.nlp4l.lucene
 
-import java.nio.file.{Files, Paths}
-
-import org.apache.commons.io.FileUtils
 import org.apache.lucene.analysis.core.KeywordAnalyzer
 import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.index.Term
