@@ -28,7 +28,10 @@ libraryDependencies ++= Seq(
   "com.github.tototoshi" %% "slick-joda-mapper" % "2.1.0",
   "joda-time" % "joda-time" % "2.7",
   "org.joda" % "joda-convert" % "1.7",
-  "net.databinder.dispatch" %% "dispatch-core" % "0.11.3"
+  "net.databinder.dispatch" %% "dispatch-core" % "0.11.3",
+  "com.github.scala-incubator.io" % "scala-io-core_2.11" % "0.4.3",
+  "com.github.scala-incubator.io" % "scala-io-file_2.11" % "0.4.3",
+  "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test"
 )
 
 
