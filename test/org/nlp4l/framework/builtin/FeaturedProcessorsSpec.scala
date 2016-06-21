@@ -197,4 +197,81 @@ class FeaturedProcessorsSpec extends Specification {
       tr2._2 must_== "キホンジョウホウショリギジュツシャ"
     }
   }
+
+  "GenericDictionaryAttributeFactory" should {
+    "construct with setting" in {
+      val config = ConfigFactory.parseString(
+        """
+          |{
+          | name: "MyDict"
+          | attributes : [
+          |   {
+          |     name: "cell-a"
+          |   },
+          |   {
+          |     name: "cell-b"
+          |     cellType: "integer"
+          |     isFilterable: false
+          |   },
+          |   {
+          |     name: "cell-c"
+          |     cellType: "double"
+          |     isSortable: false
+          |   },
+          |   {
+          |     name: "cell-d"
+          |     cellType: "float"
+          |   },
+          |   {
+          |     name: "cell-e"
+          |     cellType: "date"
+          |   }
+          | ]
+          |}
+        """.stripMargin)
+
+      val dict: DictionaryAttribute = new GenericDictionaryAttributeFactory(config).getInstance()
+
+      dict.name mustEqual "MyDict"
+
+      dict.cellAttributeList.length must_== (5)
+
+      dict.cellAttributeList(0).name mustEqual "cell-a"
+      dict.cellAttributeList(0).cellType must_== CellType.StringType
+      dict.cellAttributeList(0).isFilterable must_== true
+      dict.cellAttributeList(0).isSortable must_== true
+
+      dict.cellAttributeList(1).name mustEqual "cell-b"
+      dict.cellAttributeList(1).cellType must_== CellType.IntType
+      dict.cellAttributeList(1).isFilterable must_== false
+      dict.cellAttributeList(1).isSortable must_== true
+
+      dict.cellAttributeList(2).name mustEqual "cell-c"
+      dict.cellAttributeList(2).cellType must_== CellType.DoubleType
+      dict.cellAttributeList(2).isFilterable must_== true
+      dict.cellAttributeList(2).isSortable must_== false
+
+      dict.cellAttributeList(3).name mustEqual "cell-d"
+      dict.cellAttributeList(3).cellType must_== CellType.FloatType
+
+      dict.cellAttributeList(4).name mustEqual "cell-e"
+      dict.cellAttributeList(4).cellType must_== CellType.DateType
+    }
+
+    "throws an exception when a cellType is wrong" in {
+      val config = ConfigFactory.parseString(
+        """
+          |{
+          | attributes : [
+          |   {
+          |     name: "cell-a"
+          |     cellType: "xxx"
+          |   }
+          | ]
+          |}
+        """.stripMargin)
+
+      new GenericDictionaryAttributeFactory(config).getInstance() must throwA[IllegalArgumentException]
+    }
+  }
 }
