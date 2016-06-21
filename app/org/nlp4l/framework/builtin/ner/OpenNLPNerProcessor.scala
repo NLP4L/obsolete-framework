@@ -26,19 +26,6 @@ import org.nlp4l.framework.processors._
 
 import scala.collection.mutable.ArrayBuffer
 
-class OpenNLPNerDictionaryAttributeFactory(settings: Config) extends DictionaryAttributeFactory(settings) {
-
-  override def getInstance: DictionaryAttribute = {
-    val fields: Seq[String] = getStrListParamRequired("fields")
-    val list = new ArrayBuffer[CellAttribute]
-    fields.foreach { field => {
-      list += CellAttribute(field.trim, CellType.StringType, true, true)
-      }
-    }
-    new DictionaryAttribute("openNLPNer", list.toSeq)
-  }
-}
-
 class OpenNLPNerRecordProcessorFactory(settings: Config) extends RecordProcessorFactory(settings) {
 
   override def getInstance: RecordProcessor = {

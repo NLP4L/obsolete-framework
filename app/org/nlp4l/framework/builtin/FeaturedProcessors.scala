@@ -17,10 +17,10 @@
 package org.nlp4l.framework.builtin
 
 import com.typesafe.config.Config
-import java.io.{FileInputStream, InputStreamReader, File}
+import java.io.{File, FileInputStream, InputStreamReader}
 
 import org.apache.lucene.analysis.ja.dict.UserDictionary
-import org.apache.lucene.analysis.ja.{JapaneseTokenizer, JapaneseAnalyzer}
+import org.apache.lucene.analysis.ja.{JapaneseAnalyzer, JapaneseTokenizer}
 import org.apache.lucene.analysis.ja.tokenattributes.ReadingAttribute
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute
 import org.apache.lucene.analysis.util.CharArraySet
@@ -28,7 +28,7 @@ import org.nlp4l.framework.models._
 import org.nlp4l.framework.processors._
 import play.api.Logger
 
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import collection.JavaConversions._
 import scala.io.Source
 import scala.util.matching.Regex
@@ -311,3 +311,32 @@ class TextRecordsDictionaryAttributeFactory(settings: Config) extends Dictionary
     new DictionaryAttribute("textRecords", list)
   }
 }
+
+class GenericDictionaryAttributeFactory(settings: Config) extends DictionaryAttributeFactory(settings) {
+
+  override def getInstance: DictionaryAttribute = {
+    val name: String = getStrParam("name", "generic")
+    val list = new ArrayBuffer[CellAttribute]
+    settings.getConfigList("attributes").foreach {
+      conf => {
+        val name = conf.getString("name")
+        val cellType = if (conf.hasPath("cellType")) conf.getString("cellType") else "string"
+        val isFilterable = if (conf.hasPath("isFilterable")) conf.getBoolean("isFilterable") else true
+        val isSortable = if (conf.hasPath("isSortable")) conf.getBoolean("isSortable") else true
+        val cellTypeObj = cellType match {
+          case "string" => CellType.StringType
+          case "integer" => CellType.IntType
+          case "float" => CellType.FloatType
+          case "double" => CellType.DoubleType
+          case "date" => CellType.DateType
+          case _ => {
+            throw new IllegalArgumentException("unknown cellType: " + cellType)
+          }
+        }
+        list += CellAttribute(name.trim, cellTypeObj, isFilterable, isSortable)
+      }
+    }
+    new DictionaryAttribute(name, list.toSeq)
+  }
+}
+
