@@ -243,17 +243,17 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
         val x = formData.getOrElse(c.name.toLowerCase, Seq())(i)
         val v = c.cellType match {
           case CellType.StringType => x.toString
-          case CellType.IntType => c.toInt(x)
-          case CellType.FloatType => c.toFloat(x)
-          case CellType.DoubleType => c.toDouble(x)
+          case CellType.IntType => c.toIntOpt(x)
+          case CellType.FloatType => c.toFloatOpt(x)
+          case CellType.DoubleType => c.toDoubleOpt(x)
           case CellType.DateType => {
-            val dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
-            c.toDate(x)
+            c.toDateOpt(x)
           }
         }
         cols += Cell(c.name.toLowerCase(), v)
       }
-      recordList += Record(cols).setUserDefinedHashCode(dicAttr)
+      if (cols.exists(_.value.toString.length > 0))
+        recordList += Record(cols).setUserDefinedHashCode(dicAttr)
     })
 
     recordList.foreach { record =>

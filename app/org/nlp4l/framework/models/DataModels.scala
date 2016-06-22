@@ -192,6 +192,20 @@ trait CellView {
   def toDate(edit: String): Date = {
     DateTime.parse(edit).toDate()
   }
+
+  import scala.util.control.Exception._
+  def toIntOpt(edit: String): Option[Int] = {
+    catching(classOf[NumberFormatException]) opt edit.toInt
+  }
+  def toFloatOpt(edit: String): Option[Float] = {
+    catching(classOf[NumberFormatException]) opt edit.toFloat
+  }
+  def toDoubleOpt(edit: String): Option[Double] = {
+    catching(classOf[NumberFormatException]) opt edit.toDouble
+  }
+  def toDateOpt(edit: String): Option[Date] = {
+    catching(classOf[IllegalArgumentException]) opt DateTime.parse(edit).toDate
+  }
 }
 
 case class CellAttribute(
