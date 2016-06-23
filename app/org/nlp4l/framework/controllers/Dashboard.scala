@@ -92,6 +92,7 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     
     val dic: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
     val ths = new StringBuilder("<th data-field=\"id\" data-formatter=\"RecordIdFormatter\">ID</th>")
+    ths append "<th data-field=\"entry_id\">ENTRY_ID</th>"
     val addtable = new StringBuilder
     val addtableHead = new StringBuilder
     dic.cellAttributeList foreach { c: CellAttribute =>

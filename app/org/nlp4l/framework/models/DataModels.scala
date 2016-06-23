@@ -213,7 +213,8 @@ case class CellAttribute(
     val cellType: CellType, // String, Int, Float, Double, DateTime
     val isFilterable: Boolean = false,
     val isSortable: Boolean = false,
-    val userDefinedHashCode:(Any) => Int = null // user defined hashCode
+    val userDefinedHashCode:(Any) => Int = null, // user defined hashCode
+    val commentLine: String = ""
     ) extends CellView {
   
   def columnName: String = {

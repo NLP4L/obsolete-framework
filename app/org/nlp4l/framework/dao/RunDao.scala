@@ -150,6 +150,7 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
       }
     }
     b.append(s"  id int not null primary key,")
+    b.append(s"  entry_id int,")
     b.append(s"  replay varchar(10),")
     b.append(s"  hashcode int")
     b.append(s")")
@@ -171,7 +172,9 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   def insertData(jobId: Int, runId: Int, dicAttr: DictionaryAttribute, dic: Dictionary): Int  = {
     val tableName = s"run_${jobId}_${runId}"
     var n: Int = 0
+    var entryId: Int = 0
     dic.recordList foreach { r: Record =>
+      var isComment = false
       n = n+1
       val hashcode = r.hashCode
       val b = new StringBuffer
@@ -180,10 +183,13 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
         val columnName = c.name.toLowerCase()
         b.append(s"${columnName},")
       }
-      b.append(s"id,replay,hashcode) values (")
-      r.cellList foreach { c: Cell =>
+      b.append(s"id,entry_id,replay,hashcode) values (")
+      r.cellList.zipWithIndex foreach { case(c: Cell, idx: Int) =>
         Option(c.value) match {
           case Some(cc) => {
+            val commentLine = dicAttr.cellAttributeList(idx).commentLine
+            if (!commentLine.isEmpty && cc.value.toString.startsWith(commentLine))
+              isComment = true
             b.append(quote(cc.value.toString()))
             b.append(",")
 //            b.append("'")
@@ -196,6 +202,13 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
         }
       }
       b.append(s"$n,")
+      // entry id
+      if (isComment) {
+        b.append("null,")
+      } else {
+        entryId += 1
+        b.append(s"${entryId},")
+      }
       // replay
       var replay = ""
       if(dicAttr.addedRecordList.contains(hashcode)) {
@@ -258,22 +271,28 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
 
     val f: Future[Int] = nextId(jobId, runId)
     val n: Int = Await.result(f, scala.concurrent.duration.Duration.Inf)
+    val f2: Future[Int] = nextEntryId(jobId, runId)
+    val entryId: Int = Await.result(f2, scala.concurrent.duration.Duration.Inf)
     val hashcode = r.hashCode
     val b = new StringBuffer
+    var isComment = false
     b.append(s"insert into ${tableName} (")
     dicAttr.cellAttributeList foreach { c:CellAttribute =>
       val columnName = c.name.toLowerCase()
       b.append(s"${columnName},")
     }
-    b.append(s"id,replay,hashcode) values (")
-    r.cellList foreach { c: Cell =>
+    b.append(s"id,entry_id,replay,hashcode) values (")
+    r.cellList.zipWithIndex foreach { case(c: Cell, idx: Int) =>
       Option(c.value) match {
         case Some(cc) => {
-            b.append(quote(cc.value.toString()))
-            b.append(",")
-//          b.append("'")
-//          b.append(cc.value.toString().replace("'", "\'"))
-//          b.append("',")
+          val commentLine = dicAttr.cellAttributeList(idx).commentLine
+          if (!commentLine.isEmpty && cc.value.toString.startsWith(commentLine))
+            isComment = true
+          b.append(quote(cc.value.toString()))
+          b.append(",")
+          //          b.append("'")
+          //          b.append(cc.value.toString().replace("'", "\'"))
+          //          b.append("',")
         }
         case None => {
           b.append("null,")
@@ -283,6 +302,12 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
 
     // id
     b.append(s"'${n}',")
+    // entry id
+    if (isComment) {
+      b.append("null,")
+    } else {
+      b.append(s"${entryId},")
+    }
     // replay
     val replay = "ADD"
     b.append(s"'${replay}',")
@@ -298,10 +323,20 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   
   def updateRecord(jobId: Int, runId: Int, recordId: Int, dicAttr: DictionaryAttribute, r: Record): Future[Int]  = {
     val tableName = s"run_${jobId}_${runId}"
+
+    val f: Future[String] = getEntryId(jobId, runId, recordId)
+    var entryId: String = Await.result(f, scala.concurrent.duration.Duration.Inf)
+    val f2: Future[Int] = nextEntryId(jobId, runId)
+    val nextEId = Await.result(f2, scala.concurrent.duration.Duration.Inf)
     val hashcode = r.hashCode
     val b = new StringBuffer
     b.append(s"update ${tableName} set")
-    r.cellList foreach { c: Cell =>
+    r.cellList.zipWithIndex foreach { case(c: Cell, idx: Int) =>
+      val commentLine = dicAttr.cellAttributeList(idx).commentLine
+      if (!commentLine.isEmpty && c.value.toString.startsWith(commentLine))
+        entryId = null
+      else if (entryId == null)
+        entryId = nextEId.toString
       val columnName = c.name.toLowerCase()
       b.append(s" ${columnName} = ")
       Option(c.value) match {
@@ -332,6 +367,7 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
 
     // replay
     val replay = "MOD"
+    b.append(s" entry_id=${entryId},")
     b.append(s" replay='${replay}',")
     b.append(s" hashcode=${hashcode}")
     b.append(s" where id=${recordId}")
@@ -366,6 +402,14 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
   
   def nextId(jobId: Int, runId: Int): Future[Int] = {
     db.run(sql"select max(id)+1 as n from run_#${jobId}_#${runId}".as[Int].head)
+  }
+
+  def nextEntryId(jobId: Int, runId: Int): Future[Int] = {
+    db.run(sql"select max(entry_id)+1 as n from run_#${jobId}_#${runId}".as[Int].head)
+  }
+
+  def getEntryId(jobId: Int, runId: Int, recordId: Int): Future[String] = {
+    db.run(sql"select entry_id as n from run_#${jobId}_#${runId} where id = #${recordId}".as[String].head)
   }
 
   def totalCountFilter(jobId: Int, runId: Int, filters: Map[String, String]): Future[Int] = {
@@ -410,7 +454,7 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
         colTypeMap += (col.name.toLowerCase() -> col.sqlTypeName.getOrElse(""))
         colOrder += col.name.toLowerCase()
       }
-      selectSql append s" id from ${tableName}${filter}"
+      selectSql append s" id, entry_id from ${tableName}${filter}"
       selectSql append s" order by ${sort} ${order} limit ${size} offset ${offset}"
     }
     val r = Await.result(db.run(sql"#$selectSql".as[Map[String, Any]]), scala.concurrent.duration.Duration.Inf)

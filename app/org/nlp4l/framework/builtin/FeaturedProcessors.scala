@@ -111,34 +111,35 @@ object CellAttributeUtil {
   private val logger = Logger(this.getClass)
 
   def textSearchLink(settings: Config, cellName: String): CellAttribute = {
-    val separatedBy = settings.getString("separatedBy")
-    val searchOn = settings.getString("searchOnSolr")
-    if(searchOn != null) {
-      val collection = settings.getString("collection")
-      if (collection != null) {
-        val idField = settings.getString("idField")
-        if (idField != null) {
-          val hlField = settings.getString("hlField")
-          if (hlField != null) {
-            new StandardSolrSearchCellAttribute(searchOn, collection, idField, hlField, separatedBy, cellName, CellType.StringType, true, true)
+    val separatedBy = if (settings.hasPath("separatedBy")) settings.getString("separatedBy") else ""
+    val commentLine = if (settings.hasPath("commentLine")) settings.getString("commentLine") else ""
+    val searchOn = if (settings.hasPath("searchOnSolr")) settings.getString("searchOnSolr") else ""
+    if(!searchOn.isEmpty) {
+      val collection = if (settings.hasPath("collection")) settings.getString("collection") else ""
+      if (!collection.isEmpty) {
+        val idField = if (settings.hasPath("idField")) settings.getString("idField") else ""
+        if (!idField.isEmpty) {
+          val hlField = if (settings.hasPath("hlField")) settings.getString("hlField") else ""
+          if (!hlField.isEmpty) {
+            new StandardSolrSearchCellAttribute(searchOn, collection, idField, hlField, separatedBy, cellName, CellType.StringType, true, true, commentLine = commentLine)
           }
           else {
-            new StandardSolrSearchCellAttribute(searchOn, collection, idField, null, separatedBy, cellName, CellType.StringType, true, true)
+            new StandardSolrSearchCellAttribute(searchOn, collection, idField, null, separatedBy, cellName, CellType.StringType, true, true, commentLine = commentLine)
           }
         }
         else {
           logger.error(s"idField parameter must be set when using Solr server ($settings)")
-          CellAttribute(cellName, CellType.StringType, true, true)
+          CellAttribute(cellName, CellType.StringType, true, true, commentLine = commentLine)
         }
       }
       else {
         logger.error(s"collection parameter must be set when using Solr server ($settings)")
-        CellAttribute(cellName, CellType.StringType, true, true)
+        CellAttribute(cellName, CellType.StringType, true, true, commentLine = commentLine)
       }
     }
     // TODO: check for ES
     else{
-      CellAttribute(cellName, CellType.StringType, true, true)
+      CellAttribute(cellName, CellType.StringType, true, true, commentLine = commentLine)
     }
   }
 }
