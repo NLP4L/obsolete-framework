@@ -64,6 +64,12 @@ object ValidatorChain {
     val job = Await.result(jobDAO.get(jobId), scala.concurrent.duration.Duration.Inf)
     new ValidatorChainBuilder().build(job.config).result()
   }
+
+  def hasChain(jobDAO: JobDAO, jobId: Int): Boolean = {
+    val job = Await.result(jobDAO.get(jobId), scala.concurrent.duration.Duration.Inf)
+    val config = ConfigFactory.parseString(job.config)
+    config.hasPath("validators")
+  }
 }
 
 

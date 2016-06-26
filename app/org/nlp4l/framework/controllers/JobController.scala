@@ -412,8 +412,12 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     try {
       val dic = runDAO.fetchAll(jobId, runId)
       // do validation before deploying
-      val chain = ValidatorChain.getChain(jobDAO, jobId)
-      val errMsg = chain.process(dic)
+      val errMsg =
+        if (!ValidatorChain.hasChain(jobDAO, jobId)) Seq()
+        else {
+          val chain = ValidatorChain.getChain(jobDAO, jobId)
+          chain.process(dic)
+        }
       if (errMsg.isEmpty) {
         // validation success. we're ready to deploy
         val writer = WriterBuilder.build(jobDAO, jobId)
