@@ -411,18 +411,27 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
   def deployResult(jobId: Int, runId: Int) = Action {
     try {
       val dic = runDAO.fetchAll(jobId, runId)
-      val writer = WriterBuilder.build(jobDAO, jobId)
-      val result = writer.write(Some(dic))
-      val job = Await.result(jobDAO.get(jobId), scala.concurrent.duration.Duration.Inf)
-      if(result._1){
-        val stgs = settings(job.config)
-        val encoding = stgs.getOrElse("encoding", "UTF-8").asInstanceOf[String]
-        val toUrl = stgs.apply("deployTo").toString
-        val toFile = stgs.apply("file").toString
-        JobController.transferHttp(toUrl, toFile, result._3, encoding)
+      // do validation before deploying
+      val chain = ValidatorChain.getChain(jobDAO, jobId)
+      val errMsg = chain.process(dic)
+      if (errMsg.isEmpty) {
+        // validation success. we're ready to deploy
+        val writer = WriterBuilder.build(jobDAO, jobId)
+        val result = writer.write(Some(dic))
+        val job = Await.result(jobDAO.get(jobId), scala.concurrent.duration.Duration.Inf)
+        if (result._1) {
+          val stgs = settings(job.config)
+          val encoding = stgs.getOrElse("encoding", "UTF-8").asInstanceOf[String]
+          val toUrl = stgs.apply("deployTo").toString
+          val toFile = stgs.apply("file").toString
+          JobController.transferHttp(toUrl, toFile, result._3, encoding)
+        }
+        jobDAO.update(Job(job.jobId, job.name, job.config, runId, job.lastRunAt, Some(new DateTime())))
+        Ok(Json.toJson(ActionResult(result._1, result._2)))
+      } else {
+        // validation failed
+        Ok(Json.toJson(ActionResult(false, errMsg)))
       }
-      jobDAO.update(Job(job.jobId, job.name, job.config, runId, job.lastRunAt, Some(new DateTime())))
-      Ok(Json.toJson(ActionResult(result._1, result._2)))
     } catch {
       case e: Exception => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
     }
