@@ -494,7 +494,7 @@ class RunDAO @Inject()(protected val dbConfigProvider: DatabaseConfigProvider) e
       val cols = Await.result(db.run( tt.getColumns ), scala.concurrent.duration.Duration.Inf)
       for (col: MColumn <- cols) {
         val colname = col.name.toLowerCase()
-        if(colname != "replay" && colname != "id" && colname != "hashcode") {
+        if(colname != "replay" && colname != "id" && colname != "entry_id" && colname != "hashcode") {
           selectSql += s" ${col.name.toLowerCase()},"
           colTypeMap += (col.name.toLowerCase() -> col.sqlTypeName.getOrElse(""))
           colOrder += col.name.toLowerCase()
