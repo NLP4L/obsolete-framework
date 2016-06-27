@@ -23,7 +23,7 @@ import org.nlp4l.framework.models._
 import org.nlp4l.lucene.RawReader
 import org.specs2.mutable.{BeforeAfter, Specification}
 
-class LuceneIndexWriterProcessorSpec extends Specification with BeforeAfter {
+class LuceneIndexingProcessorSpec extends Specification with BeforeAfter {
 
   val SCHEMA_TEXT = s"""
        |schema {
@@ -87,7 +87,7 @@ class LuceneIndexWriterProcessorSpec extends Specification with BeforeAfter {
           | schemaFile: "${SCHEMA_PATH}"
           |}
         """.stripMargin)
-      val proc = new LuceneIndexWriterProcessorFactory(config).getInstance()
+      val proc = new LuceneIndexingProcessorFactory(config).getInstance()
       val dict = Dictionary(Seq(
         Record(Seq(
           Cell("id", "id-001"),
@@ -100,18 +100,17 @@ class LuceneIndexWriterProcessorSpec extends Specification with BeforeAfter {
       ))
 
       val result = proc.execute(Some(dict))
-      var reader: RawReader = null
+      val reader: RawReader = RawReader(config.getString("index"))
       try {
-        reader = RawReader(config.getString("index"))
         reader.numFields mustEqual(3)
         reader.fieldMap.get("id")  must_!= None
         reader.fieldMap.get("cat")  must_!= None
         reader.fieldMap.get("body")  must_!= None
         reader.universalset().size mustEqual(2)
-        reader.document(0).get.getValue("id") mustEqual (Some(List("id-001")))
-        reader.document(0).get.getValue("cat") mustEqual (Some(List("cat-a")))
-        reader.document(0).get.getValue("body") mustEqual (Some(List("Hello. This is a body part of doc 001.")))
-        reader.document(1).get.getValue("id") mustEqual (Some(List("id-002")))
+        reader.document(0).get.getValue("id").toString mustEqual (Some(List(Some("id-001")))).toString
+        reader.document(0).get.getValue("cat").toString mustEqual (Some(List(Some("cat-a")))).toString
+        reader.document(0).get.getValue("body").toString mustEqual (Some(List(Some("Hello. This is a body part of doc 001.")))).toString
+        reader.document(1).get.getValue("id").toString mustEqual (Some(List(Some("id-002")))).toString
       } finally {
         if (reader != null)
           reader.close
@@ -129,7 +128,7 @@ class LuceneIndexWriterProcessorSpec extends Specification with BeforeAfter {
            | }
            |}
         """.stripMargin)
-      val proc = new LuceneIndexWriterProcessorFactory(config).getInstance()
+      val proc = new LuceneIndexingProcessorFactory(config).getInstance()
       val dict = Dictionary(Seq(
         Record(Seq(
           Cell("id", "id-001"),
@@ -142,9 +141,8 @@ class LuceneIndexWriterProcessorSpec extends Specification with BeforeAfter {
       ))
 
       val result = proc.execute(Some(dict))
-      var reader: RawReader = null
+      val reader: RawReader = RawReader(config.getString("index"))
       try {
-        reader = RawReader(config.getString("index"))
         reader.numFields mustEqual(3)
         reader.fieldMap.get("id")  must_!= None
         reader.fieldMap.get("cat")  must_!= None
@@ -169,7 +167,7 @@ class LuceneIndexWriterProcessorSpec extends Specification with BeforeAfter {
            | optimize: false
            |}
         """.stripMargin)
-      val proc1 = new LuceneIndexWriterProcessorFactory(config1).getInstance()
+      val proc1 = new LuceneIndexingProcessorFactory(config1).getInstance()
       val dict1 = Dictionary(Seq(
         Record(Seq(
           Cell("id", "id-001"),
@@ -181,9 +179,8 @@ class LuceneIndexWriterProcessorSpec extends Specification with BeforeAfter {
           Cell("body", "Hello. This is a body part of doc 002.")))
       ))
       val result1 = proc1.execute(Some(dict1))
-      var reader1: RawReader = null
+      val reader1: RawReader = RawReader(config1.getString("index"))
       try {
-        reader1 = RawReader(config1.getString("index"))
         reader1.universalset().size mustEqual(2)
       } finally {
         if (reader1 != null)
@@ -201,7 +198,7 @@ class LuceneIndexWriterProcessorSpec extends Specification with BeforeAfter {
            | optimize: true
            |}
         """.stripMargin)
-      val proc2 = new LuceneIndexWriterProcessorFactory(config2).getInstance()
+      val proc2 = new LuceneIndexingProcessorFactory(config2).getInstance()
       val dict2 = Dictionary(Seq(
         Record(Seq(
           Cell("id", "id-003"),
@@ -209,9 +206,8 @@ class LuceneIndexWriterProcessorSpec extends Specification with BeforeAfter {
           Cell("body", "Hello. This is a body part of doc 003.")))
       ))
       val result2 = proc2.execute(Some(dict2))
-      var reader2: RawReader = null
+      val reader2: RawReader = RawReader(config1.getString("index"))
       try {
-        reader2 = RawReader(config1.getString("index"))
         reader2.universalset().size mustEqual(3)
       } finally {
         if (reader1 != null)
@@ -234,7 +230,7 @@ class LuceneIndexWriterProcessorSpec extends Specification with BeforeAfter {
            | ]
            |}
         """.stripMargin)
-      val proc = new LuceneIndexWriterProcessorFactory(config).getInstance()
+      val proc = new LuceneIndexingProcessorFactory(config).getInstance()
       val dict = Dictionary(Seq(
         Record(Seq(
           Cell("id", "id-001"),
@@ -246,18 +242,17 @@ class LuceneIndexWriterProcessorSpec extends Specification with BeforeAfter {
           Cell("contents", "Hello. This is a body part of doc 002.")))
       ))
       val result = proc.execute(Some(dict))
-      var reader: RawReader = null
+      val reader: RawReader = RawReader(config.getString("index"))
       try {
-        reader = RawReader(config.getString("index"))
         reader.numFields mustEqual(3)
         reader.fieldMap.get("id")  must_!= None
         reader.fieldMap.get("cat")  must_!= None
         reader.fieldMap.get("body")  must_!= None
         reader.universalset().size mustEqual(2)
-        reader.document(0).get.getValue("id") mustEqual (Some(List("id-001")))
-        reader.document(0).get.getValue("cat") mustEqual (Some(List("cat-a")))
-        reader.document(0).get.getValue("body") mustEqual (Some(List("Hello. This is a body part of doc 001.")))
-        reader.document(1).get.getValue("id") mustEqual (Some(List("id-002")))
+        reader.document(0).get.getValue("id").toString mustEqual (Some(List(Some("id-001")))).toString
+        reader.document(0).get.getValue("cat").toString mustEqual (Some(List(Some("cat-a")))).toString
+        reader.document(0).get.getValue("body").toString mustEqual (Some(List(Some("Hello. This is a body part of doc 001.")))).toString
+        reader.document(1).get.getValue("id").toString mustEqual (Some(List(Some("id-002")))).toString
       } finally {
         if (reader != null)
           reader.close

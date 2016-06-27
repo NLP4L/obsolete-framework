@@ -23,10 +23,10 @@ import org.nlp4l.lucene._
 
 import scala.collection.mutable.ArrayBuffer
 
-class LuceneIndexWriterProcessorFactory(settings: Config) extends ProcessorFactory(settings) {
+class LuceneIndexingProcessorFactory(settings: Config) extends ProcessorFactory(settings) {
 
   override def getInstance: Processor = {
-    new LuceneIndexWriterProcessor(
+    new LuceneIndexingProcessor(
       getConfigParam("schemaDef", null),
       getStrParam("schemaFile", null),
       getStrParamRequired("index"),
@@ -37,7 +37,7 @@ class LuceneIndexWriterProcessorFactory(settings: Config) extends ProcessorFacto
   }
 }
 
-class LuceneIndexWriterProcessor(val schemaDef: Config,
+class LuceneIndexingProcessor(val schemaDef: Config,
                                  val schemaFile: String,
                                  val index: String,
                                  val fieldsMapConf: Seq[Config],
@@ -60,18 +60,15 @@ class LuceneIndexWriterProcessor(val schemaDef: Config,
           throw new IllegalArgumentException("no schema setting found.")
       }
     }
-    var counter = 0
-    var writer: IWriter = null
+    val writer: IWriter = IWriter(index, schema)
     try{
-      writer = IWriter(index, schema)
-
       if (deleteAll) writer.deleteAll()
 
       val fieldNames = schema.fieldTypes.keySet
 
       data.get.recordList.foreach {
         record => {
-          var fields = new ArrayBuffer[Field]
+          val fields = new ArrayBuffer[Field]
           fieldNames.foreach {
             fieldName => {
               val cellName = fieldsMap.getOrElse(fieldName, fieldName)
@@ -83,7 +80,6 @@ class LuceneIndexWriterProcessor(val schemaDef: Config,
           }
           val doc = new Document(fields.toSet)
           writer.write(doc)
-          counter += 1
         }
       }
       if (optimize) writer.forceMerge(1)
@@ -93,7 +89,7 @@ class LuceneIndexWriterProcessor(val schemaDef: Config,
         writer.close()
     }
 
-    val result = "success: " + counter  + " documents added."
+    val result = s"success: ${data.get.recordList.size} documents added."
     val dict = Dictionary(Seq(
       Record(Seq(
         Cell("result", result)
