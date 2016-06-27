@@ -70,6 +70,13 @@ abstract class ConfiguredFactory(val settings: Config){
     // TODO: need to check this throws an Exception if there isn't the entry
     settings.getStringList(name)
   }
+  def getConfigParam(name: String, default: Config): Config = {
+    if(settings.hasPath(name)) settings.getConfig(name) else default
+  }
+  def getConfigListParam(name: String, default: Seq[Config]): Seq[Config] = {
+    // TODO: need to check this throws an Exception if there isn't the entry
+    if(settings.hasPath(name)) settings.getConfigList(name) else default
+  }
 
 }
 
