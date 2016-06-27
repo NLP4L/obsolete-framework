@@ -65,12 +65,16 @@ class IWriter(index: String, schema: Schema) {
   }
 
   /**
+    * Force merge the index.
+    */
+  def forceMerge( maxNumSegments: Int): Unit = {
+    writer.forceMerge(maxNumSegments)
+  }
+
+  /**
    * Close the index.
-   *
-   * NOTE: Before closing, this calls IndexWriter.forceMerge(1)
    */
   def close(): Unit = {
-    writer.forceMerge(1)    // TODO: remove this
     writer.close
     directory.close
   }
