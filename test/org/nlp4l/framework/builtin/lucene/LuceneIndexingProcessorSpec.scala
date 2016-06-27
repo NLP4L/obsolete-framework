@@ -107,10 +107,10 @@ class LuceneIndexingProcessorSpec extends Specification with BeforeAfter {
         reader.fieldMap.get("cat")  must_!= None
         reader.fieldMap.get("body")  must_!= None
         reader.universalset().size mustEqual(2)
-        reader.document(0).get.getValue("id").toString mustEqual (Some(List(Some("id-001")))).toString
-        reader.document(0).get.getValue("cat").toString mustEqual (Some(List(Some("cat-a")))).toString
-        reader.document(0).get.getValue("body").toString mustEqual (Some(List(Some("Hello. This is a body part of doc 001.")))).toString
-        reader.document(1).get.getValue("id").toString mustEqual (Some(List(Some("id-002")))).toString
+        reader.document(0).get.getValue("id") mustEqual (Some(List("id-001")))
+        reader.document(0).get.getValue("cat") mustEqual (Some(List("cat-a")))
+        reader.document(0).get.getValue("body") mustEqual (Some(List("Hello. This is a body part of doc 001.")))
+        reader.document(1).get.getValue("id") mustEqual (Some(List("id-002")))
       } finally {
         if (reader != null)
           reader.close
@@ -249,10 +249,10 @@ class LuceneIndexingProcessorSpec extends Specification with BeforeAfter {
         reader.fieldMap.get("cat")  must_!= None
         reader.fieldMap.get("body")  must_!= None
         reader.universalset().size mustEqual(2)
-        reader.document(0).get.getValue("id").toString mustEqual (Some(List(Some("id-001")))).toString
-        reader.document(0).get.getValue("cat").toString mustEqual (Some(List(Some("cat-a")))).toString
-        reader.document(0).get.getValue("body").toString mustEqual (Some(List(Some("Hello. This is a body part of doc 001.")))).toString
-        reader.document(1).get.getValue("id").toString mustEqual (Some(List(Some("id-002")))).toString
+        reader.document(0).get.getValue("id") mustEqual (Some(List("id-001")))
+        reader.document(0).get.getValue("cat") mustEqual (Some(List("cat-a")))
+        reader.document(0).get.getValue("body") mustEqual (Some(List("Hello. This is a body part of doc 001.")))
+        reader.document(1).get.getValue("id") mustEqual (Some(List("id-002")))
       } finally {
         if (reader != null)
           reader.close

@@ -74,7 +74,7 @@ class LuceneIndexingProcessor(val schemaDef: Config,
               val cellName = fieldsMap.getOrElse(fieldName, fieldName)
               val value = record.cellValue(cellName)
               if (value != None) {
-                fields += Field(fieldName, value.toString)
+                fields += Field(fieldName, value.get.toString)
               }
             }
           }
