@@ -100,7 +100,8 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
         case _ =>    ths append "<th data-field=\"" + c.name.toLowerCase() + "\""
       }
       addtableHead append "<th>" + c.name.toLowerCase() + "</th>"
-      addtable append "<td><input type=\"text\" class=\"form-control\" id=\"form_" + c.name.toLowerCase() + "\" name=\"" + c.name.toLowerCase() + "\"></td>"
+      addtable append "<td><input type=\"text\" class=\"form-control\"" + " name=\"" + c.name.toLowerCase() + "\"></td>"
+
       c.isSortable match {
         case true => ths append " data-sortable=\"true\""
         case _ => ths append " data-sortable=\"false\""
@@ -108,6 +109,18 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
       ths append ">" + c.name.toLowerCase()  + "</th>\n"
     }
     ths append "<th data-field=\"replay\" data-filter-control=\"select\" data-filter-data=\"url:/job/result/filterlist/"+jobId+"/"+runId+"/replay\">Replay</th>"
+
+    // for adding multiple records
+    addtableHead append "<td></td>"
+    addtable append "<td><button type=\"button\" class=\"btn btn-success addrecord-multi-add\"><span class=\"glyphicon-plus\"></button></td>"
+
+    val edittable = new StringBuilder
+    val edittableHead = new StringBuilder
+    dic.cellAttributeList foreach { c: CellAttribute =>
+      edittableHead append "<th>" + c.name.toLowerCase() + "</th>"
+      edittable append "<td><input type=\"text\" class=\"form-control\" id=\"form_" + c.name.toLowerCase() + "\" name=\"" + c.name.toLowerCase() + "\"></td>"
+    }
+
 
     val listTable = s"""<table id="table"
            data-toolbar="#toolbar"
@@ -137,12 +150,15 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     val addform = s"""
     <form id="addrecord-form" method="post">
       <table id="addform" class="table">
-        <tbody>
+        <thead>
           <tr>
-            <td rowspan="2"><button type="submit" id="addrecord-button" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i>Add</button></td>
+            <td><button type="submit" id="addrecord-button" class="btn btn-primary"></i>Add records</button></td>
             ${addtableHead}
           </tr>
+        </thead>
+        <tbody>
           <tr>
+            <td></td>
             ${addtable}
           </tr>
         </tbody>
@@ -154,12 +170,14 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     val editform = s"""
     <form id="editrecord-form" method="post">
       <table id="editform" class="table">
+        <thead>
+          <tr>
+            ${edittableHead}
+          </tr>
+        </thead>
         <tbody>
           <tr>
-            ${addtableHead}
-          </tr>
-          <tr>
-            ${addtable}
+            ${edittable}
           </tr>
         </tbody>
       </table>

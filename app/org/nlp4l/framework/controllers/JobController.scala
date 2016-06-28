@@ -227,51 +227,52 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       case e => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
     }
   }
-  
-  
-  def addRecord(jobId: Int, runId: Int) = Action.async {implicit request =>
+
+  def addRecords(jobId: Int, runId: Int) = Action {implicit request =>
     val f: Future[Job] = jobDAO.get(jobId)
     val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
     val dicAttr: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
-    val cellList = ListBuffer.empty[Cell]
-    
-    val formData: Map[String, Seq[String]]  = request.body.asFormUrlEncoded.getOrElse(Map())
-    dicAttr.cellAttributeList foreach { c: CellAttribute =>
-      val v = formData.get(c.name.toLowerCase()) map { list: Seq[String] =>
-        val x:String = list.head
-        if(x.length() > 0) {
-          c.cellType match {
-              case CellType.StringType => x.toString
-              case CellType.IntType => c.toInt(x)
-              case CellType.FloatType => c.toFloat(x)
-              case CellType.DoubleType => c.toDouble(x)
-              case CellType.DateType => {
-                val dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
-                c.toDate(x)
-              }
-            }
-        } else {
-          null
-        }
-      }
-      cellList += Cell(c.name.toLowerCase(), v.getOrElse(null))
-    }
-    val r = Record(cellList).setUserDefinedHashCode(dicAttr)
-    val hashcode: Int = r.hashCode
-    
+    val recordList = ListBuffer.empty[Record]
 
-    
-    runDAO.addRecord(jobId, runId, dicAttr, r) map {
-      case (recordId) => {
-        val hashcode = runDAO.fetchRecordHashcode(jobId, runId, recordId)
+    val formData: Map[String, Seq[String]]  = request.body.asFormUrlEncoded.getOrElse(Map())
+    val rowCount = if (formData.isEmpty) 0 else formData.values.head.length
+    (0 until rowCount).foreach(i => {
+      val cols = ListBuffer.empty[Cell]
+      dicAttr.cellAttributeList map { c: CellAttribute =>
+
+        val x = formData.getOrElse(c.name.toLowerCase, Seq())(i)
+        val v = c.cellType match {
+          case CellType.StringType => x.toString
+          case CellType.IntType => c.toInt(x)
+          case CellType.FloatType => c.toFloat(x)
+          case CellType.DoubleType => c.toDouble(x)
+          case CellType.DateType => {
+            val dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
+            c.toDate(x)
+          }
+        }
+        cols += Cell(c.name.toLowerCase(), v)
+      }
+      recordList += Record(cols).setUserDefinedHashCode(dicAttr)
+    })
+
+    recordList.foreach { record =>
+      try {
+        val f = runDAO.addRecord(jobId, runId, dicAttr, record)
+        val id = Await.result(f, scala.concurrent.duration.Duration.Inf)
+        val hashcode = runDAO.fetchRecordHashcode(jobId, runId, id)
         val replay = Replay(runId, hashcode, "ADD", 0)
         jobDAO.insertReplay(jobId, replay)
-        Ok(Json.toJson(ActionResult(true, Seq("success"))))
+      } catch {
+        case e => InternalServerError(Json.toJson(ActionResult(false, Seq(e.getMessage))))
       }
-    } recover {
-      case e => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
     }
+
+    Ok(Json.toJson(ActionResult(true, Seq("success"))))
   }
+
+
+
   
   
   def fetchRecord(jobId: Int, runId: Int, recordId: Int) = Action {
