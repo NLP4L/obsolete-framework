@@ -41,7 +41,7 @@ class SampleCsvImportProcessorFactory(settings: Config) extends ProcessorFactory
 class SampleCsvImportProcessor(val file: String, val encoding: String, val fields: Seq[String]) extends Processor {
 
   override def execute(data: Option[Dictionary]): Option[Dictionary] = {
-    val parser: CSVParser = CSVParser.parse(new File(file), Charset.forName(encoding), CSVFormat.DEFAULT.withHeader(fields: _*))
+    val parser: CSVParser = CSVParser.parse(new File(file), Charset.forName(encoding), CSVFormat.DEFAULT.withHeader(fields: _*).withTrim())
     try {
       val dict = Dictionary(
         parser.getRecords().map(
@@ -76,7 +76,7 @@ class SampleCsvDataProcessor(val fields: Seq[String], val data: Seq[String]) ext
       b.append(d)
       b.append(Properties.lineSeparator)
     })
-    val parser: CSVParser = CSVParser.parse(b.toString, CSVFormat.DEFAULT.withHeader(fields: _*))
+    val parser: CSVParser = CSVParser.parse(b.toString, CSVFormat.DEFAULT.withHeader(fields: _*).withTrim())
     try {
       val dict = Dictionary(
         parser.getRecords().map(
