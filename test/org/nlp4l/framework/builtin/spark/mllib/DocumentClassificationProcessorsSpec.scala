@@ -38,8 +38,7 @@ class DocumentClassificationProcessorsSpec extends Specification with BeforeAfte
 
   object TestSettings {
     val TMP_DIR = System.getProperty("java.io.tmpdir")
-//    val TEST_OUT_DIR = new File(TMP_DIR, "nlp4l-class-test").getAbsolutePath.replace('\\', '/')
-    val TEST_OUT_DIR = "/tmp/nlp4l-class-test"
+    val TEST_OUT_DIR = new File(TMP_DIR, "nlp4l-class-test").getAbsolutePath.replace('\\', '/')
   }
   def before = {
   }

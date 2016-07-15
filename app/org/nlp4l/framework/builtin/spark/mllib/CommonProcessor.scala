@@ -231,7 +231,7 @@ class WorkingDirSettings(workingDir: String) {
 object AlgorithmSupport {
   val LogisticRegressionWithLBFGS = "LogisticRegressionWithLBFGS"
   val NaiveBayes = "NaiveBayes"
-  
+
   val Default = LogisticRegressionWithLBFGS
 }
 
