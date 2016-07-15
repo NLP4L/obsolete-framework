@@ -22,6 +22,8 @@ import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions}
 import org.nlp4l.framework.builtin.lucene.LuceneIndexingProcessorEmbedded
 import org.nlp4l.framework.models.{Record, _}
 import org.nlp4l.framework.processors._
+import org.nlp4l.lucene.IReader
+import org.nlp4l.lucene.stats.TFIDF
 import resource._
 
 
@@ -123,6 +125,7 @@ class LabeledPointProcessor(val workingDir: String,
       }
 
       val docIds = reader.universalset().toList
+      val labels = selectFieldValues(reader, docIds, Seq(labelField)).map(m => m(labelField).head).map(labelMap(_)).toVector
       val termBoosts = if (termBoostsFile != null) readTermBoostsFile(termBoostsFile) else Map.empty[String, Double]
       val (features: Seq[String], vectors: Stream[Seq[Double]]) =
           TFIDF.tfIdfVectors(reader, textField, docIds, featuresWords, tfMode, smthTerm, idfMode, termBoosts)
