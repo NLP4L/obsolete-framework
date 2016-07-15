@@ -91,6 +91,10 @@ object SchemaLoader {
     Schema(defANalyzerObj, fieldTypes)
   }
 
+  def readAnalyzer(analyzerConf: Config): Analyzer = {
+    buildAnalyzer(analyzerConf, false)._2
+  }
+
   private def buildAnalyzer(analyzer: Config, nameRequired: Boolean = true): (String, Analyzer) = {
     val name =
       if (analyzer.hasPath("name")) analyzer.getString("name")
