@@ -16,9 +16,11 @@
 
 package org.nlp4l.framework.builtin.lucene
 
-import java.io.{File, PrintWriter}
+import java.io.{File, IOException, PrintWriter}
 
 import com.typesafe.config.ConfigFactory
+import org.apache.lucene.index.{IndexReader, MultiFields, Terms, TermsEnum}
+import org.apache.lucene.util.BytesRef
 import org.nlp4l.framework.models._
 import org.nlp4l.lucene.RawReader
 import org.specs2.mutable.{BeforeAfter, Specification}
