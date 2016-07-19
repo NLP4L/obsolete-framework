@@ -45,28 +45,54 @@ class LuceneIndexingProcessor(val schemaDef: Config,
                                  val optimize: Boolean)
   extends Processor {
 
+  val embedded = new LuceneIndexingProcessorEmbedded(schemaDef, schemaFile, index, fieldsMapConf, deleteAll, optimize)
+
+  override def execute(data: Option[Dictionary]): Option[Dictionary] = {
+
+    embedded.write(data.get.recordList)
+
+    val result = s"success: ${data.get.recordList.size} documents added."
+
+    val dict = Dictionary(Seq(
+      Record(Seq(
+        Cell("result", result)
+    ))))
+    Some(dict)
+  }
+}
+
+class LuceneIndexingProcessorEmbedded(val schemaDef: Config,
+                                    val schemaFile: String,
+                                    val index: String,
+                                    val fieldsMapConf: Seq[Config],
+                                    val deleteAll: Boolean,
+                                    val optimize: Boolean) {
+  val schema: Schema = {
+    if (schemaDef != null)
+      SchemaLoader.read(schemaDef)
+    else if (schemaFile != null)
+      SchemaLoader.loadFile(schemaFile)
+    else
+      throw new IllegalArgumentException("no schema setting found.")
+  }
+
   val fieldsMap: Map[String, String] =
     if (fieldsMapConf != null)
       fieldsMapConf.map(fieldMap => fieldMap.getString("fieldName") -> fieldMap.getString("cellName")).toMap
     else Map()
 
-  override def execute(data: Option[Dictionary]): Option[Dictionary] = {
-    val schema =    {
-      if (schemaDef != null)
-        SchemaLoader.read(schemaDef)
-      else if (schemaFile != null) {
-        SchemaLoader.loadFile(schemaFile)
-      } else {
-          throw new IllegalArgumentException("no schema setting found.")
-      }
-    }
+  def getSchema() = schema
+
+  def getFieldsMap() = fieldsMap
+
+  def write(records: Seq[Record]) = {
     val writer: IWriter = IWriter(index, schema)
-    try{
+    try {
       if (deleteAll) writer.deleteAll()
 
       val fieldNames = schema.fieldTypes.keySet
 
-      data.get.recordList.foreach {
+      records.foreach {
         record => {
           val fields = new ArrayBuffer[Field]
           fieldNames.foreach {
@@ -84,16 +110,10 @@ class LuceneIndexingProcessor(val schemaDef: Config,
       }
       if (optimize) writer.forceMerge(1)
     }
-    finally{
+    finally {
       if (writer != null)
         writer.close()
     }
-
-    val result = s"success: ${data.get.recordList.size} documents added."
-    val dict = Dictionary(Seq(
-      Record(Seq(
-        Cell("result", result)
-    ))))
-    Some(dict)
   }
+
 }
