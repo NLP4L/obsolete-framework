@@ -18,21 +18,11 @@ package org.nlp4l.framework.builtin.spark.mllib
 
 import java.io.File
 
-import com.typesafe.config.{Config, ConfigFactory}
-import dispatch.Defaults._
-import dispatch._
-import org.nlp4l.framework.builtin.lucene.LuceneIndexingProcessorFactory
+import com.typesafe.config.ConfigFactory
 import org.nlp4l.framework.models.{Cell, Dictionary, Record}
-import org.nlp4l.lucene.{Document, Field, _}
-import org.scalatest.BeforeAndAfterAll
 import org.specs2.mutable.{BeforeAfter, Specification}
-import play.api.Logger
 
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-import scala.util.Try
-import scalax.file.Path
 
 class DocumentClassificationProcessorsSpec extends Specification with BeforeAfter {
 
@@ -46,7 +36,7 @@ class DocumentClassificationProcessorsSpec extends Specification with BeforeAfte
   def after = {
   }
   "DocumentClassificationProcessors" should {
-    "execute processor chain" in {
+    "execute each processor as chain" in {
 
       val config = ConfigFactory.parseString(
         s"""
@@ -95,6 +85,7 @@ class DocumentClassificationProcessorsSpec extends Specification with BeforeAfte
         s"""
            |{
            | workingDir:   "${TestSettings.TEST_OUT_DIR}"
+           | algorithm:    "LogisticRegressionWithLBFGS"
            |}
         """.stripMargin)
       val proc2 = new TrainAndModelProcessorFactory(config2).getInstance()
@@ -121,6 +112,7 @@ class DocumentClassificationProcessorsSpec extends Specification with BeforeAfte
            |     }
            |   ]
            | }
+           | algorithm:    "LogisticRegressionWithLBFGS"
            |}
         """.stripMargin)
       val proc3 = new ClassificationProcessorFactory(config3).getInstance()
