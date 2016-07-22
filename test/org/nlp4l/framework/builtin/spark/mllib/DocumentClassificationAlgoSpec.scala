@@ -90,7 +90,7 @@ class DocumentClassificationAlgoSpec extends Specification with BeforeAfter {
              | workingDir:   "${TestSettings.TEST_OUT_DIR}"
              | algorithm:    "NaiveBayes"
              | algorithmParams {
-             |   lamda: 0.9
+             |   lambda: 0.9
              |   modelType: "multinomial"
              | }
              |}

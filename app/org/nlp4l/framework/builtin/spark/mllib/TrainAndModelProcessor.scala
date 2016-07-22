@@ -73,7 +73,7 @@ class TrainAndModelProcessor(val workingDir: String,
       // Run training algorithm to build the model
       val model: ModelSupport = algorithm match {
         case AlgorithmSupport.NaiveBayes => {
-          val lambda = getAlgorithmParamAsDouble("lamda", 1.0)
+          val lambda = getAlgorithmParamAsDouble("lambda", 1.0)
           val modelType = getAlgorithmParam("modelType", "multinomial")
           logger.info("algorithm: " + AlgorithmSupport.NaiveBayes + ", lambda: " + lambda + ", modelType: " + modelType)
           new NaiveBayesModelSupport(
