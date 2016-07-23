@@ -17,7 +17,7 @@
 package org.nlp4l.framework.builtin.spark.mllib
 
 import com.typesafe.config.Config
-import org.apache.spark.mllib.classification.{LogisticRegressionWithLBFGS, NaiveBayes, NaiveBayesModel}
+import org.apache.spark.mllib.classification.{LogisticRegressionWithLBFGS, NaiveBayes}
 import org.apache.spark.mllib.evaluation.MulticlassMetrics
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.tree.{DecisionTree, RandomForest}
@@ -25,6 +25,7 @@ import org.apache.spark.mllib.util.MLUtils._
 import org.apache.spark.rdd.RDD
 import org.nlp4l.framework.models.{Record, _}
 import org.nlp4l.framework.processors._
+import play.api.Logger
 
 import scala.util.Try
 import scalax.file.Path
@@ -35,6 +36,7 @@ class TrainAndModelProcessorFactory(settings: Config) extends ProcessorFactory(s
     new TrainAndModelProcessor(
       getStrParamRequired("workingDir"),
       getStrParam("algorithm", AlgorithmSupport.Default),
+      getConfigParam("algorithmParams", null),
       getDoubleParam("trainTestRate", 0.7)
     )
   }
@@ -42,12 +44,15 @@ class TrainAndModelProcessorFactory(settings: Config) extends ProcessorFactory(s
 
 class TrainAndModelProcessor(val workingDir: String,
                              val algorithm: String,
+                             val algorithmParams: Config,
                              val trainTestRate: Double
                             )
   extends Processor
     with CommonProcessor {
 
   val settings = new WorkingDirSettings(workingDir)
+
+  private val logger = Logger(this.getClass)
 
   override def execute(dataDict: Option[Dictionary]): Option[Dictionary] = {
 
@@ -67,17 +72,50 @@ class TrainAndModelProcessor(val workingDir: String,
 
       // Run training algorithm to build the model
       val model: ModelSupport = algorithm match {
+        case AlgorithmSupport.NaiveBayes => {
+          val lambda = getAlgorithmParamAsDouble("lambda", 1.0)
+          val modelType = getAlgorithmParam("modelType", "multinomial")
+          logger.info("algorithm: " + AlgorithmSupport.NaiveBayes + ", lambda: " + lambda + ", modelType: " + modelType)
+          new NaiveBayesModelSupport(
+            NaiveBayes.train(training, lambda, modelType)
+          )
+        }
         case AlgorithmSupport.LogisticRegressionWithLBFGS => {
           val numClasses = labelNameMap.keySet.size
+          logger.info("algorithm: " + AlgorithmSupport.LogisticRegressionWithLBFGS + ", numClasses: " + numClasses)
           new LogisticRegressionModelSupport(
             new LogisticRegressionWithLBFGS()
             .setNumClasses(numClasses)
             .run(training)
           )
         }
-        case AlgorithmSupport.NaiveBayes => {
-          new NaiveBayesModelSupport(
-            NaiveBayes.train(training, lambda = 1.0)
+        case AlgorithmSupport.DecisionTree => {
+          val numClasses = labelNameMap.keySet.size
+          val categoricalFeaturesInfo = Map[Int, Int]()
+          val impurity = getAlgorithmParam("impurity", "gini") //  "gini" (recommended)
+          val maxDepth = getAlgorithmParamAsInt("maxDepth", 5) // (suggested value: 5)
+          val maxBins = getAlgorithmParamAsInt("maxBins", 32) // (suggested value: 32)
+          logger.info("algorithm: " + AlgorithmSupport.DecisionTree + ", numClasses: " + numClasses +
+            ", impurity: " + impurity + ", maxDepth: " + maxDepth + ", maxBins: " + maxBins)
+          new DecisionTreeModelSupport(
+            DecisionTree.trainClassifier(training, numClasses, categoricalFeaturesInfo,
+              impurity, maxDepth, maxBins)
+          )
+        }
+        case AlgorithmSupport.RandomForest => {
+          val numClasses = labelNameMap.keySet.size
+          val categoricalFeaturesInfo = Map[Int, Int]()
+          val numTrees = getAlgorithmParamAsInt("numTrees", 10) // Number of trees in the random forest.
+          val featureSubsetStrategy = getAlgorithmParam("featureSubsetStrategy", "auto") // Let the algorithm choose.
+          val impurity =  getAlgorithmParam("impurity", "gini") //  "gini" (recommended)
+          val maxDepth =  getAlgorithmParamAsInt("maxDepth", 4) // ((suggested value: 4)
+          val maxBins = getAlgorithmParamAsInt("maxBins", 100) // (suggested value: 100)
+          logger.info("algorithm: " + AlgorithmSupport.RandomForest + ", numClasses: " + numClasses +
+            ", numTrees: " + numTrees + ", featureSubsetStrategy: " + featureSubsetStrategy +
+            ", impurity: " + impurity + ", maxDepth: " + maxDepth + ", maxBins: " + maxBins)
+          new RandomForestModelSupport(
+            RandomForest.trainClassifier(training, numClasses, categoricalFeaturesInfo,
+              numTrees, featureSubsetStrategy, impurity, maxDepth, maxBins)
           )
         }
         case _ => throw new IllegalArgumentException("unknown algorithm: " + algorithm)
@@ -112,4 +150,13 @@ class TrainAndModelProcessor(val workingDir: String,
     Some(dict)
   }
 
+  def getAlgorithmParam(name: String, default: String): String = {
+    if (algorithmParams != null && algorithmParams.hasPath(name)) algorithmParams.getString(name) else default
+  }
+  def getAlgorithmParamAsDouble(name: String, default: Double): Double = {
+    if (algorithmParams != null && algorithmParams.hasPath(name)) algorithmParams.getDouble(name) else default
+  }
+  def getAlgorithmParamAsInt(name: String, default: Int): Int = {
+    if (algorithmParams != null && algorithmParams.hasPath(name)) algorithmParams.getInt(name) else default
+  }
 }
