@@ -69,11 +69,17 @@ class ClassificationProcessor(val workingDir: String,
     try {
       // Load model
       val model = algorithm match {
+        case AlgorithmSupport.NaiveBayes => {
+          NaiveBayesModelSupport.load(sc, settings.MODEL_FILE_DIR)
+        }
         case AlgorithmSupport.LogisticRegressionWithLBFGS => {
           LogisticRegressionModelSupport.load(sc, settings.MODEL_FILE_DIR)
         }
-        case AlgorithmSupport.NaiveBayes => {
-          NaiveBayesModelSupport.load(sc, settings.MODEL_FILE_DIR)
+        case AlgorithmSupport.DecisionTree => {
+          DecisionTreeModelSupport.load(sc, settings.MODEL_FILE_DIR)
+        }
+        case AlgorithmSupport.RandomForest => {
+          RandomForestModelSupport.load(sc, settings.MODEL_FILE_DIR)
         }
         case _ => throw new IllegalArgumentException("unknown algorithm: " + algorithm)
       }

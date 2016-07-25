@@ -229,15 +229,31 @@ class WorkingDirSettings(workingDir: String) {
 }
 
 object AlgorithmSupport {
-  val LogisticRegressionWithLBFGS = "LogisticRegressionWithLBFGS"
   val NaiveBayes = "NaiveBayes"
+  val LogisticRegressionWithLBFGS = "LogisticRegressionWithLBFGS"
+  val DecisionTree = "DecisionTree"
+  val RandomForest = "RandomForest"
 
-  val Default = LogisticRegressionWithLBFGS
+  val Default = NaiveBayes
 }
 
 abstract class ModelSupport() extends Serializable  {
   def predict(testData: Vector): Double
   def save(sc: SparkContext, path: String): Unit
+}
+
+class NaiveBayesModelSupport(model: NaiveBayesModel) extends ModelSupport {
+  override def predict(features: Vector): Double = {
+    model.predict(features)
+  }
+  override def save(sc: SparkContext, path: String): Unit = {
+    model.save(sc, path)
+  }
+}
+object NaiveBayesModelSupport {
+  def load(sc: SparkContext, path: String): NaiveBayesModelSupport = {
+    new NaiveBayesModelSupport(NaiveBayesModel.load(sc, path))
+  }
 }
 
 class LogisticRegressionModelSupport(model: LogisticRegressionModel) extends ModelSupport {
@@ -254,7 +270,7 @@ object LogisticRegressionModelSupport {
   }
 }
 
-class NaiveBayesModelSupport(model: NaiveBayesModel) extends ModelSupport {
+class DecisionTreeModelSupport(model: DecisionTreeModel) extends ModelSupport {
   override def predict(features: Vector): Double = {
     model.predict(features)
   }
@@ -262,10 +278,25 @@ class NaiveBayesModelSupport(model: NaiveBayesModel) extends ModelSupport {
     model.save(sc, path)
   }
 }
-object NaiveBayesModelSupport {
-  def load(sc: SparkContext, path: String): NaiveBayesModelSupport = {
-    new NaiveBayesModelSupport(NaiveBayesModel.load(sc, path))
+object DecisionTreeModelSupport {
+  def load(sc: SparkContext, path: String): DecisionTreeModelSupport = {
+    new DecisionTreeModelSupport(DecisionTreeModel.load(sc, path))
   }
 }
+
+class RandomForestModelSupport(model: RandomForestModel) extends ModelSupport {
+  override def predict(features: Vector): Double = {
+    model.predict(features)
+  }
+  override def save(sc: SparkContext, path: String): Unit = {
+    model.save(sc, path)
+  }
+}
+object RandomForestModelSupport {
+  def load(sc: SparkContext, path: String): RandomForestModelSupport = {
+    new RandomForestModelSupport(RandomForestModel.load(sc, path))
+  }
+}
+
 
 
