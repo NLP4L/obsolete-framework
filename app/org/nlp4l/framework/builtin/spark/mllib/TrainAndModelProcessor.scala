@@ -34,7 +34,7 @@ class TrainAndModelProcessorFactory(settings: Config) extends ProcessorFactory(s
 
   override def getInstance: Processor = {
     new TrainAndModelProcessor(
-      getStrParamRequired("workingDir"),
+      getStrParamRequired("modelDir"),
       getStrParam("algorithm", AlgorithmSupport.Default),
       getConfigParam("algorithmParams", null),
       getDoubleParam("trainTestRate", 0.7)
@@ -42,7 +42,7 @@ class TrainAndModelProcessorFactory(settings: Config) extends ProcessorFactory(s
   }
 }
 
-class TrainAndModelProcessor(val workingDir: String,
+class TrainAndModelProcessor(val modelDir: String,
                              val algorithm: String,
                              val algorithmParams: Config,
                              val trainTestRate: Double
@@ -50,7 +50,7 @@ class TrainAndModelProcessor(val workingDir: String,
   extends Processor
     with CommonProcessor {
 
-  val settings = new WorkingDirSettings(workingDir)
+  val settings = new ModelDirSettings(modelDir)
 
   private val logger = Logger(this.getClass)
 

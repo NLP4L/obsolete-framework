@@ -211,15 +211,15 @@ object SparkContextLocal {
 
 }
 
-class WorkingDirSettings(workingDir: String) {
+class ModelDirSettings(modelDir: String) {
 
-  val LUCENE_INDEX_DIR = new File(workingDir, "lucene").getAbsolutePath
-  val LABEL_FILE = new File(workingDir, "label.txt").getAbsolutePath
-  val DATA_FILE  = new File(workingDir, "data.txt").getAbsolutePath
-  val WORDS_FILE = new File(workingDir, "words.txt").getAbsolutePath
-  val TFIDF_FILE = new File(workingDir, "tfidf-params.txt").getAbsolutePath
-  val VALUES_FILE_DIR = new File(workingDir, "values").getAbsolutePath
-  val MODEL_FILE_DIR = new File(workingDir, "model").getAbsolutePath
+  val LUCENE_INDEX_DIR = new File(modelDir, "lucene").getAbsolutePath
+  val LABEL_FILE = new File(modelDir, "label.txt").getAbsolutePath
+  val DATA_FILE  = new File(modelDir, "data.txt").getAbsolutePath
+  val WORDS_FILE = new File(modelDir, "words.txt").getAbsolutePath
+  val TFIDF_FILE = new File(modelDir, "tfidf-params.txt").getAbsolutePath
+  val VALUES_FILE_DIR = new File(modelDir, "values").getAbsolutePath
+  val MODEL_FILE_DIR = new File(modelDir, "model").getAbsolutePath
 
   val LABEL_FILE_SEP  = "\t"
   val DATA_FILE_SEP  = " "
