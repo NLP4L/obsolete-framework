@@ -43,7 +43,7 @@ class DocumentClassificationProcessorsSpec extends Specification with BeforeAfte
            |{
            | textField:   "text"
            | labelField:  "classification"
-           | workingDir:   "${TestSettings.TEST_OUT_DIR}"
+           | modelDir:   "${TestSettings.TEST_OUT_DIR}"
            | valuesFields:  ["classification", "text"]
            | analyzer : {
            |   tokenizer {
@@ -84,7 +84,7 @@ class DocumentClassificationProcessorsSpec extends Specification with BeforeAfte
       val config2 = ConfigFactory.parseString(
         s"""
            |{
-           | workingDir:   "${TestSettings.TEST_OUT_DIR}"
+           | modelDir:   "${TestSettings.TEST_OUT_DIR}"
            | algorithm:    "LogisticRegressionWithLBFGS"
            |}
         """.stripMargin)
@@ -101,7 +101,7 @@ class DocumentClassificationProcessorsSpec extends Specification with BeforeAfte
            | passThruFields: [
            |   "title"
            |   ]
-           | workingDir:   "${TestSettings.TEST_OUT_DIR}"
+           | modelDir:   "${TestSettings.TEST_OUT_DIR}"
            | analyzer : {
            |   tokenizer {
            |     factory : standard

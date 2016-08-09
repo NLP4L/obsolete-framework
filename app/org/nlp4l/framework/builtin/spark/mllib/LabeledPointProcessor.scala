@@ -31,7 +31,7 @@ class LabeledPointProcessorFactory(settings: Config) extends ProcessorFactory(se
 
   override def getInstance: Processor = {
     new LabeledPointProcessor(
-      getStrParamRequired("workingDir"),
+      getStrParamRequired("modelDir"),
       getStrParamRequired("labelField"),
       getStrParamRequired("textField"),
       getStrListParam("valuesFields", null),
@@ -59,7 +59,7 @@ class LabeledPointProcessorFactory(settings: Config) extends ProcessorFactory(se
   }
 }
 
-class LabeledPointProcessor(val workingDir: String,
+class LabeledPointProcessor(val modelDir: String,
                             val labelField: String,
                             val textField: String,
                             val valuesFields: Seq[String],
@@ -100,7 +100,7 @@ class LabeledPointProcessor(val workingDir: String,
        | }
         """.stripMargin)
 
-  val settings = new WorkingDirSettings(workingDir)
+  val settings = new ModelDirSettings(modelDir)
 
   override def execute(data: Option[Dictionary]): Option[Dictionary] = {
 

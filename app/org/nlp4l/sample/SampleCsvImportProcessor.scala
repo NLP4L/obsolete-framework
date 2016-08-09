@@ -20,7 +20,7 @@ import java.io._
 import java.nio.charset.Charset
 
 import com.typesafe.config.Config
-import org.apache.commons.csv.{CSVFormat, CSVParser}
+import org.apache.commons.csv.{CSVFormat, CSVParser, QuoteMode}
 import org.nlp4l.framework.models.{Record, _}
 import org.nlp4l.framework.processors._
 
@@ -41,7 +41,7 @@ class SampleCsvImportProcessorFactory(settings: Config) extends ProcessorFactory
 class SampleCsvImportProcessor(val file: String, val encoding: String, val fields: Seq[String]) extends Processor {
 
   override def execute(data: Option[Dictionary]): Option[Dictionary] = {
-    val parser: CSVParser = CSVParser.parse(new File(file), Charset.forName(encoding), CSVFormat.DEFAULT.withHeader(fields: _*).withTrim())
+    val parser: CSVParser = CSVParser.parse(new File(file), Charset.forName(encoding), CSVFormat.DEFAULT.withHeader(fields: _*).withTrim().withQuoteMode(QuoteMode.MINIMAL))
     try {
       val dict = Dictionary(
         parser.getRecords().map(
@@ -76,7 +76,7 @@ class SampleCsvDataProcessor(val fields: Seq[String], val data: Seq[String]) ext
       b.append(d)
       b.append(Properties.lineSeparator)
     })
-    val parser: CSVParser = CSVParser.parse(b.toString, CSVFormat.DEFAULT.withHeader(fields: _*).withTrim())
+    val parser: CSVParser = CSVParser.parse(b.toString, CSVFormat.DEFAULT.withHeader(fields: _*).withTrim().withQuoteMode(QuoteMode.MINIMAL))
     try {
       val dict = Dictionary(
         parser.getRecords().map(

@@ -61,7 +61,7 @@ class DocumentClassificationAlgoSpec extends Specification with BeforeAfter {
            |{
            | textField:   "text"
            | labelField:  "classification"
-           | workingDir:   "${TestSettings.TEST_OUT_DIR}"
+           | modelDir:   "${TestSettings.TEST_OUT_DIR}"
            | analyzer {
            |   class : org.apache.lucene.analysis.standard.StandardAnalyzer
            | }
@@ -87,7 +87,7 @@ class DocumentClassificationAlgoSpec extends Specification with BeforeAfter {
         new TrainAndModelProcessorFactory(ConfigFactory.parseString(
           s"""
              |{
-             | workingDir:   "${TestSettings.TEST_OUT_DIR}"
+             | modelDir:   "${TestSettings.TEST_OUT_DIR}"
              | algorithm:    "NaiveBayes"
              | algorithmParams {
              |   lambda: 0.9
@@ -104,7 +104,7 @@ class DocumentClassificationAlgoSpec extends Specification with BeforeAfter {
            | passThruFields: [
            |   "title"
            |   ]
-           | workingDir:   "${TestSettings.TEST_OUT_DIR}"
+           | modelDir:   "${TestSettings.TEST_OUT_DIR}"
            |  analyzer {
            |   class : org.apache.lucene.analysis.standard.StandardAnalyzer
            | }
@@ -123,7 +123,7 @@ class DocumentClassificationAlgoSpec extends Specification with BeforeAfter {
         new TrainAndModelProcessorFactory(ConfigFactory.parseString(
           s"""
              |{
-             | workingDir:   "${TestSettings.TEST_OUT_DIR}"
+             | modelDir:   "${TestSettings.TEST_OUT_DIR}"
              | algorithm:    "LogisticRegressionWithLBFGS"
              |}
           """.stripMargin)).getInstance().execute(None)
@@ -136,8 +136,8 @@ class DocumentClassificationAlgoSpec extends Specification with BeforeAfter {
            | passThruFields: [
            |   "title"
            |   ]
-           | workingDir:   "${TestSettings.TEST_OUT_DIR}"
-           |  analyzer {
+           | modelDir:   "${TestSettings.TEST_OUT_DIR}"
+           | analyzer {
            |   class : org.apache.lucene.analysis.standard.StandardAnalyzer
            | }
            | algorithm:    "LogisticRegressionWithLBFGS"
@@ -155,7 +155,7 @@ class DocumentClassificationAlgoSpec extends Specification with BeforeAfter {
         new TrainAndModelProcessorFactory(ConfigFactory.parseString(
           s"""
              |{
-             | workingDir:   "${TestSettings.TEST_OUT_DIR}"
+             | modelDir:   "${TestSettings.TEST_OUT_DIR}"
              | algorithm:    "DecisionTree"
              | algorithmParams {
              |   impurity: "gini"
@@ -173,8 +173,8 @@ class DocumentClassificationAlgoSpec extends Specification with BeforeAfter {
            | passThruFields: [
            |   "title"
            |   ]
-           | workingDir:   "${TestSettings.TEST_OUT_DIR}"
-           |  analyzer {
+           | modelDir:   "${TestSettings.TEST_OUT_DIR}"
+           | analyzer {
            |   class : org.apache.lucene.analysis.standard.StandardAnalyzer
            | }
            | algorithm:    "DecisionTree"
@@ -192,7 +192,7 @@ class DocumentClassificationAlgoSpec extends Specification with BeforeAfter {
         new TrainAndModelProcessorFactory(ConfigFactory.parseString(
           s"""
              |{
-             | workingDir:   "${TestSettings.TEST_OUT_DIR}"
+             | modelDir:   "${TestSettings.TEST_OUT_DIR}"
              | algorithm:    "RandomForest"
              | algorithmParams {
              |   numTrees: 9
@@ -212,8 +212,8 @@ class DocumentClassificationAlgoSpec extends Specification with BeforeAfter {
            | passThruFields: [
            |   "title"
            |   ]
-           | workingDir:   "${TestSettings.TEST_OUT_DIR}"
-           |  analyzer {
+           | modelDir:   "${TestSettings.TEST_OUT_DIR}"
+           | analyzer {
            |   class : org.apache.lucene.analysis.standard.StandardAnalyzer
            | }
            | algorithm:    "RandomForest"
