@@ -237,7 +237,6 @@ class AcronymExtractionProcessor(val textField: String) extends Processor {
     } else if(as.size == 0){
       None
     } else{
-      println(s"ac = ${ac.mkString}, as=${as.mkString}")
       val c = ac(0).toLower
       val word = as(0)
       if(c == word(0)){

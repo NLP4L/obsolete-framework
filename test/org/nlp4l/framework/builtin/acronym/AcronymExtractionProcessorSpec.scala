@@ -17,6 +17,7 @@
 package org.nlp4l.framework.builtin.acronym
 
 import com.typesafe.config.ConfigFactory
+import org.nlp4l.framework.models.{Cell, Record, Dictionary}
 import org.specs2.mutable.Specification
 
 import scala.collection.mutable.ArrayBuffer
@@ -116,6 +117,134 @@ class AcronymExtractionProcessorSpec extends Specification {
         true, true, ArrayBuffer.empty[String]) must_== Some("japan advanced institute of science and technology in Ishikawa")
       processor.testLowerCaseStrict(ACRONYM, ACRONYM.toCharArray.reverse, Array("Japan", "advanced", "Institute", "of", "Science", "and", "Technology", "in", "Ishikawa").reverse,
         true, true, ArrayBuffer.empty[String]) must_== None
+    }
+
+    "expansionCandidate in format of 'Expansion (ACRONYM)'" in {
+      val ACRONYM = "ACRONYM"
+      val TEXT = s"here is an expansion (${ACRONYM})"
+      val start = TEXT.indexOf(ACRONYM)
+      val length = ACRONYM.length
+      val end = start + length
+      val result = processor.expansionCandidate(TEXT, ACRONYM, start, end, length)
+      result must_!= None
+      result.get._1 must_== ACRONYM.toCharArray.reverse
+      result.get._2 must_== Array("here","is","an","expansion").reverse
+      result.get._3 must_== true
+      result.get._4 must_== true
+    }
+
+    "expansionCandidate in format of 'Expansion (ACRONYM)' long version" in {
+      val ACRONYM = "ACRONYM"
+      val TEXT = s"aa bb cc dd ee ff gg hh ii jj kk ll mm nn oo pp qq rr ss tt here is an expansion (${ACRONYM})"
+      val start = TEXT.indexOf(ACRONYM)
+      val length = ACRONYM.length
+      val end = start + length
+      val result = processor.expansionCandidate(TEXT, ACRONYM, start, end, length)
+      result must_!= None
+      result.get._1 must_== ACRONYM.toCharArray.reverse
+      result.get._2 must_== "ee ff gg hh ii jj kk ll mm nn oo pp qq rr ss tt here is an expansion".split(" ").reverse
+      result.get._3 must_== true
+      result.get._4 must_== true
+    }
+
+    "expansionCandidate in format of 'Expansion or ACRONYM'" in {
+      val ACRONYM = "ACRONYM"
+      val TEXT = s"here is an expansion or ${ACRONYM}"
+      val start = TEXT.indexOf(ACRONYM)
+      val length = ACRONYM.length
+      val end = start + length
+      val result = processor.expansionCandidate(TEXT, ACRONYM, start, end, length)
+      result must_!= None
+      result.get._1 must_== ACRONYM.toCharArray.reverse
+      result.get._2 must_== Array("here","is","an","expansion").reverse
+      result.get._3 must_== true
+      result.get._4 must_== true
+    }
+
+    "expansionCandidate in format of 'Expansion, or ACRONYM'" in {
+      val ACRONYM = "ACRONYM"
+      val TEXT = s"here is an expansion, or ${ACRONYM}"
+      val start = TEXT.indexOf(ACRONYM)
+      val length = ACRONYM.length
+      val end = start + length
+      val result = processor.expansionCandidate(TEXT, ACRONYM, start, end, length)
+      result must_!= None
+      result.get._1 must_== ACRONYM.toCharArray.reverse
+      result.get._2 must_== Array("here","is","an","expansion").reverse
+      result.get._3 must_== true
+      result.get._4 must_== true
+    }
+
+    "expansionCandidate in format of 'Expansion, ACRONYM'" in {
+      val ACRONYM = "ACRONYM"
+      val TEXT = s"here is an expansion, ${ACRONYM}"
+      val start = TEXT.indexOf(ACRONYM)
+      val length = ACRONYM.length
+      val end = start + length
+      val result = processor.expansionCandidate(TEXT, ACRONYM, start, end, length)
+      result must_!= None
+      result.get._1 must_== ACRONYM.toCharArray.reverse
+      result.get._2 must_== Array("here","is","an","expansion").reverse
+      result.get._3 must_== true
+      result.get._4 must_== true
+    }
+
+    "expansionCandidate in format of 'ACRONYM (Expansion)'" in {
+      val ACRONYM = "ACRONYM"
+      val TEXT = s"${ACRONYM} (here is an expansion)"
+      val start = TEXT.indexOf(ACRONYM)
+      val length = ACRONYM.length
+      val end = start + length
+      val result = processor.expansionCandidate(TEXT, ACRONYM, start, end, length)
+      result must_!= None
+      result.get._1 must_== ACRONYM.toCharArray
+      result.get._2 must_== Array("here","is","an","expansion")
+      result.get._3 must_== false
+      result.get._4 must_== false
+    }
+
+    "expansionCandidate in format of 'ACRONYM, Expansion'" in {
+      val ACRONYM = "ACRONYM"
+      val TEXT = s"${ACRONYM}, here is an expansion and others"
+      val start = TEXT.indexOf(ACRONYM)
+      val length = ACRONYM.length
+      val end = start + length
+      val result = processor.expansionCandidate(TEXT, ACRONYM, start, end, length)
+      result must_!= None
+      result.get._1 must_== ACRONYM.toCharArray
+      result.get._2 must_== Array("here","is","an","expansion","and","others")
+      result.get._3 must_== false
+      result.get._4 must_== true
+    }
+
+    "expansion" in {
+      val TEXT =
+        """
+          |I sell my Compact Disc Read Only Memory (CD-ROM)
+          |I graduated from JAIST, Japan Advanced Institute of Science and Technology.
+          |You should go back home ASAP (as soon as possible).
+        """.stripMargin
+      checkDictionaryContent(
+        """CD-ROM, Compact Disc Read Only Memory
+          |JAIST, Japan Advanced Institute of Science and Technology
+          |ASAP, as soon as possible
+        """.stripMargin, processor.execute(textAsDictionary(TEXT)))
+      ok
+    }
+  }
+
+  def textAsDictionary(text: String): Option[Dictionary] = {
+    Some(Dictionary(text.split("\n").map(r => Record(Seq(Cell("text", r))))))
+  }
+
+  def checkDictionaryContent(expected: String, actual: Option[Dictionary]): Unit = {
+    val expectedRecords = expected.split("\n")
+    actual must_!= None
+    val dic = actual.get
+    dic.recordList.zip(expectedRecords).foreach{ pair =>
+      val cell = pair._1.cellValue("acronyms")
+      cell must_!= None
+      cell.get.toString must_== pair._2
     }
   }
 }
