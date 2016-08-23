@@ -29,7 +29,7 @@ class ClassificationProcessorFactory(settings: Config) extends ProcessorFactory(
 
   override def getInstance: Processor = {
     new ClassificationProcessor(
-      getStrParamRequired("workingDir"),
+      getStrParamRequired("modelDir"),
       getStrParamRequired("textField"),
       getStrParamRequired("idField"),
       getStrListParam("passThruFields", null),
@@ -39,7 +39,7 @@ class ClassificationProcessorFactory(settings: Config) extends ProcessorFactory(
   }
 }
 
-class ClassificationProcessor(val workingDir: String,
+class ClassificationProcessor(val modelDir: String,
                               val textField: String,
                               val idField: String,
                               val passThruFields: Seq[String],
@@ -49,7 +49,7 @@ class ClassificationProcessor(val workingDir: String,
   extends Processor
     with CommonProcessor {
 
-  val settings = new WorkingDirSettings(workingDir)
+  val settings = new ModelDirSettings(modelDir)
 
   override def execute(dictData: Option[Dictionary]): Option[Dictionary] = {
 
