@@ -19,6 +19,7 @@ package org.nlp4l.framework.builtin.kea;
 import com.typesafe.config.Config;
 import org.apache.commons.io.FileUtils;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.Analyzer.TokenStreamComponents;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
@@ -48,7 +49,7 @@ public class KEAStandardAnalyzer extends Analyzer {
         String[] words;
         if (params.hasPath("stopwords")) {
           words = params.getString("stopwords").split(",");
-        } else{
+        } else {
           String stopwordsFile = params.getString("stopwordsFile");
           try {
             List<String> lines = FileUtils.readLines(new File(stopwordsFile));
