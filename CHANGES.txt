@@ -1,4 +1,25 @@
-RONDHUIT COMMONS Java Library change history
+NLP4L/framework change history
+
+========== 0.3.1 / YYYY-MM-DD ===================================
+
+Important Notice
+
+New Features & Improvements
+
+Bug Fixes
+
+API Changes
+
+Javadoc Fixes
+
+Project environments
+
+Tests
+
+Deprecated/Deleted Features
+
+Others
+
 
 ========== 0.3.0 / 2016-08-29 ===================================
 
