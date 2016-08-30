@@ -1,0 +1,28 @@
+RONDHUIT COMMONS Java Library change history
+
+========== 0.3.0 / 2016-08-29 ===================================
+
+Important Notice
+
+New Features & Improvements
+
+* add builtin solutions
+ - Named Entity Recognition
+ - Document Classification
+ - Keyphrases Extraction
+ - Acronym Extraction
+
+Bug Fixes
+
+API Changes
+
+Javadoc Fixes
+
+Project environments
+
+Tests
+
+Deprecated/Deleted Features
+
+Others
+
