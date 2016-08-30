@@ -49,3 +49,7 @@ unmanagedBase := baseDirectory.value / "lib"
 // Play provides two styles of routers, one expects its actions to be injected, the
 // other, legacy style, accesses its actions statically.
 routesGenerator := InjectedRoutesGenerator
+
+mappings in Universal ++=
+  (baseDirectory.value / "examples" * "*" get) map
+    (x => x -> ("examples/" + x.getName))
