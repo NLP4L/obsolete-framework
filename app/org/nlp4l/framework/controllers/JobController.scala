@@ -429,6 +429,12 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
           val toUrl = stgs.apply("deployTo").toString
           val toFile = stgs.apply("file").toString
           JobController.transferHttp(toUrl, toFile, result._3, encoding)
+          // reload the core if 'coreApi' and 'coreName' are given
+          (stgs.get("coreApi"), stgs.get("coreName")) match {
+            case (Some(coreApi: String), Some(coreName: String)) =>
+              JobController.reloadCore(coreApi, coreName)
+            case _ => ()
+          }
         }
         jobDAO.update(Job(job.jobId, job.name, job.config, runId, job.lastRunAt, Some(new DateTime())))
         Ok(Json.toJson(ActionResult(result._1, result._2)))
@@ -564,5 +570,11 @@ object JobController {
     val f = Http(req OK as.String)
     Await.result(f, scala.concurrent.duration.Duration.Inf)
     FileUtil.delete(tempFile)
+  }
+
+  def reloadCore(coreApiRoot: String, core: String): Unit = {
+    val reloadUrl = coreApiRoot + "?action=RELOAD&core=" + core
+    val f = Http(url(reloadUrl) OK as.String)
+    Await.result(f, scala.concurrent.duration.Duration.Inf)
   }
 }
