@@ -26,17 +26,17 @@ import scala.concurrent.Await
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class HttpFileTransferDepoyerFactory(settings: Config) extends DeployerFactory(settings) {
+class HttpFileTransferDeployerFactory(settings: Config) extends DeployerFactory(settings) {
 
   override def getInstance: Deployer = {
-    new HttpFileTransferDepoyer(
+    new HttpFileTransferDeployer(
       getStrParamRequired("deployToUrl"),
       getStrParamRequired("deployToFile")
     )
   }
 }
 
-class HttpFileTransferDepoyer(toUrl: String, toFile: String) extends Deployer {
+class HttpFileTransferDeployer(toUrl: String, toFile: String) extends Deployer {
 
   override def deploy(file: String): Unit = {
     val req = url(toUrl).addQueryParameter("file", toFile) <<< new File(file)
