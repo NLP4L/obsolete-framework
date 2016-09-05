@@ -16,9 +16,12 @@
 
 package org.nlp4l.sample
 
+import java.io.{Writer => _, _}
+
 import com.typesafe.config.Config
 import org.nlp4l.framework.processors._
 import org.nlp4l.framework.models._
+import resource._
 
 import scala.collection.mutable.ListBuffer
 
@@ -182,10 +185,13 @@ class SimpleWriterFactory(settings: Config) extends WriterFactory(settings) {
 
 
 class SimpleWriter(val filename: String) extends Writer {
-  override def write (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]] = {
+  override def write (data: Option[Dictionary], dictionaryAttribute: DictionaryAttribute): String = {
     Thread.sleep(3000)
-    
-    (false, Seq("err 01", "err 02", filename), Seq())
-    //(true, Seq())
+
+    val result = data.get.recordList.map(r => r.mkCsvRecord(","))
+    val pw = new PrintWriter(filename)
+    result.foreach(pw.println(_))
+    pw.close()
+    filename
   }
 }

@@ -16,24 +16,69 @@
 
 package org.nlp4l.framework.builtin
 
-import com.typesafe.config.Config
-import org.nlp4l.framework.models.Dictionary
-import org.nlp4l.framework.processors.{Writer, WriterFactory}
+import java.io.{BufferedWriter, File, FileWriter, PrintWriter, _}
 
-class CSVFileWriterFactory(settings: Config) extends WriterFactory(settings) {
+import com.typesafe.config.Config
+import org.nlp4l.framework.builtin.DbModels.fWRecordWithAttrubuteWrites
+import org.nlp4l.framework.models.{Dictionary, DictionaryAttribute, Record, RecordWithAttrbute}
+import org.nlp4l.framework.processors.{Writer, WriterFactory}
+import play.api.libs.json.Json
+import resource._
+
+
+class JsonFileWriterFactory(settings: Config) extends WriterFactory(settings) {
+
   override def getInstance: Writer = {
-    new CSVFileWriter(getStrParam("separator", ","))
+    new JsonFileWriter(
+      getStrParam("file", null)
+    )
   }
 }
 
-class CSVFileWriter(separator: String) extends Writer {
-  override def write (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]] = {
+class JsonFileWriter(file: String) extends Writer {
+
+  override def write(data: Option[Dictionary], dictionaryAttribute: DictionaryAttribute): String = {
     data match {
       case Some(dic) => {
-        val result = dic.recordList.map(r => r.mkCsvRecord(separator))
-        (true, Seq(), result)
+        val outfile = if (file == null) File.createTempFile("nlp4l-", ".json") else new File(file)
+        val result = dic.recordList.map { x: Record => RecordWithAttrbute(x, dictionaryAttribute) }
+        val jsValue = Json.toJson(result)
+        for (output <- managed(new PrintWriter(new BufferedWriter(new FileWriter(outfile, false))))) {
+          output.print(Json.prettyPrint(jsValue))
+        }
+        outfile.getAbsolutePath
       }
-      case None => (false, Seq("no data to be deployed found"), Seq())
+      case None => throw new Exception("no data to write found")
     }
   }
 }
+
+class CSVFileWriterFactory(settings: Config) extends WriterFactory(settings) {
+
+  override def getInstance: Writer = {
+    new CSVFileWriter(
+      getStrParam("file", null),
+      getStrParam("separator", ","),
+      getStrParam("encoding", "UTF-8")
+    )
+  }
+}
+
+class CSVFileWriter(file: String, separator: String, encoding: String) extends Writer {
+
+  override def write(data: Option[Dictionary], dictionaryAttribute: DictionaryAttribute): String = {
+    data match {
+      case Some(dic) => {
+        val outfile = if (file == null) File.createTempFile("nlp4l-", ".csv") else new File(file)
+        val result = dic.recordList.map(r => r.mkCsvRecord(separator))
+
+        for (output <- managed(new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outfile), encoding))))) {
+          result.foreach(output.println(_))
+        }
+        outfile.getAbsolutePath
+      }
+      case None => throw new Exception("no data to write found")
+    }
+  }
+}
+

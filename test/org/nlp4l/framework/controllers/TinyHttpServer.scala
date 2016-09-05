@@ -16,11 +16,16 @@
 
 package org.nlp4l.framework.controllers
 
-import java.io.{PrintWriter, OutputStream}
+import java.io.{OutputStream, PrintWriter}
 import java.net.{HttpURLConnection, InetSocketAddress, ServerSocket, Socket}
+
+import dispatch.{Http, as, url}
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
+
+import dispatch._, Defaults._
+
 
 class TinyHttpServer(val port: Int){
 
@@ -181,5 +186,23 @@ class Request(val sock: Socket){
     else{
       contlen.head.split(":")(1).trim.toInt
     }
+  }
+}
+
+object TinyHttpServerStartObject {
+
+  def main(args: Array[String]): Unit ={
+    val server = new TinyHttpServerThread
+    server.start()
+    println("TinyHttpServer started.")
+  }
+}
+
+object TinyHttpServerShutdownObject {
+
+  def main(args: Array[String]): Unit ={
+    val req = url("http://localhost:8983/shutdown")
+    Http(req OK as.String)
+    println("TinyHttpServer shutdown.")
   }
 }

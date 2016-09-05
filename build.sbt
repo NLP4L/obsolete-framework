@@ -53,3 +53,8 @@ routesGenerator := InjectedRoutesGenerator
 mappings in Universal ++=
   (baseDirectory.value / "examples" * "*" get) map
     (x => x -> ("examples/" + x.getName))
+
+mappings in Universal ++=
+  (baseDirectory.value / "conf/application.conf.sample" get) map
+    (x => x -> ("conf/application.conf"))
+

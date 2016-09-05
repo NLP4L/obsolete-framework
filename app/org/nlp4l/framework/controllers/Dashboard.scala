@@ -75,19 +75,20 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     Await.ready(f, Duration.Inf)
     f.value.get match {
       case Success(job) => {
-        val (listTable: String, addForm: String, editForm: String, hasValidators: Boolean, hasWriter: Boolean) = createJobResultTable(job, runId)
+        val (listTable: String, addForm: String, editForm: String, hasValidators: Boolean, hasWriter: Boolean, hasDeployer: Boolean) = createJobResultTable(job, runId)
         val runIdList: Seq[Int] = runDAO.selectRunList(jobId, job.lastRunId)
-        Ok(org.nlp4l.framework.views.html.jobresult(job, jobId, runId, runIdList, listTable, addForm, editForm, hasValidators, hasWriter))
+        Ok(org.nlp4l.framework.views.html.jobresult(job, jobId, runId, runIdList, listTable, addForm, editForm, hasValidators, hasWriter, hasDeployer))
       }
       case Failure(ex) => NotFound(org.nlp4l.framework.views.html.notFound("Job not found"))
     }
   }
   
-  def createJobResultTable(job: Job, runId: Int): (String, String, String, Boolean, Boolean) = {
+  def createJobResultTable(job: Job, runId: Int): (String, String, String, Boolean, Boolean, Boolean) = {
     val jobId = job.jobId.getOrElse(0)
     
     val config = ConfigFactory.parseString(job.config, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF))
     val hasWriter: Boolean = config.hasPath("writer")
+    val hasDeployer: Boolean = config.hasPath("deployer")
     val hasValidators: Boolean = config.hasPath("validators")
     
     val dic: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
@@ -168,6 +169,6 @@ class Dashboard @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-acto
     </form>
     """
 
-    (listTable, addform, editform, hasValidators, hasWriter)
+    (listTable, addform, editform, hasValidators, hasWriter, hasDeployer)
   }
 }
