@@ -124,5 +124,15 @@ abstract class WriterFactory(settings: Config) extends ConfiguredFactory(setting
   def getInstance(): Writer
 }
 trait Writer {
-  def write (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]]
+  def write (data: Option[Dictionary], dictionaryAttribute: DictionaryAttribute): String
+}
+
+/**
+  * Deployer
+  */
+abstract class DeployerFactory(settings: Config) extends ConfiguredFactory(settings){
+  def getInstance(): Deployer
+}
+trait Deployer {
+  def deploy (file: String): Unit
 }

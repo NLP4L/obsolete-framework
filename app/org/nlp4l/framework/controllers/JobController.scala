@@ -97,9 +97,9 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     }
   }
 
- 
 
-  
+
+
   def saveJobConfig(jobId: Int) = Action.async(parse.multipartFormData) {request =>
     jobDAO.get(jobId) map {job =>
         request.body.file("config") map { file =>
@@ -129,7 +129,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       case e => NotFound(org.nlp4l.framework.views.html.notFound(e.getMessage))
     }
   }
-  
+
   def saveNewJobConfig = Action(parse.multipartFormData) {request =>
     request.body.file("config") map { file =>
       val uuid = UUID.randomUUID().toString
@@ -147,7 +147,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       Ok(org.nlp4l.framework.views.html.newjob("", "", "Upload failed."))
     }
   }
-  
+
 
   def saveJobInfo(jobId: Int) = Action.async(parse.json) { request =>
     val data = request.body
@@ -181,7 +181,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
           }
         }
       }
-      
+
     }
   }
 
@@ -191,7 +191,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     jobDAO.delete(jobId) map {
       case (a) => {
         (1 to job.lastRunId).foreach {runId =>
-          runDAO.dropTable(jobId, runId) 
+          runDAO.dropTable(jobId, runId)
         }
         jobDAO.dropReplayTable(jobId)
         runDAO.deleteJobStatusByJobId(jobId)
@@ -201,7 +201,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       case e => InternalServerError("Delete failed. " + e.getMessage)
     }
   }
-  
+
   def deleteRunResult(jobId: Int, runId: Int) = Action.async {
     runDAO.dropTable(jobId, runId) map {
       case (a) => {
@@ -213,7 +213,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       case e => InternalServerError("Delete failed. " + e.getMessage)
     }
   }
-  
+
   def deleteRecord(jobId: Int, runId: Int, recordId: Int) = Action.async {
     val hashcode: Int= runDAO.fetchRecordHashcode(jobId, runId, recordId)
     runDAO.deleteRecord(jobId, runId, recordId) map {
@@ -227,14 +227,14 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       case e => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
     }
   }
-  
-  
+
+
   def addRecord(jobId: Int, runId: Int) = Action.async {implicit request =>
     val f: Future[Job] = jobDAO.get(jobId)
     val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
     val dicAttr: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
     val cellList = ListBuffer.empty[Cell]
-    
+
     val formData: Map[String, Seq[String]]  = request.body.asFormUrlEncoded.getOrElse(Map())
     dicAttr.cellAttributeList foreach { c: CellAttribute =>
       val v = formData.get(c.name.toLowerCase()) map { list: Seq[String] =>
@@ -258,9 +258,9 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     }
     val r = Record(cellList).setUserDefinedHashCode(dicAttr)
     val hashcode: Int = r.hashCode
-    
 
-    
+
+
     runDAO.addRecord(jobId, runId, dicAttr, r) map {
       case (recordId) => {
         val hashcode = runDAO.fetchRecordHashcode(jobId, runId, recordId)
@@ -272,14 +272,14 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       case e => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
     }
   }
-  
-  
+
+
   def fetchRecord(jobId: Int, runId: Int, recordId: Int) = Action {
     val recordMap = runDAO.fetchRecordData(jobId, runId, recordId)
-    val d = for {m <- recordMap} yield { 
-      if(m._2 != null) { 
+    val d = for {m <- recordMap} yield {
+      if(m._2 != null) {
         m._1 -> m._2.toString
-      } else { 
+      } else {
         m._1 -> null
       }
     }
@@ -288,8 +288,8 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
         )
         Ok(jsonResponse)
   }
-  
-  
+
+
   def updateRecord(jobId: Int, runId: Int, recordId: Int) = Action {implicit request =>
     val f: Future[Job] = jobDAO.get(jobId)
     val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
@@ -299,14 +299,14 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
 
     val formData: Map[String, Seq[String]]  = request.body.asFormUrlEncoded.getOrElse(Map())
     val oldRecordMap = runDAO.fetchRecordData(jobId, runId, recordId)
-    val d = for {m <- oldRecordMap} yield { 
-      if(m._2 != null) { 
+    val d = for {m <- oldRecordMap} yield {
+      if(m._2 != null) {
         m._1 -> m._2.toString
-      } else { 
+      } else {
         m._1 -> null
       }
     }
-    
+
     dicAttr.cellAttributeList foreach { c: CellAttribute =>
       val v = formData.get(c.name.toLowerCase()) map { list: Seq[String] =>
         val x:String = list.head
@@ -329,7 +329,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
         }
       }
       cellList += Cell(c.name.toLowerCase(), v.getOrElse(null))
-      
+
       val vv = d.get(c.name.toLowerCase()) map { x =>
         if(x != null) {
           c.cellType match {
@@ -353,7 +353,7 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     }
     val newr = Record(cellList).setUserDefinedHashCode(dicAttr)
     val oldr = Record(oldCellList).setUserDefinedHashCode(dicAttr)
-    
+
     runDAO.updateRecord(jobId, runId, recordId, dicAttr, newr) map {
       case (a) => {
         formData.get("hashcode") map { h =>
@@ -366,10 +366,10 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
     } recover {
       case e => InternalServerError("Add failed. " + e.getMessage)
     }
-        
+
     Ok(Json.toJson(ActionResult(true, Seq("success"))))
   }
-  
+
   def jobExists(jobId: Int): Future[Boolean] = {
     jobDAO.get(jobId).map(job => true ).recover {
       case ex: TimeoutException => false
@@ -388,40 +388,20 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       case Failure(ex) => Future.successful(NotFound(org.nlp4l.framework.views.html.notFound("Job not found")))
     }
   }
-  
-  
+
+
   def validateResult(jobId: Int, runId: Int) = Action {
     try {
 
       val dic = runDAO.fetchAll(jobId, runId)
       val chain = ValidatorChain.getChain(jobDAO, jobId)
       val errMsg = chain.process(dic)
-      
+
       if(errMsg.isEmpty) {
         Ok(Json.toJson(ActionResult(true, Seq("success"))))
       } else {
         Ok(Json.toJson(ActionResult(false, errMsg)))
       }
-    } catch {
-      case e: Exception => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
-    }
-  }
-
-  def deployResult(jobId: Int, runId: Int) = Action {
-    try {
-      val dic = runDAO.fetchAll(jobId, runId)
-      val writer = WriterBuilder.build(jobDAO, jobId)
-      val result = writer.write(Some(dic))
-      val job = Await.result(jobDAO.get(jobId), scala.concurrent.duration.Duration.Inf)
-      if(result._1){
-        val stgs = settings(job.config)
-        val encoding = stgs.getOrElse("encoding", "UTF-8").asInstanceOf[String]
-        val toUrl = stgs.apply("deployTo").toString
-        val toFile = stgs.apply("file").toString
-        JobController.transferHttp(toUrl, toFile, result._3, encoding)
-      }
-      jobDAO.update(Job(job.jobId, job.name, job.config, runId, job.lastRunAt, Some(new DateTime())))
-      Ok(Json.toJson(ActionResult(result._1, result._2)))
     } catch {
       case e: Exception => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
     }
@@ -466,11 +446,11 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
         Ok(jsonResponse)
     }
   }
-  
-  
+
+
   def jobResult(jobId: Int, runId: Int) = Action { request =>
     val tableName = s"run_${jobId}_${runId}"
-    
+
     val offset = request.getQueryString("offset") match {
       case Some(x) if x != "" => x.toInt
       case _ => 0
@@ -497,44 +477,54 @@ class JobController @Inject()(jobDAO: JobDAO, runDAO: RunDAO, @Named("processor-
       res =>
         total = res
     }
-    
+
     val f: Future[Job] = jobDAO.get(jobId)
     val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
     val dic: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
-    
+
     val res:Dictionary = runDAO.fetch(tableName, job, dic, sort, order, offset, size, filterMap)
     val res2 = res.recordList.map { x:Record => RecordWithAttrbute(x, dic) }
-      
+
     val jsonResponse = Json.obj(
       "total" -> total,
       "rows" -> Json.toJson(res2)
     )
 
     Ok(jsonResponse)
-    
+
   }
-  
+
   def exportResult(jobId: Int, runId: Int) = Action {
     try {
       val f: Future[Job] = jobDAO.get(jobId)
       val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
-      val dic: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
-      
-      val res:Dictionary = runDAO.fetchAllColumn(jobId, runId)
-      val res2 = res.recordList.map { x:Record => RecordWithAttrbute(x, dic) }
-      
-      val file = new File(s"run_${jobId}_${runId}.json")
-      val fileWriter:FileWriter = new FileWriter(file, false);
-      val printWriter:PrintWriter = new PrintWriter(new BufferedWriter(fileWriter));
-      printWriter.print(Json.toJson(res2));
-      printWriter.close();
-      Ok.sendFile(file)
-
+      val dictAttr: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
+      val dictData = runDAO.fetchAllColumn(jobId, runId)
+      val writer = WriterBuilder.build(jobDAO, jobId)
+      val filename = writer.write(Some(dictData), dictAttr)
+      Ok.sendFile(new File(filename))
     } catch {
       case e: Exception => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
     }
   }
-  
+
+  def deployResult(jobId: Int, runId: Int) = Action {
+    try {
+      val f: Future[Job] = jobDAO.get(jobId)
+      val job = Await.result(f, scala.concurrent.duration.Duration.Inf)
+      val dictAttr: DictionaryAttribute = new ProcessorChainBuilder().dicBuild(job.config)
+      val dictData = runDAO.fetchAllColumn(jobId, runId)
+      val writer = WriterBuilder.build(jobDAO, jobId)
+      val filename = writer.write(Some(dictData), dictAttr)
+      val deployer = DeployerBuilder.build(jobDAO, jobId)
+      deployer.deploy(filename)
+      jobDAO.update(Job(job.jobId, job.name, job.config, runId, job.lastRunAt, Some(new DateTime())))
+      Ok(Json.toJson(ActionResult(true, Seq("deployed."))))
+    } catch {
+      case e: Exception => Ok(Json.toJson(ActionResult(false, Seq(e.getMessage))))
+    }
+  }
+
   def filterList(jobId: Int, runId: Int, cellname: String) = Action {request =>
     val r = runDAO.fetchCellValueList(jobId, runId, cellname)
     val res = r.filter(_ != null).grouped(1).map(xs => (xs(0).toString -> xs(0).toString)).toMap

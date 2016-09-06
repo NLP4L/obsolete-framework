@@ -79,6 +79,14 @@ class ConfigSpec extends Specification {
       |        code : "write-1"
       |      }
       |    }
+      |
+      |  deployer :
+      |    {
+      |      class : org.nlp4l.framework.processors.TestDeployerFactory
+      |      settings : {
+      |        code : "deploy-1"
+      |      }
+      |    }
       |}
     """.stripMargin
 
@@ -140,6 +148,11 @@ class ConfigSpec extends Specification {
     "can be overridden by WriterFactories" in {
       val dp0 : TestWriter = WriterBuilder.build(conf1).asInstanceOf[TestWriter]
       dp0.settings.getString("code") must_== "write-1"
+    }
+
+    "can be overridden by DeployerFactories" in {
+      val dp0 : TestDeployer = DeployerBuilder.build(conf1).asInstanceOf[TestDeployer]
+      dp0.settings.getString("code") must_== "deploy-1"
     }
   }
 
@@ -427,7 +440,18 @@ class TestWriterFactory(settings: Config) extends WriterFactory(settings){
 }
 
 class TestWriter(val settings: Config) extends Writer {
-  def write (data: Option[Dictionary]): Tuple3[Boolean, Seq[String], Seq[String]] = {
-    (true, Seq(), Seq())
+  override def write (data: Option[Dictionary], dictionaryAttribute: DictionaryAttribute): String = {
+    ""
+  }
+}
+
+class TestDeployerFactory(settings: Config) extends DeployerFactory(settings){
+  override def getInstance(): Deployer = {
+    new TestDeployer(settings)
+  }
+}
+
+class TestDeployer(val settings: Config) extends Deployer {
+  override def deploy (filename: String): Unit = {
   }
 }
