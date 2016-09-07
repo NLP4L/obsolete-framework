@@ -1,5 +1,26 @@
 NLP4L/framework change history
 
+========== 0.4.1 / YYYY-MM-DD ===================================
+
+Important Notice
+
+New Features & Improvements
+
+Bug Fixes
+
+API Changes
+
+Javadoc Fixes
+
+Project environments
+
+Tests
+
+Deprecated/Deleted Features
+
+Others
+
+
 ========== 0.4.0 / 2016-09-06 ===================================
 
 Important Notice
