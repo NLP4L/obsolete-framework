@@ -52,6 +52,45 @@ class TextRecordsProcessor(val file: String, val encoding: String) extends Proce
   }
 }
 
+class UniqueProcessorFactory(settings: Config) extends ProcessorFactory(settings) {
+  override def getInstance: Processor = {
+    new UniqueProcessor(getStrParamRequired("cellname"))
+  }
+}
+
+class UniqueProcessor(val cellname: String) extends Processor {
+  override def execute(data: Option[Dictionary]): Option[Dictionary] = data match {
+    case None => data
+    case _ => {
+      val recs = data.get.recordList.foldLeft(Nil: Seq[Record]){(out, r) =>
+        if(out.isEmpty){
+          out :+ r
+        }
+        else{
+          val left = out.last.cellValue(cellname)
+          val right = r.cellValue(cellname)
+          if(left.isEmpty){
+            if(right.isEmpty) out
+            else{
+              out :+ r
+            }
+          }
+          else{
+            if(right.isEmpty) out :+ r
+            else if(left.get == right.get){
+              out
+            }
+            else{
+              out :+ r
+            }
+          }
+        }
+      }
+      Some(Dictionary(recs))
+    }
+  }
+}
+
 class StandardSolrQueryLogProcessorFactory(settings: Config) extends RecordProcessorFactory(settings) {
 
   val REGEX = "(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}).*INFO.*o.a.s.c.S.Request.*/select params=\\{(.*)\\} hits=(\\d+) status=\\d+ QTime=(\\d+)"
