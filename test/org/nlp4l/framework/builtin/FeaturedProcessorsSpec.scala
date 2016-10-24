@@ -53,6 +53,57 @@ class FeaturedProcessorsSpec extends Specification {
     }
   }
 
+  "UniqueProcessor" should {
+    "no records" in {
+      val settings = ConfigFactory.parseString(
+        """
+          |{
+          |  cellname : "uq"
+          |}
+        """.stripMargin)
+      val processor = new UniqueProcessorFactory(settings).getInstance
+      val result: Option[Dictionary] = processor.execute(None)
+      result must_== None
+    }
+
+    "sorted records" in {
+      val settings = ConfigFactory.parseString(
+        """
+          |{
+          |  cellname : "uq"
+          |}
+        """.stripMargin)
+      val processor = new UniqueProcessorFactory(settings).getInstance
+      val data = Some(Dictionary(records("uq,text",
+        """
+          |aaa,check cell soon.
+          |bbb,good and great.
+          |bbb,not sure.
+          |bbb,calendar for the next year.
+          |ccc,he bought a new car.
+          |ccc,natural language processing.
+        """.stripMargin)))
+      val result: Option[Dictionary] = processor.execute(data)
+      result must_!= None
+      result.get.recordList.size must_== 3
+      result.get.recordList(0).cellValue("uq").get must_== "aaa"
+      result.get.recordList(0).cellValue("text").get must_== "check cell soon."
+      result.get.recordList(1).cellValue("uq").get must_== "bbb"
+      result.get.recordList(1).cellValue("text").get must_== "good and great."
+      result.get.recordList(2).cellValue("uq").get must_== "ccc"
+      result.get.recordList(2).cellValue("text").get must_== "he bought a new car."
+    }
+  }
+
+  def records(cellNames: String, data: String): Seq[Record] = {
+    val cnames = cellNames.split(",")
+    data.split("\n").filterNot(_.trim.length == 0).map{ r =>
+      Record(r.split(",") zip cnames map { c =>
+        Cell(c._2, c._1)
+      })
+    }
+  }
+
   val solrLogProc = new StandardSolrQueryLogProcessorFactory(ConfigFactory.empty()).getInstance
 
   "StandardSolrQueryLogProcessor" should {
