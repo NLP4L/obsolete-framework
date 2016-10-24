@@ -61,32 +61,32 @@ class UniqueProcessorFactory(settings: Config) extends ProcessorFactory(settings
 class UniqueProcessor(val cellname: String) extends Processor {
   override def execute(data: Option[Dictionary]): Option[Dictionary] = data match {
     case None => data
-    case _ => {
-      val recs = data.get.recordList.foldLeft(Nil: Seq[Record]){(out, r) =>
-        if(out.isEmpty){
-          out :+ r
+    case Some(dic) => {
+      val recList: ArrayBuffer[Record] = ArrayBuffer()
+      var prevRecord: Record = null
+      dic.recordList.foreach{ rec: Record =>
+        if(prevRecord == null){
+          recList += rec
         }
         else{
-          val left = out.last.cellValue(cellname)
-          val right = r.cellValue(cellname)
+          val left = prevRecord.cellValue(cellname)
+          val right = rec.cellValue(cellname)
           if(left.isEmpty){
-            if(right.isEmpty) out
-            else{
-              out :+ r
+            if(!right.isEmpty){
+              recList += rec
             }
           }
           else{
-            if(right.isEmpty) out :+ r
-            else if(left.get == right.get){
-              out
-            }
-            else{
-              out :+ r
+            if(right.isEmpty) recList += rec
+            else if(left.get != right.get){
+              recList += rec
             }
           }
         }
+        prevRecord = rec
       }
-      Some(Dictionary(recs))
+
+      Some(Dictionary(recList))
     }
   }
 }
